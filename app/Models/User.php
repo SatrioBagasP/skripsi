@@ -18,6 +18,9 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'role_id',
+        'userable_id',
+        'userable_type',
         'email',
         'password',
     ];
@@ -43,5 +46,18 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function proposal(){
+        return $this->hasMany(Proposal::class,'user_id','id');
+    }
+
+    public function roles(){
+        return $this->belongsTo(Roles::class,'roles_id','id');
+    }
+
+    public function userable()
+    {
+        return $this->morphTo();
     }
 }
