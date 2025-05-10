@@ -13,6 +13,7 @@ class Proposal extends Model
         'name',
         'desc',
         'file',
+        'is_harian',
         'start_date',
         'end_date',
         'alasan_tolak',
