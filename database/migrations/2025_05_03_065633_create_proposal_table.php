@@ -22,6 +22,7 @@ return new class extends Migration
             $table->boolean('is_harian');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
+            $table->string('status');
             $table->text('alasan_tolak')->nullable();
             $table->boolean('is_acc_dosen')->nullable();
             $table->boolean('is_acc_kaprodi')->nullable();

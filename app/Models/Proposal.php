@@ -16,6 +16,7 @@ class Proposal extends Model
         'is_harian',
         'start_date',
         'end_date',
+        'status',
         'alasan_tolak',
         'is_acc_dosen',
         'is_acc_kaprodi',
