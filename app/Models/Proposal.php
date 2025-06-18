@@ -36,4 +36,8 @@ class Proposal extends Model
     public function ruangan(){
         return $this->belongsToMany(Ruangan::class,'proposal_has_ruangan','proposal_id','ruangan_id');
     }
+
+    public function mahasiswa(){
+        return $this->belongsToMany(Mahasiswa::class,'proposal_has_mahasiswa','proposal_id','mahasiswa_id');
+    }
 }
