@@ -43,7 +43,7 @@ class AuthController extends Controller
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user);
             $request->session()->regenerate();
-            return redirect()->to('/');
+            return redirect()->route('dashboard.index');
         } else {
             return back()->withErrors([
                 'loginFailed' => 'User belum terdaftar, silahkan hubungi Admin!',
