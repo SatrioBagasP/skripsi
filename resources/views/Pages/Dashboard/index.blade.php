@@ -1,13 +1,13 @@
 @extends('Layout.layout')
 
-@section('pages','Dashboard');
+@section('pages', 'Dashboard');
 
-@section('title','Aplikasi Mantap | Dashboard');
+@section('title', config('app.name') . ' | Dashboard');
 
 @section('content')
 
-<div>
-    asdasd
-</div>
+    <div>
+        asdasd
+    </div>
 
 @endsection
