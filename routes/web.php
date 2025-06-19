@@ -4,8 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\TestingTwilloController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 
-Route::get('',[TestingTwilloController::class,'index']);
+// Route::get('',[TestingTwilloController::class,'index']);
 
 // Route::group
 
@@ -18,5 +19,15 @@ Route::controller(AuthController::class)->group(function () {
 });
 
 Route::middleware(['auth'])->group(function(){
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Master
+    Route::prefix('/master')->name('master.')->group(function (){
+        Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function (){
+            Route::get('/', 'index')->name('index');
+        });
+    });
+
+    Route::prefix('/dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function (){
+        Route::get('/', 'index')->name('index');
+    });
 });
