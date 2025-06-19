@@ -19,7 +19,7 @@
                     <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Data Master</h6>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  @if($currentRouteName == 'master.unit-kemahasiswaan.index') active @endif" href="{{ route('master.unit-kemahasiswaan.index') }}">
+                    <a class="nav-link @if($currentRouteName == 'master.unit-kemahasiswaan.index') active @endif" href="{{ route('master.unit-kemahasiswaan.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 45 40" version="1.1"
@@ -46,7 +46,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  " href="../pages/tables.html">
+                    <a class="nav-link @if($currentRouteName == 'master.dosen.index') active @endif" href="{{ route('master.dosen.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 42 42" version="1.1"
@@ -69,11 +69,11 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">Tables</span>
+                        <span class="nav-link-text ms-1">Dosen</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  " href="../pages/billing.html">
+                    <a class="nav-link @if($currentRouteName == 'master.mahasiswa.index') active @endif" href="{{ route('master.mahasiswa.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1"
@@ -96,11 +96,11 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">Billing</span>
+                        <span class="nav-link-text ms-1">Mahasiswa</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  " href="../pages/virtual-reality.html">
+                    <a class="nav-link @if($currentRouteName == 'master.jurusan.index') active @endif" href="{{ route('master.jurusan.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 42 42" version="1.1"
@@ -126,11 +126,11 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">Virtual Reality</span>
+                        <span class="nav-link-text ms-1">Jurusan</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  " href="../pages/rtl.html">
+                    <a class="nav-link @if($currentRouteName == 'master.user.index') active @endif" href="{{ route('master.user.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 40 40" version="1.1"
@@ -156,7 +156,7 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">RTL</span>
+                        <span class="nav-link-text ms-1">User</span>
                     </a>
                 </li>
                 <li class="nav-item mt-3">

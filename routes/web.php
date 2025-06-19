@@ -2,8 +2,12 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\User\UserController;
+use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\TestingTwilloController;
+use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Mahasiswa\MahasiswaController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 
 // Route::get('',[TestingTwilloController::class,'index']);
@@ -23,6 +27,18 @@ Route::middleware(['auth'])->group(function(){
     // Master
     Route::prefix('/master')->name('master.')->group(function (){
         Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function (){
+            Route::get('/', 'index')->name('index');
+        });
+        Route::prefix('/dosen')->name('dosen.')->controller(DosenController::class)->group(function (){
+            Route::get('/', 'index')->name('index');
+        });
+        Route::prefix('/mahasiswa')->name('mahasiswa.')->controller(MahasiswaController::class)->group(function (){
+            Route::get('/', 'index')->name('index');
+        });
+        Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function (){
+            Route::get('/', 'index')->name('index');
+        });
+        Route::prefix('/user')->name('user.')->controller(UserController::class)->group(function (){
             Route::get('/', 'index')->name('index');
         });
     });

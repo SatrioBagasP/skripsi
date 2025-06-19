@@ -2,19 +2,19 @@
 
 @section('titleSidebarForm', 'Tambah Data')
 
-@section('sub-titleSidebarForm', 'Unit Kemahasiswaan')
+@section('sub-titleSidebarForm', 'Mahasiswa')
 
 @section('contentSidebarForm')
     <form action="">
-        <label>Unit Kemahasiswaan</label>
+        <label>Mahasiswa</label>
         <div class="mb-3">
             <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="name" id="name">
             <div class="invalid-feedback" id="nameError"></div>
         </div>
-        <label>No Hp</label>
+        <label>NPM</label>
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="no_hp" id="no_hp">
-            <div class="invalid-feedback" id="no_hpError"></div>
+            <input type="text" class="form-control" placeholder="NPM" name="npm" id="npm">
+            <div class="invalid-feedback" id="npmError"></div>
         </div>
         <label>Jurusan</label>
         <div class="mb-3">
@@ -22,11 +22,6 @@
                 'name' => 'jurusan_id',
                 'id' => 'jurusan_id',
             ])
-        </div>
-        <label>Image</label>
-        <div class="mb-3">
-            <input type="file" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="image" id="image">
-            <div class="invalid-feedback" id="imageError"></div>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="status" name="status" checked="">

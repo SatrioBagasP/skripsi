@@ -6,15 +6,25 @@
 
 @section('contentSidebarForm')
     <form action="">
-        <label>Unit Kemahasiswaan</label>
+        <label>Dosen</label>
         <div class="mb-3">
             <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="name" id="name">
             <div class="invalid-feedback" id="nameError"></div>
         </div>
         <label>No Hp</label>
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="no_hp" id="no_hp">
+            <input type="text" class="form-control" placeholder="No Handphone" name="no_hp" id="no_hp">
             <div class="invalid-feedback" id="no_hpError"></div>
+        </div>
+        <label>NIP</label>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="NIP" name="nip" id="nip">
+            <div class="invalid-feedback" id="nipError"></div>
+        </div>
+        <label>Alamat</label>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="Alamat" name="alamat" id="alamat">
+            <div class="invalid-feedback" id="alamatError"></div>
         </div>
         <label>Jurusan</label>
         <div class="mb-3">
@@ -22,11 +32,6 @@
                 'name' => 'jurusan_id',
                 'id' => 'jurusan_id',
             ])
-        </div>
-        <label>Image</label>
-        <div class="mb-3">
-            <input type="file" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="image" id="image">
-            <div class="invalid-feedback" id="imageError"></div>
         </div>
         <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="status" name="status" checked="">
