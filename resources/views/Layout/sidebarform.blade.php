@@ -7,7 +7,7 @@
                 </div>
                 <div class="float-end mt-4">
                     <button class="btn btn-link text-dark p-0 fixed-plugin-close-button">
-                        <i class="fa fa-close">x</i>
+                        <i class="fa fa-close"></i>
                     </button>
                 </div>
                 <!-- End Toggle Button -->
