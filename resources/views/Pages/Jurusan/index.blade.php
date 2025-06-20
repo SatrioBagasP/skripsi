@@ -1,12 +1,12 @@
 @extends('Layout.layout')
 
-@section('pages', 'Jurusan');
+@section('pages', 'Jurusan')
 
-@section('title', config('app.name') . ' | Jurusan');
+@section('title', config('app.name') . ' | Jurusan')
 
 @section('content')
 
-    <div>
+    <div class='d-flex justify-content-end'>
         @include('Component.button', [
             'class' => 'fixed-plugin-button',
             'label' => 'Tambah Data',

@@ -1,8 +1,8 @@
 @extends('Layout.layout')
 
-@section('pages', 'Dashboard');
+@section('pages', 'Dashboard')
 
-@section('title', config('app.name') . ' | Dashboard');
+@section('title', config('app.name') . ' | Dashboard')
 
 @section('content')
 

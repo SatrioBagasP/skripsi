@@ -1,8 +1,8 @@
 @extends('Layout.layout')
 
-@section('pages', 'User');
+@section('pages', 'User')
 
-@section('title', config('app.name') . ' | User');
+@section('title', config('app.name') . ' | User')
 
 @section('content')
 
