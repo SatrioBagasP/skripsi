@@ -37,6 +37,7 @@
     <!-- Nepcha is a easy-to-use web analytics. No cookies and fully compliant with GDPR, CCPA and PECR. -->
     <script defer data-site="YOUR_DOMAIN_HERE" src="https://api.nepcha.com/js/nepcha-analytics.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    @stack('css')
 </head>
 
 <body class="g-sidenav-show  bg-gray-100">
@@ -99,6 +100,7 @@
     <script src="{{ asset('/js/plugins/perfect-scrollbar.min.js') }}"></script>
     <script src="{{ asset('/js/plugins/smooth-scrollbar.min.js') }}"></script>
     <script src="{{ asset('/js/plugins/chartjs.min.js') }}"></script>
+    @stack('js')
     <script>
         $(document).ready(function() {
             $('.select2').select2();

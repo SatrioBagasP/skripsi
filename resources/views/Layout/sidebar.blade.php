@@ -1,5 +1,5 @@
     @php
-        $currentRouteName = Route::currentRouteName()
+        $currentRouteName = Route::currentRouteName();
     @endphp
     <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 "
         id="sidenav-main">
@@ -19,7 +19,8 @@
                     <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Data Master</h6>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @if($currentRouteName == 'master.unit-kemahasiswaan.index') active @endif" href="{{ route('master.unit-kemahasiswaan.index') }}">
+                    <a class="nav-link @if ($currentRouteName == 'master.unit-kemahasiswaan.index') active @endif"
+                        href="{{ route('master.unit-kemahasiswaan.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 45 40" version="1.1"
@@ -46,7 +47,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @if($currentRouteName == 'master.dosen.index') active @endif" href="{{ route('master.dosen.index') }}">
+                    <a class="nav-link @if ($currentRouteName == 'master.dosen.index') active @endif"
+                        href="{{ route('master.dosen.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 42 42" version="1.1"
@@ -73,7 +75,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @if($currentRouteName == 'master.mahasiswa.index') active @endif" href="{{ route('master.mahasiswa.index') }}">
+                    <a class="nav-link @if ($currentRouteName == 'master.mahasiswa.index') active @endif"
+                        href="{{ route('master.mahasiswa.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1"
@@ -100,7 +103,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @if($currentRouteName == 'master.jurusan.index') active @endif" href="{{ route('master.jurusan.index') }}">
+                    <a class="nav-link @if ($currentRouteName == 'master.jurusan.index') active @endif"
+                        href="{{ route('master.jurusan.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 42 42" version="1.1"
@@ -130,7 +134,8 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link @if($currentRouteName == 'master.user.index') active @endif" href="{{ route('master.user.index') }}">
+                    <a class="nav-link @if ($currentRouteName == 'master.user.index') active @endif"
+                        href="{{ route('master.user.index') }}">
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="12px" viewBox="0 0 40 40" version="1.1"
@@ -219,8 +224,11 @@
                         <span class="nav-link-text ms-1">Sign In</span>
                     </a>
                 </li>
+                <form id='logout' method="POST" action="{{ route('logout') }}" hidden>
+                    @csrf
+                </form>
                 <li class="nav-item">
-                    <a class="nav-link  " href="../pages/sign-up.html">
+                    <a class="nav-link" href="#" id='btn-logout'>
                         <div
                             class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
                             <svg width="12px" height="20px" viewBox="0 0 40 40" version="1.1"
@@ -249,9 +257,11 @@
                                 </g>
                             </svg>
                         </div>
-                        <span class="nav-link-text ms-1">Sign Up</span>
+                        <span class="nav-link-text ms-1">Log out</span>
                     </a>
+
                 </li>
+
             </ul>
         </div>
         <div class="sidenav-footer mx-3 ">
@@ -276,3 +286,21 @@
                 href="https://www.creative-tim.com/product/soft-ui-dashboard-pro?ref=sidebarfree">Upgrade to pro</a>
         </div>
     </aside>
+    @push('css')
+        <style>
+            a.disabled {
+                pointer-events: none;
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+        </style>
+    @endpush
+    @push('js')
+        <script>
+            $('#btn-logout').on('click', function(e) {
+                e.preventDefault();
+                $(this).addClass('disabled');
+                $('#logout').submit();
+            });
+        </script>
+    @endpush

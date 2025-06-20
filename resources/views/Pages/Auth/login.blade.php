@@ -119,7 +119,7 @@
                                 @if ($errors->has('loginFailed'))
                                     <label class="text-danger">{{ $errors->first('loginFailed') }}</label>
                                 @endif
-                                    <form method="POST" role="form" action="{{ route('postlogin') }}">
+                                    <form method="POST" id='form-login' role="form" action="{{ route('postlogin') }}">
                                         @csrf
                                         <label>Username</label>
                                         <div class="mb-3">
@@ -139,7 +139,7 @@
                                             @endif
                                         </div>
                                         <div class="text-center">
-                                            <button type="submit" class="btn bg-gradient-info w-100 mt-4 mb-0">Sign
+                                            <button type="submit" id='btn-login' class="btn bg-gradient-info w-100 mt-4 mb-0">Sign
                                                 in</button>
                                         </div>
                                     </form>
@@ -220,10 +220,21 @@
         </div>
     </footer>
     <!--   Core JS Files   -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="{{ asset('/js/core/popper.min.js') }}"></script>
     <script src="{{ asset('/js/core/bootstrap.min.js') }}"></script>
     <script src="{{ asset('/js/plugins/perfect-scrollbar.min.js') }}"></script>
     <script src="{{ asset('/js/plugins/smooth-scrollbar.min.js') }}"></script>
+    <script>
+        $(document).ready(function () {
+            $('#btn-login').click(function (e) { 
+                e.preventDefault();
+                $('#btn-login').attr('disabled', true);
+                $('#form-login').submit();
+            });
+        });
+    </script>
     <script>
         var win = navigator.platform.indexOf('Win') > -1;
         if (win && document.querySelector('#sidenav-scrollbar')) {
