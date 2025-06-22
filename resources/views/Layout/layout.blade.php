@@ -16,10 +16,7 @@
     <link href="{{ asset('css/nucleo-icons.css') }}" rel="stylesheet" />
     <link href="{{ asset('css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- Font Awesome Icons -->
- <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <link href="{{ asset('css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- CSS Files -->
     <link id="pagestyle" href="{{ asset('css/soft-ui-dashboard.css?v=1.0.7') }}" rel="stylesheet" />
@@ -37,7 +34,7 @@
         @include('Layout.navbar')
         <!-- End Navbar -->
         <div class="container-fluid py-4">
-            <div class="px-3" style="min-height: 100vh">
+            <div class="px-3" style="min-height: 80vh">
                 @yield('content')
             </div>
 
@@ -99,6 +96,9 @@
                 }
             });
             $('.select2').select2();
+            $('#sidebarform-btn').click(function (e) { 
+                $('#sidebarForm').find('input, textarea, select').val('').trigger('change');
+            });
         });
     </script>
     @stack('js')
