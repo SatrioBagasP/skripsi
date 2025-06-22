@@ -38,13 +38,12 @@
     <script>
         (function() {
 
+            // BUNDLE DATATABLE
             let searching = false;
-
-            @stack('paginate_js')
-
             let data = {
                 jurusan: [],
             };
+            @stack('paginate_js')
 
             function renderTableBody(data) {
                 let i = 1;
@@ -66,7 +65,6 @@
                     i++;
                 });
             }
-
             function getData(page = 1) {
                 if(searching){
                     return;
@@ -108,6 +106,7 @@
             }
 
             getData();
+            // END BUNDLE
 
             let dataSet = {
                 id: null,

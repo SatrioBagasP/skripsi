@@ -35,9 +35,6 @@
                 {{ $item }}</th>
         @endforeach
     </thead>
-    <tbody>
-
-    </tbody>
     <tbody id='tableBody'>
 
     </tbody>
