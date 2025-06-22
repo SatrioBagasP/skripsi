@@ -13,6 +13,8 @@
         ])
     </div>
 
+    @include('Component.datatable')
+
     @include('Pages.UnitKemahasiswaan.form')
 
 @endsection

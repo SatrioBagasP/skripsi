@@ -38,6 +38,8 @@ Route::middleware(['auth'])->group(function(){
         Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function (){
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
         });
         Route::prefix('/user')->name('user.')->controller(UserController::class)->group(function (){
             Route::get('/', 'index')->name('index');

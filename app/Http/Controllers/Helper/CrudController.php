@@ -50,4 +50,55 @@ class CrudController extends Controller
             'message' => 'Data Berhasil Ditambahkan',
         ], 200);
     }
+
+    public function updateWithReturnData()
+    {
+        $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+        if (!$data) {
+            throw new \Exception('Data tidak ada');
+        }
+        $old = $data->getOriginal();
+        $data->fill($this->dataField);
+
+        if ($data->isDirty()) {
+            $data->save();
+            $change = $data->getChanges();
+            $oldField = array_intersect_key(
+                $old,
+                array_flip(array_keys($change))
+            );
+            $this->setLog($this->user, $data, $this->description, [
+                'old' => $oldField,
+                'changed' => $change,
+            ], $this->content);
+        }
+        return $data;
+    }
+
+    public function updateWithReturnJson()
+    {
+        $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+        if (!$data) {
+            throw new \Exception('Data tidak ada');
+        }
+        $old = $data->getOriginal();
+        $data->fill($this->dataField);
+
+        if ($data->isDirty()) {
+            $data->save();
+            $change = $data->getChanges();
+            $oldField = array_intersect_key(
+                $old,
+                array_flip(array_keys($change))
+            );
+            $this->setLog($this->user, $data, $this->description, [
+                'old' => $oldField,
+                'changed' => $change,
+            ], $this->content);
+        }
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Berhasil Dirubah',
+        ], 200);
+    }
 }
