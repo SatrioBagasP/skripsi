@@ -13,6 +13,7 @@ class Dosen extends Model
         'alamat',
         'no_hp',
         'status',
+        'jurusan_id',
     ];
 
     public function user(){
@@ -20,5 +21,8 @@ class Dosen extends Model
     }
     public function proposal(){
         return $this->hasMany(Proposal::class,'dosen_id','id');
+    }
+    public function jurusan(){
+        return $this->belongsTo(Jurusan::class,'jurusan_id','id');
     }
 }

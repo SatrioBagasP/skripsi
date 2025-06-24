@@ -96,9 +96,16 @@
                 }
             });
             $('.select2').select2();
-            $('#sidebarform-btn').click(function (e) { 
+            $('#sidebarform-btn').click(function(e) {
                 $('#sidebarForm').find('input, textarea, select').val('').trigger('change');
             });
+        });
+    </script>
+    <script>
+        $('#sidebarform-btn').click(function(e) {
+            e.preventDefault();
+            $('#btn-edit').hide();
+            $('#btn-tambah').show();
         });
     </script>
     @stack('js')

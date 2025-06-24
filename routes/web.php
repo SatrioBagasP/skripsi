@@ -31,6 +31,9 @@ Route::middleware(['auth'])->group(function(){
         });
         Route::prefix('/dosen')->name('dosen.')->controller(DosenController::class)->group(function (){
             Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
         });
         Route::prefix('/mahasiswa')->name('mahasiswa.')->controller(MahasiswaController::class)->group(function (){
             Route::get('/', 'index')->name('index');

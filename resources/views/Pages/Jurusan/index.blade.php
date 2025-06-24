@@ -40,9 +40,7 @@
 
             // BUNDLE DATATABLE
             let searching = false;
-            let data = {
-                jurusan: [],
-            };
+            let data = [];
             @stack('paginate_js')
 
             function renderTableBody(data) {
@@ -70,7 +68,7 @@
                     return;
                 }
                 searching = true;
-                data.jurusan = [];
+                data = [];
                 $('#tableBody').empty(); // Dari data table blade
                 $('#loading-spinner').show();
                 $.ajax({
@@ -83,7 +81,7 @@
                     },
                     success: function(response) {
                         response.data.forEach(item => {
-                            data.jurusan.push({
+                            data.push({
                                 id: item.id,
                                 name: item.name,
                                 kode: item.kode,
@@ -93,7 +91,7 @@
                         paginateControll.currentPage = response.currentPage;
                         paginateControll.totalPage = response.totalPage;
                         renderPagination(); // function dari datatable
-                        renderTableBody(data.jurusan)
+                        renderTableBody(data)
                     },
                     error: function(xhr, status, error) {
                         flasher.error(xhr.responseJSON.message);
@@ -119,8 +117,6 @@
 
                 $('#sidebarform-btn').click(function(e) {
                     e.preventDefault();
-                    $('#btn-edit').hide();
-                    $('#btn-tambah').show();
                     resetDataSet();
                 });
 
@@ -149,12 +145,12 @@
                     const index = parseInt(item.data('index'));
 
                     dataSet = {
-                        id: data.jurusan[index].id,
+                        id: data[index].id,
                     }
                     $('#sidebar-form').addClass('show');
-                    $('#name').val(data.jurusan[index].name).trigger('change');
-                    $('#kode').val(data.jurusan[index].kode).trigger('change');
-                    $('#status').prop('checked', data.jurusan[index].status == 1).trigger('change');
+                    $('#name').val(data[index].name).trigger('change');
+                    $('#kode').val(data[index].kode).trigger('change');
+                    $('#status').prop('checked', data[index].status == 1).trigger('change');
                 });
 
                 function resetDataSet() {
