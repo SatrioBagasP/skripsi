@@ -99,7 +99,7 @@ class DosenController extends Controller
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('nip', 'like', '%' . $request->search . '%')
-                    ->orWhereRelation('jurusan', 'name', $request->search);
+                    ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
             })
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);

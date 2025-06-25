@@ -28,6 +28,9 @@ Route::middleware(['auth'])->group(function(){
     Route::prefix('/master')->name('master.')->group(function (){
         Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function (){
             Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
         });
         Route::prefix('/dosen')->name('dosen.')->controller(DosenController::class)->group(function (){
             Route::get('/', 'index')->name('index');
@@ -37,6 +40,9 @@ Route::middleware(['auth'])->group(function(){
         });
         Route::prefix('/mahasiswa')->name('mahasiswa.')->controller(MahasiswaController::class)->group(function (){
             Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
         });
         Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function (){
             Route::get('/', 'index')->name('index');

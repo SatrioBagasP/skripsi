@@ -21,6 +21,7 @@
             @include('Component.select', [
                 'name' => 'jurusan_id',
                 'id' => 'jurusan_id',
+                'data' => $optionJurusan,
             ])
         </div>
         <div class="form-check form-switch">
@@ -32,6 +33,11 @@
                 'class' => 'bg-gradient-info mt-4 mb-0',
                 'label' => 'Tambah',
                 'id' => 'btn-tambah',
+            ])
+            @include('Component.button', [
+                'class' => 'bg-gradient-info mt-4 mb-0',
+                'label' => 'Simpan',
+                'id' => 'btn-edit',
             ])
         </div>
 
