@@ -17,32 +17,34 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'admin',
+        User::updateOrCreate([
             'email' => 'admin@example.com',
+        ],[
+            'name' => 'admin',
             'password' => Hash::make('123'),
+            'role_id' => 1,
         ]);
 
-        Roles::create([
+        Roles::updateOrCreate([
             'name' => 'Admin',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Unit Kemahasiswaan',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Dosen',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Kaprodi',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Kepala Bagian Minat Dan Bakat',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Layanan Mahasiswa',
-        ]);
-        Roles::create([
+        ],[]);
+        Roles::updateOrCreate([
             'name' => 'Wakil Rektor Bidang Kemahasiswaan',
-        ]);
+        ],[]);
     }
 }
