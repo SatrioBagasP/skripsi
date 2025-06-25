@@ -14,7 +14,7 @@
             </div>
             <hr class="horizontal dark my-1">
             <div class="card-body pt-sm-3 pt-0">
-                <form id='sidebarForm'>
+                <form id='sidebarForm' enctype="multipart/form-data">
                       @yield('contentSidebarForm')
                 </form>
             </div>

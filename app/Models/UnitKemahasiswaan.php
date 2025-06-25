@@ -12,9 +12,14 @@ class UnitKemahasiswaan extends Model
         'image',
         'no_hp',
         'status',
+        'jurusan_id',
     ];
 
     public function user(){
         return $this->morphOne(User::class,'userable');
+    }
+
+    public function jurusan(){
+        return $this->belongsTo(Jurusan::class,'jurusan_id','id');
     }
 }
