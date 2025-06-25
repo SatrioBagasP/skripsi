@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Dosen;
+use App\Models\Roles;
 use App\Models\Jurusan;
+use App\Models\Mahasiswa;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,6 +26,40 @@ abstract class Controller
     {
         $data = [];
         $data = Jurusan::get()->map(function ($item) {
+            return [
+                'value' => $item->id,
+                'label' => $item->name,
+            ];
+        });
+
+        return $data;
+    }
+
+    function getUserableOption()
+    {
+        $data = [];
+
+        $dataUnit = UnitKemahasiswaan::where('status',true)->get()->map(function ($item) {
+            return [
+                'value' => $item->id . '|Unit',
+                'label' => $item->name,
+            ];
+        });
+
+        $dataDosen = Dosen::where('status',true)->get()->map(function ($item) {
+            return [
+                'value' => $item->id . '|Dosen',
+                'label' => $item->name,
+            ];
+        });
+        $data = $dataUnit->concat($dataDosen)->sortBy('label')->values();
+        return $data;
+    }
+
+    function getRoleOption()
+    {
+        $data = [];
+        $data = Roles::get()->map(function ($item) {
             return [
                 'value' => $item->id,
                 'label' => $item->name,

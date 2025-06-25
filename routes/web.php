@@ -22,40 +22,43 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->middleware(['auth'])->name('logout');
 });
 
-Route::middleware(['auth'])->group(function(){
+Route::middleware(['auth'])->group(function () {
 
     // Master
-    Route::prefix('/master')->name('master.')->group(function (){
-        Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function (){
+    Route::prefix('/master')->name('master.')->group(function () {
+        Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
             Route::post('/update', 'update')->name('update');
             Route::get('/get-data', 'getData')->name('getData');
         });
-        Route::prefix('/dosen')->name('dosen.')->controller(DosenController::class)->group(function (){
+        Route::prefix('/dosen')->name('dosen.')->controller(DosenController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
             Route::post('/update', 'update')->name('update');
             Route::get('/get-data', 'getData')->name('getData');
         });
-        Route::prefix('/mahasiswa')->name('mahasiswa.')->controller(MahasiswaController::class)->group(function (){
+        Route::prefix('/mahasiswa')->name('mahasiswa.')->controller(MahasiswaController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
             Route::post('/update', 'update')->name('update');
             Route::get('/get-data', 'getData')->name('getData');
         });
-        Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function (){
+        Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
             Route::post('/update', 'update')->name('update');
             Route::get('/get-data', 'getData')->name('getData');
         });
-        Route::prefix('/user')->name('user.')->controller(UserController::class)->group(function (){
+        Route::prefix('/user')->name('user.')->controller(UserController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
         });
     });
 
-    Route::prefix('/dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function (){
+    Route::prefix('/dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('index');
     });
 });

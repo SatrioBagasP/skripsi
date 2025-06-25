@@ -53,11 +53,11 @@ class User extends Authenticatable
     }
 
     public function roles(){
-        return $this->belongsTo(Roles::class,'roles_id','id');
+        return $this->belongsTo(Roles::class,'role_id','id');
     }
 
     public function userable()
     {
-        return $this->morphTo();
+        return $this->morphTo(__FUNCTION__, 'userable_type', 'userable_id');
     }
 }
