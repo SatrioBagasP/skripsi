@@ -25,7 +25,7 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     // Master
-    Route::prefix('/master')->name('master.')->group(function () {
+    Route::prefix('/master')->name('master.')->middleware('isAdmin')->group(function () {
         Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
@@ -58,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    Route::prefix('/dashboard')->name('dashboard.')->controller(DashboardController::class)->group(function () {
+    Route::prefix('/')->name('dashboard.')->controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('index');
     });
 });
