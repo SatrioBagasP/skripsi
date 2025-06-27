@@ -110,7 +110,7 @@
                                         <label>Username</label>
                                         <div class="mb-3">
                                             <input type="text" class="form-control"
-                                                placeholder="NIP/NPM/Username/Email" aria-label="Username"
+                                                placeholder="NIP/Username/Email" aria-label="Username"
                                                 aria-describedby="email-addon" name="username">
                                             @if ($errors->has('username'))
                                                 <label class="text-danger">{{ $errors->first('username') }}</label>

@@ -7,6 +7,7 @@ use App\Models\Dosen;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,11 +31,11 @@ class AuthController extends Controller
             ->orWhere('name', $request->username)
             ->orWhereHasMorph(
                 'userable',
-                [Mahasiswa::class, Dosen::class],
+                [UnitKemahasiswaan::class, Dosen::class],
                 function ($q, $type) use ($request) {
-                    $column = $type === Mahasiswa::class ? 'npm' : 'nip';
+                    $column = $type === UnitKemahasiswaan::class ? 'name' : 'nip';
 
-                    $q->where($column, $request->username);
+                    $q->where($column, $request->username)->where('status',true);
                 }
             )
             ->first();
@@ -46,7 +47,7 @@ class AuthController extends Controller
             return redirect()->route('dashboard.index');
         } else {
             return back()->withErrors([
-                'loginFailed' => 'User belum terdaftar, silahkan hubungi Admin!',
+                'loginFailed' => 'User belum terdaftar atau tidak aktif, silahkan hubungi Admin!',
             ]);
         }
     }
