@@ -8,6 +8,7 @@ use App\Http\Controllers\TestingTwilloController;
 use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
+use App\Http\Controllers\Proposal\ProposalController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 
 // Route::get('',[TestingTwilloController::class,'index']);
@@ -60,5 +61,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('/')->name('dashboard.')->controller(DashboardController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+    });
+
+    Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/create', 'create')->name('create');
+        Route::post('/store', 'store')->name('store');
+        Route::post('/update', 'update')->name('update');
+        Route::get('/get-data', 'getData')->name('getData');
     });
 });

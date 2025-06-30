@@ -10,6 +10,7 @@ class Proposal extends Model
     protected $fillable = [
         'user_id',
         'dosen_id',
+        'no_proposal',
         'name',
         'desc',
         'file',

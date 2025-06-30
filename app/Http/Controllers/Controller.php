@@ -39,20 +39,67 @@ abstract class Controller
     {
         $data = [];
 
-        $dataUnit = UnitKemahasiswaan::where('status',true)->get()->map(function ($item) {
+        $dataUnit = UnitKemahasiswaan::where('status', true)->get()->map(function ($item) {
             return [
                 'value' => $item->id . '|Unit',
                 'label' => $item->name,
             ];
         });
 
-        $dataDosen = Dosen::where('status',true)->get()->map(function ($item) {
+        $dataDosen = Dosen::where('status', true)->get()->map(function ($item) {
             return [
                 'value' => $item->id . '|Dosen',
                 'label' => $item->name,
             ];
         });
         $data = $dataUnit->concat($dataDosen)->sortBy('label')->values();
+        return $data;
+    }
+
+    function getOrganisasiOption()
+    {
+        $data = [];
+
+        $data = UnitKemahasiswaan::where('status', true)->get()->map(function ($item) {
+            return [
+                'value' => $item->id,
+                'label' => $item->name,
+            ];
+        });
+
+        return $data;
+    }
+
+    function getDosenOption()
+    {
+        $data = [];
+
+        $data = Dosen::where('status', true)->get()->map(function ($item) {
+            return [
+                'value' => $item->id,
+                'label' => $item->name,
+            ];
+        });
+
+        return $data;
+    }
+
+    function getMahasiswaOption($jurusan = null)
+    {
+        $data = [];
+
+        $data = Mahasiswa::where('status', true)
+            ->when($jurusan != null, function ($query) use ($jurusan) {
+                $query->where('jurusan_id', $jurusan);
+            })
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ];
+            });
+
         return $data;
     }
 
