@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Proposal;
 
+use Dom\Attr;
 use Carbon\Carbon;
+use App\Models\User;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +36,7 @@ class ProposalController extends Controller
         $admin = Gate::allows('admin');
         $organisasiOption = $this->getOrganisasiOption();
         $dosenOption = $this->getDosenOption();
-        $mahasiswaOption = [];
+        $mahasiswaOption = $this->getMahasiswaOption();
         if (!$admin) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->id)->map(function ($item) {
                 if ($item['value'] == Auth::id()) {
@@ -41,7 +44,6 @@ class ProposalController extends Controller
                 }
                 return $item;
             });
-            $mahasiswaOption = $this->getMahasiswaOption();
         }
 
         return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'dosenOption'));
@@ -76,6 +78,39 @@ class ProposalController extends Controller
             $filePath = $this->storageStore($request->file('file'), 'proposal');
             return DB::transaction(function () use ($request, $filePath) {
                 $admin = Gate::allows('admin');
+                if ($admin) {
+                    $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
+                } else {
+                    $unitKemahasiswaan = Auth::user()->userable;
+                }
+                $kodeJurusan = $unitKemahasiswaan->jurusan->kode;
+                $romawi = $this->getRomawi(Carbon::now()->format('m'));
+                $tahun = Carbon::now()->format('Y');
+
+                $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
+                    ->orderBy('no_proposal', 'desc')
+                    ->first();
+
+                if ($lastRecord == null) {
+                    $got = DB::selectOne("SELECT GET_LOCK('nomor_lock', 10)")->{"GET_LOCK('nomor_lock', 10)"};
+                    if ($got !== 1) {
+                        throw new \Exception('Server sedang sibuk, Silahkan coba lagi!');
+                    }
+                } else {
+                    $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
+                        ->orderBy('no_proposal', 'desc')
+                        ->lockForUpdate()
+                        ->first();
+                }
+                $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
+                    ->orderBy('no_proposal', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+
+                $lastNumber = $lastRecord ? intval(explode('/', $lastRecord->no_proposal)[0]) : 0;
+                $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                $noProposal = $newNumber  . '/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun;
+
                 if ($request->boolean('is_harian')) {
                     $range = strpos($request->range_date, 'to');
                     if ($range == false) {
@@ -96,7 +131,7 @@ class ProposalController extends Controller
                 $dataField = [
                     'name' => $request->name,
                     'desc' => $request->desc,
-                    'no_proposal' => '321',
+                    'no_proposal' => $noProposal,
                     'dosen_id' => $request->dosen_id,
                     'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
                     'file' => $filePath,
@@ -108,7 +143,10 @@ class ProposalController extends Controller
 
                 $Crud = new CrudController(Proposal::class, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
                 $data = $Crud->insertWithReturnData();
-
+                // Lepas lock
+                if ($lastRecord == null) {
+                    DB::select("SELECT RELEASE_LOCK('bukti_lock')");
+                }
                 // insert mahasiswanya pakai table aja agar tidak mengulang
                 $rows = collect($request->mahasiswa_id)->map(function ($id) use ($data) {
                     return [
