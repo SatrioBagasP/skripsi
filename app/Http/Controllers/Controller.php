@@ -60,7 +60,7 @@ abstract class Controller
     {
         $data = [];
 
-        $data = UnitKemahasiswaan::where('status', true)->get()->map(function ($item) {
+        $data = UnitKemahasiswaan::where('status', true)->whereHas('user')->get()->map(function ($item) {
             return [
                 'value' => $item->id,
                 'label' => $item->name,
