@@ -66,8 +66,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
+        Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/store', 'store')->name('store');
         Route::post('/update', 'update')->name('update');
+        Route::post('/delete', 'delete')->name('delete');
         Route::get('/get-data', 'getData')->name('getData');
     });
 });

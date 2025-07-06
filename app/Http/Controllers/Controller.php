@@ -127,6 +127,13 @@ abstract class Controller
         return $imagePath;
     }
 
+    function storageDelete($path)
+    {
+        if (Storage::exists($path)) {
+            Storage::delete($path);
+        }
+    }
+
     function getRomawi($bulan)
     {
         switch (intval($bulan)) {
@@ -167,5 +174,16 @@ abstract class Controller
                 return "XII";
                 break;
         }
+    }
+
+    function getErrorMessage($e)
+    {
+        $message = '';
+        if (app()->environment('local')) {
+            $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
+        } else {
+            $message = $e->getMessage();
+        }
+        return $message;
     }
 }

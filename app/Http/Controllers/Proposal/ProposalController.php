@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Helper\CrudController;
+use App\Models\ProposalHasMahasiswa;
+use PDO;
 
 class ProposalController extends Controller
 {
@@ -74,7 +76,7 @@ class ProposalController extends Controller
         ]);
 
         try {
-            $filePath = null;
+            $filePath = '';
             $filePath = $this->storageStore($request->file('file'), 'proposal');
             return DB::transaction(function () use ($request, $filePath) {
                 $admin = Gate::allows('admin');
@@ -82,6 +84,9 @@ class ProposalController extends Controller
                     $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
                 } else {
                     $unitKemahasiswaan = Auth::user()->userable;
+                    if (!($unitKemahasiswaan instanceof UnitKemahasiswaan)) {
+                        throw new \Exception('Organisasi yang dipilih bukan dari unit kemahasiswaan');
+                    }
                 }
                 $kodeJurusan = $unitKemahasiswaan->jurusan->kode;
                 $romawi = $this->getRomawi(Carbon::now()->format('m'));
@@ -164,12 +169,229 @@ class ProposalController extends Controller
                 ], 200);
             });
         } catch (\Throwable $e) {
-            Storage::delete($filePath);
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
+            if (Storage::exists($filePath)) {
+                Storage::delete($filePath);
             }
+            $message = $this->getErrorMessage($e);
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function edit(Request $request, $id)
+    {
+        $data = Proposal::findOrFail(decrypt($id));
+        $edit = true;
+
+        $admin = Gate::allows('admin');
+        $organisasiOption = $this->getOrganisasiOption();
+        $dosenOption = $this->getDosenOption();
+        $mahasiswaOption = $this->getMahasiswaOption();
+        $listMahasiswa = ProposalHasMahasiswa::where('proposal_id', $data->id)->pluck('mahasiswa_id')->toArray();
+
+        if (!$admin) {
+            $organisasiOption = $organisasiOption->where('value', Auth::user()->id)->map(function ($item) {
+                if ($item['value'] == Auth::id()) {
+                    $item['selected'] = true;
+                }
+                return $item;
+            });
+        } else {
+            $organisasiOption = $organisasiOption->map(function ($item) use ($data) {
+                if ($item['value'] == $data->user_id) {
+                    $item['selected'] = true;
+                }
+                return $item;
+            });
+        }
+
+        if (!in_array($data->status, ['Draft', 'Tolak'])) {
+            return abort(404);
+        }
+
+        // set dosen agar ke select
+        $dosenOption = $dosenOption->map(function ($item) use ($data) {
+            if ($item['value'] == $data->dosen_id) {
+                $item['selected'] = true;
+            }
+            return $item;
+        });
+
+        // set mahasiswanya yang ke select
+        $mahasiswaOption = $mahasiswaOption->map(function ($item) use ($listMahasiswa) {
+            if (in_array($item['value'], $listMahasiswa)) {
+                $item['selected'] = true;
+            }
+            return $item;
+        });
+        $range = null;
+        if ($data->is_harian) {
+            $range = Carbon::parse($data->start_date)->format('Y-m-d') . ' to ' . Carbon::parse($data->end_date)->format('Y-m-d');
+        }
+
+        // ini maping data ulang untuk dikirim ke bladenya
+        $data = [
+            'id' => encrypt($data->id),
+            'name' => $data->name,
+            'desc' => $data->desc,
+            'file_url' => Storage::temporaryUrl($data->file, now()->addMinutes(5)),
+            'is_harian' => $data->is_harian,
+            'start_date' => Carbon::parse($data->start_date)->format('Y-m-d H:i'),
+            'end_date' => Carbon::parse($data->end_date)->format('Y-m-d H:i'),
+            'range_date' => $range,
+        ];
+
+        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'dosenOption', 'data', 'edit'));
+    }
+
+    public function update(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'dosen_id' => 'required',
+            'desc' => 'required',
+            'start_date' => 'required_if:is_harian,false',
+            'end_date' => 'required_if:is_harian,false',
+            'mahasiswa_id' => 'required',
+            'range_date' => 'required_if:is_harian,true',
+            'file' => ['sometimes', File::types(['pdf'])->max(2 * 1024)],
+        ], [
+            'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
+            'name.required' => 'Judul proposal wajib diisi',
+            'desc.required' => 'Deskripsi wajib diisi',
+            'start_date.required_if' => 'Jadwal mulai wajib diisi',
+            'end_date.required_if' => 'Jadwal berakhir wajib diisi',
+            'range_date.required_if' => 'Jadwal wajib diisi',
+            'mahasiswa_id.required' => 'Mahasiswa wajib dipilih',
+            'file.max' => 'Ukuran file maksimal 2MB.',
+            'file.mimes' => 'File harus berupa PDF.',
+        ]);
+        try {
+            DB::beginTransaction();
+
+            $filePath = '';
+            $data = Proposal::with(['mahasiswa'])->where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
+            if (!$data) {
+                throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
+            } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
+                throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
+            }
+
+            $oldPath = $data->file;
+            if ($request->file('file')) {
+                $filePath = $this->storageStore($request->file('file'), 'proposal');
+            }
+
+            $admin = Gate::allows('admin');
+            if ($admin) {
+                $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
+            } else {
+                $unitKemahasiswaan = Auth::user()->userable;
+                if (!($unitKemahasiswaan instanceof UnitKemahasiswaan)) {
+                    throw new \Exception('Organisasi yang dipilih bukan dari unit kemahasiswaan');
+                }
+            }
+
+            if ($request->boolean('is_harian')) {
+                $range = strpos($request->range_date, 'to');
+                if ($range == false) {
+                    throw new \Exception('Start - End Date tidak boleh satu hari saja!, jika harian, silahkan click checkbox harian');
+                }
+                list($startDate, $endDate) = explode(' to ', $request->range_date);
+                $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+                $endDate = Carbon::createFromFormat('Y-m-d', $endDate)->startOfDay();
+            } else {
+                $startDate = Carbon::createFromFormat('Y-m-d H:i', $request->start_date);
+                $endDate = Carbon::createFromFormat('Y-m-d H:i', $request->end_date);
+                if ($endDate->isBefore($startDate)) {
+                    throw new \Exception('Ups...! End date anda lebih duluan dari pada start date');
+                }
+            }
+
+            $dataField = [
+                'name' => $request->name,
+                'desc' => $request->desc,
+                'dosen_id' => $request->dosen_id,
+                'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
+                'file' => $request->file('file') ? $filePath : $oldPath,
+                'is_harian' => $request->boolean('is_harian'),
+                'status' => 'Draft',
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ];
+
+            $mahasiswaDefault = $data->mahasiswa->pluck('id');
+            $mahasiswaInsert = array_diff($request->mahasiswa_id, $mahasiswaDefault->toArray()); // ini yang insert
+            $mahasiswaDeleted = array_diff($mahasiswaDefault->toArray(), $request->mahasiswa_id); // ini yang didelete
+
+            ProposalHasMahasiswa::where('proposal_id', $data->id)
+                ->whereIn('mahasiswa_id', $mahasiswaDeleted)
+                ->delete();
+
+            // insert mahasiswanya pakai table aja agar tidak mengulang
+            $rows = collect($mahasiswaInsert)->map(function ($id) use ($data) {
+                return [
+                    'proposal_id'  => $data->id,
+                    'mahasiswa_id' => $id,
+                    'created_at'   => now(),
+                    'updated_at'   => now(),
+                ];
+            })->toArray();
+            DB::table('proposal_has_mahasiswa')->insert($rows);
+
+            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
+            $data = $Crud->updateWithReturnData();
+
+            if ($request->file('file')) {
+                $this->storageDelete($oldPath);
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Data Berhasil Ditambahkan',
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $this->storageDelete($filePath);
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function delete(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = Proposal::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
+            if (!$data) {
+                throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
+            } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
+                throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
+            }
+
+            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, description: 'Menghapus Proposal', content: 'Proposal');
+            $action = $Crud->deleteWithReturnJson();
+
+            DB::commit();
+            return $action;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
             return response()->json([
                 'status' => 400,
                 'message' => $message,

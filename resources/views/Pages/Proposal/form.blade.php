@@ -1,3 +1,6 @@
+@php
+    $edit = $edit ?? false;
+@endphp
 @extends('Layout.layout')
 
 @section('pages', 'Tambah Data Proposal')
@@ -34,6 +37,11 @@
             </div>
             <div class="col-md-6">
                 <label>File Proposal</label>
+                @if (isset($data))
+                    <small>
+                        (<a href="{{ $data['file_url'] }}" target="_blank">view file</a>)
+                    </small>
+                @endif
                 <div class="mb-2">
                     <input type="file" class="form-control" name="file" id="file" accept="application/pdf">
                     <small>pdf 2mb</small>
@@ -91,7 +99,7 @@
                     @include('Component.button', [
                         'class' => 'fixed-plugin-button mt-2',
                         'id' => 'btn-submit',
-                        'label' => 'Ajukan Proposal',
+                        'label' => $edit == true ? 'Rubah Data' : 'Ajukan Proposal',
                     ])
                 </div>
             </div>
@@ -103,19 +111,39 @@
 @push('js')
     <script>
         (function() {
+            let edit = @json($edit ?? false);
+            let dataSet = {};
+            if (edit) {
+                dataSet = @json($data ?? null);
 
-            let dataSet = {
-                id: null,
-                name: null,
-                dosen_id: null,
-                desc: null,
-                file: null,
-                user_id: null,
-                mahasiswa_id: [],
-                is_harian: false,
-                start_date: null,
-                end_date: null,
-                range_date: null,
+                Object.entries(dataSet).forEach(function([key, value]) {
+                    if (key != 'file_url') {
+                        $(`#${key}`).val(value);
+                    }
+                });
+                $('#is_harian').prop('checked', dataSet.is_harian == 1);
+                if (dataSet.is_harian == 1) {
+                    $('#yes-harian').show();
+                    $('#not-harian').hide();
+                } else {
+                    $('#yes-harian').hide();
+                    $('#not-harian').show();
+                }
+
+            } else {
+                dataSet = {
+                    id: null,
+                    name: null,
+                    dosen_id: null,
+                    desc: null,
+                    file: null,
+                    user_id: null,
+                    mahasiswa_id: [],
+                    is_harian: false,
+                    start_date: null,
+                    end_date: null,
+                    range_date: null,
+                }
             }
 
             $(document).ready(function() {
@@ -131,45 +159,6 @@
                     time_24hr: true,
                 });
 
-                // const end = flatpickr("#end_date", {
-                //     enableTime: true,
-                //     dateFormat: "Y-m-d H:i",
-                //     minDate: "today",
-                //     time_24hr: true,
-                // });
-
-                // const start = flatpickr("#start_date", {
-                //     enableTime: true,
-                //     dateFormat: "Y-m-d H:i",
-                //     minDate: "today",
-                //     time_24hr: true,
-                //     onChange: (selectedDates) => {
-                //         if (selectedDates.length > 0) {
-                //             // Atur minimal tanggal jam di end picker
-                //             end.set("minDate", selectedDates[0]);
-                //             // (Opsional) Jika current end < new start, bersihkan nilai end
-                //             if (end.selectedDates.length > 0 && end.selectedDates[0] <
-                //                 selectedDates[0]) {
-                //                 end.clear();
-                //             }
-                //         }
-                //     }
-                // });
-
-
-                $(document).on('click', '.edit', function() {
-                    resetDataSet();
-                    $('#btn-tambah').hide();
-                    $('#btn-edit').show();
-                    const item = $(this).closest('.data-item');
-                    const index = parseInt(item.data('index'));
-                    $('#sidebar-form').addClass('show');
-                    $('#name').val(data[index].name).trigger('change');
-                    $('#npm').val(data[index].npm).trigger('change');
-                    $('#jurusan_id').val(data[index].jurusan_id).trigger('change');
-                    $('#status').prop('checked', data[index].status == 1).trigger('change');
-                });
-
                 $('input[id], select[id], textarea[id], checkbox[id], file[id]').on('input change', function() {
                     const key = $(this).attr('id');
                     const type = $(this).attr('type');
@@ -183,15 +172,10 @@
                     }
                 });
 
+                $('.select2').trigger('change');
 
                 $('#is_harian').change(function(e) {
                     e.preventDefault();
-                    $('#start_date').val('');
-                    $('#end_date').val('');
-                    $('#range_date').val('');
-                    dataSet.start_date = null
-                    dataSet.end_date = null
-                    dataSet.range_date = null
 
                     let isHarian = $(this).prop('checked')
                     if (isHarian) {
@@ -217,15 +201,15 @@
                             formData.append('mahasiswa_id[]', id);
                         });
                     }
-
                     $.ajax({
                         type: "POST",
-                        url: "{{ route('proposal.store') }}",
+                        url: edit ? '{{ route('proposal.update') }}' :
+                            '{{ route('proposal.store') }}',
                         data: formData,
                         processData: false,
                         contentType: false,
                         success: function(response) {
-
+                            window.location.href = '{{ route('proposal.index') }}';
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
@@ -240,11 +224,7 @@
                         }
                     });
                 });
-
-                // $('#btn-edit').click(function(e) {
-                //     e.preventDefault();
-                //     submitForm($(this), 'update')
-                // });
+                
             });
         })()
     </script>

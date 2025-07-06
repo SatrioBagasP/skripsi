@@ -9,6 +9,7 @@ class CrudController extends Controller
 {
     protected $field;
     protected $model;
+    protected $data;
     protected $id;
     protected $answer;
     protected $user;
@@ -17,7 +18,7 @@ class CrudController extends Controller
     protected $content;
 
 
-    function __construct($model, ?int $id = null, ?string $field = null, $answer = null, $user = null, $description = null, $dataField = [], $content = 'default')
+    function __construct($model, $data = null, ?int $id = null, ?string $field = null, $answer = null, $user = null, $description = null, $dataField = [], $content = 'default')
     {
         $this->model = new $model;
         $this->id = $id;
@@ -27,6 +28,7 @@ class CrudController extends Controller
         $this->description = $description;
         $this->dataField  = $dataField;
         $this->content = $content;
+        $this->data = $data;
     }
 
 
@@ -53,10 +55,15 @@ class CrudController extends Controller
 
     public function updateWithReturnData()
     {
-        $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-        if (!$data) {
-            throw new \Exception('Data tidak ada');
+        if ($this->data == null) {
+            $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+            if (!$data) {
+                throw new \Exception('Data tidak ada');
+            }
+        } else {
+            $data = $this->data;
         }
+
         $old = $data->getOriginal();
         $data->fill($this->dataField);
 
@@ -77,9 +84,13 @@ class CrudController extends Controller
 
     public function updateWithReturnJson()
     {
-        $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-        if (!$data) {
-            throw new \Exception('Data tidak ada');
+        if ($this->data == null) {
+            $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+            if (!$data) {
+                throw new \Exception('Data tidak ada');
+            }
+        } else {
+            $data = $this->data;
         }
         $old = $data->getOriginal();
         $data->fill($this->dataField);
@@ -99,6 +110,46 @@ class CrudController extends Controller
         return response()->json([
             'status' => 200,
             'message' => 'Data Berhasil Dirubah',
+        ], 200);
+    }
+
+    public function deleteWithReturnData()
+    {
+        if ($this->data == null) {
+            $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+            if (!$data) {
+                throw new \Exception('Data tidak ada');
+            }
+        } else {
+            $data = $this->data;
+        }
+        $old = $data->getOriginal();
+        $data->delete();
+        $this->setLog($this->user, $data, $this->description, [
+            'old' => $old
+        ], $this->content);
+        return $old;
+    }
+
+    public function deleteWithReturnJson()
+    {
+        if ($this->data == null) {
+            $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
+            if (!$data) {
+                throw new \Exception('Data tidak ada');
+            }
+        } else {
+            $data = $this->data;
+        }
+        $old = $data->getOriginal();
+        $data->delete();
+        $this->setLog($this->user, $data, $this->description, [
+            'old' => $old
+        ], $this->content);
+
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Berhasil Dihapus!',
         ], 200);
     }
 }

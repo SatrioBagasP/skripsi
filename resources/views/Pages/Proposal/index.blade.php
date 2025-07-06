@@ -51,7 +51,7 @@
                             <td class='align-middle text-center text-sm'> ${item.status} </td>
                             <td class='align-middle text-center text-sm'> 
                                 ${item.edit == true ? ` <a href="#" class='edit'><i class="fa fa-pencil me-1"></i></a>` : ''}
-                                ${item.delete == true ? `<a href="#"><i class="fa fa-trash me-1"></i></a>` : ''}
+                                ${item.delete == true ? `<a href="#" class='delete'><i class="fa fa-trash me-1"></i></a>` : ''}
                             </td>
                         </tr>
                     `);
@@ -108,7 +108,9 @@
             // END BUNDLE
 
             $(document).ready(function() {
+                const editUrlTemplate = @json(route('proposal.edit', ['id' => ':id']));
                 const tambahProposalUrl = "{{ route('proposal.create') }}";
+
                 $('#btn-tambah-proposal').click(function(e) {
                     e.preventDefault();
                     window.location.href = tambahProposalUrl;
@@ -117,7 +119,39 @@
                 $(document).on('click', '.edit', function() {
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-                    console.log(data[index]);
+                    if (data[index].edit == true) {
+                        let editUrl = editUrlTemplate.replace(':id', data[index].id);
+                        window.location.href = editUrl;
+                    }
+                });
+
+                $(document).on('click', '.delete', function() {
+                    const item = $(this).closest('.data-item');
+                    const index = parseInt(item.data('index'));
+                    if (data[index].delete == true) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('proposal.delete') }}",
+                            data: {
+                                id: data[index].id,
+                            },
+                            success: function(response) {
+                                flasher.success(response.message);
+                                getData();
+                            },
+                            error: function(xhr, status, error) {
+                                var err = xhr.responseJSON.errors;
+                                $('.invalid-feedback').text('').hide();
+                                $('.form-control').removeClass('is-invalid');
+                                $.each(err, function(key, value) {
+                                    $('#' + key + 'Error').text(value).show();
+                                    $('#' + key).addClass('is-invalid');
+                                });
+                                flasher.error(xhr.responseJSON.message);
+                                // button.attr('disabled', false);
+                            }
+                        });
+                    }
                 });
             });
         })()
