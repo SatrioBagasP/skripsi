@@ -29,7 +29,10 @@ class UnitKemahasiswaanController extends Controller
         ]);
 
         try {
-            $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
+            $imagePath = '';
+            if ($request->file('image')) {
+                $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
+            }
 
             $dataField = [
                 'name' => $request->name,
@@ -38,22 +41,19 @@ class UnitKemahasiswaanController extends Controller
                 'image' => $imagePath,
                 'status' => $request->boolean('status'),
             ];
+            DB::beginTransaction();
 
-            return DB::transaction(function () use ($dataField) {
-                $Crud = new CrudController(UnitKemahasiswaan::class, dataField: $dataField, description: 'Menambah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
-                return $Crud->insertWithReturnJson();
-            });
+            $Crud = new CrudController(UnitKemahasiswaan::class, dataField: $dataField, description: 'Menambah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
+            $action =  $Crud->insertWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            Storage::delete($imagePath);
-
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            $this->storageDelete($imagePath);
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -69,34 +69,35 @@ class UnitKemahasiswaanController extends Controller
         try {
             $imagePath = null;
             $imageOld = UnitKemahasiswaan::select('image')->where('id', decrypt($request->id))->first();
-    
+
             $dataField = [
                 'name' => $request->name,
                 'no_hp' => $request->no_hp,
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
-            
-            if ($request->image) {
+
+            if ($request->file('image')) {
                 $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
                 $dataField['image'] = $imagePath;
             }
+            DB::beginTransaction();
 
-            return DB::transaction(function () use ($dataField, $request, $imageOld) {
-                $Crud = new CrudController(UnitKemahasiswaan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
-                Storage::delete($imageOld->image);
-                return $Crud->updateWithReturnJson();
-            });
-        } catch (\Throwable $e) {
-            Storage::delete($imagePath);
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
+            $Crud = new CrudController(UnitKemahasiswaan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
+            $action = $Crud->updateWithReturnJson();
+
+            if ($request->file('image')) {
+                $this->storageDelete($imageOld->image);
             }
+
+            DB::commit();
+            return $action;
+        } catch (\Throwable $e) {
+            $this->storageDelete($imagePath);
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -118,7 +119,7 @@ class UnitKemahasiswaanController extends Controller
                 'name' => $item->name,
                 'no_hp' => $item->no_hp,
                 'jurusan' => $item->jurusan->name ?? '-',
-                'image' => Storage::temporaryUrl($item->image, now()->addMinutes(5)),
+                'image' => $item->image ? Storage::temporaryUrl($item->image, now()->addMinutes(5)) : null,
                 'jurusan_id' => $item->jurusan_id,
                 'status' => $item->status,
             ];

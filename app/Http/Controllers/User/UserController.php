@@ -30,36 +30,33 @@ class UserController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                list($id, $type) = explode('|', $request->user_id,);
-                $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
+            DB::beginTransaction();
+            list($id, $type) = explode('|', $request->user_id,);
+            $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
 
-                $dataField = [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'userable_id' => $id,
-                    'userable_type' => $type,
-                    'password' => Hash::make($request->password),
-                    'status' => $request->boolean('status'),
-                    'role_id' => $request->role_id,
-                ];
-                $model = new $type;
-                $userAble = $model->where('id', $id)->lockForUpdate()->first();
-                if ($userAble->status == 0) {
-                    throw new \Exception('User Tidak Aktif');
-                }
-                $Crud = new CrudController(User::class, dataField: $dataField, description: 'Menambah User', content: 'User');
-                return $Crud->insertWithReturnJson();
-            });
-        } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
+            $dataField = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'userable_id' => $id,
+                'userable_type' => $type,
+                'password' => Hash::make($request->password),
+                'status' => $request->boolean('status'),
+                'role_id' => $request->role_id,
+            ];
+            $model = new $type;
+            $userAble = $model->where('id', $id)->lockForUpdate()->first();
+            if ($userAble->status == 0) {
+                throw new \Exception('User Tidak Aktif');
             }
+            $Crud = new CrudController(User::class, dataField: $dataField, description: 'Menambah User', content: 'User');
+            $action = $Crud->insertWithReturnJson();
+            DB::commit();
+            return $action;
+        } catch (\Throwable $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -74,32 +71,31 @@ class UserController extends Controller
         ]);
 
         try {
-            return DB::transaction(function () use ($request) {
-                list($id, $type) = explode('|', $request->user_id,);
-                $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
+            DB::beginTransaction();
 
-                $dataField = [
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'userable_id' => $id,
-                    'userable_type' => $type,
-                    'password' => Hash::make($request->password),
-                    'status' => $request->boolean('status'),
-                    'role_id' => $request->role_id,
-                ];
+            list($id, $type) = explode('|', $request->user_id,);
+            $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
 
-                $Crud = new CrudController(User::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah User', content: 'User');
-                return $Crud->updateWithReturnJson();
-            });
+            $dataField = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'userable_id' => $id,
+                'userable_type' => $type,
+                'password' => Hash::make($request->password),
+                'status' => $request->boolean('status'),
+                'role_id' => $request->role_id,
+            ];
+
+            $Crud = new CrudController(User::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah User', content: 'User');
+            $action = $Crud->updateWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }

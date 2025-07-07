@@ -28,20 +28,18 @@ class JurusanController extends Controller
                 'kode' => $request->kode,
                 'status' => $request->boolean('status'),
             ];
+            DB::beginTransaction();
 
-            return DB::transaction(function () use ($dataField) {
-                $Crud = new CrudController(Jurusan::class, dataField: $dataField, description: 'Menambah Jurusan', content: 'Jurusan');
-                return $Crud->insertWithReturnJson();
-            });
+            $Crud = new CrudController(Jurusan::class, dataField: $dataField, description: 'Menambah Jurusan', content: 'Jurusan');
+            $action = $Crud->insertWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -60,19 +58,18 @@ class JurusanController extends Controller
                 'status' => $request->boolean('status'),
             ];
 
-            return DB::transaction(function () use ($dataField, $request) {
-                $Crud = new CrudController(Jurusan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Jurusan', content: 'Jurusan');
-                return $Crud->updateWithReturnJson();
-            });
+            DB::beginTransaction();
+
+            $Crud = new CrudController(Jurusan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Jurusan', content: 'Jurusan');
+            $action = $Crud->updateWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -87,7 +84,7 @@ class JurusanController extends Controller
             })
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);
-        
+
         // dd($data);
 
         $dataFormated = $data->getCollection()->transform(function ($item) {

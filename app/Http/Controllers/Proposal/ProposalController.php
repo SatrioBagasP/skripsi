@@ -272,6 +272,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
+            $admin = Gate::allows('admin');
             $filePath = '';
             $data = Proposal::with(['mahasiswa'])->where('id', decrypt($request->id))
                 ->lockForUpdate()
@@ -283,12 +284,6 @@ class ProposalController extends Controller
                 throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
             }
 
-            $oldPath = $data->file;
-            if ($request->file('file')) {
-                $filePath = $this->storageStore($request->file('file'), 'proposal');
-            }
-
-            $admin = Gate::allows('admin');
             if ($admin) {
                 $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
             } else {
@@ -319,12 +314,17 @@ class ProposalController extends Controller
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
                 'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
-                'file' => $request->file('file') ? $filePath : $oldPath,
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ];
+            
+            $oldPath = $data->file;
+            if ($request->file('file')) {
+                $filePath = $this->storageStore($request->file('file'), 'proposal');
+                $dataField['file'] = $filePath;
+            }
 
             $mahasiswaDefault = $data->mahasiswa->pluck('id');
             $mahasiswaInsert = array_diff($request->mahasiswa_id, $mahasiswaDefault->toArray()); // ini yang insert

@@ -50,7 +50,7 @@
                             <td class='align-middle text-center text-sm'>${i}</td>
                             <td> ${item.name} </td>
                             <td> ${item.jurusan} </td>
-                            <td class='align-middle text-center text-sm'> <img class='rounded mx-auto d-block' src='${item.image}' alt='icon' width='62'> </td>
+                            <td class='align-middle text-center text-sm'> <img class='rounded mx-auto d-block' src='${item.image}' alt='Image' width='62'> </td>
                             <td class='align-middle text-center text-sm'>
                                 ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}    
                             </td>
@@ -199,7 +199,6 @@
                         status: false,
                     };
                     $('.select2').val('').trigger('change');
-                    $('#image').val('').trigger('change');
                     $('#imagePreview').attr('src', '').addClass('d-none');
                     $('#status').prop('checked', dataSet.status);
                     $('.invalid-feedback').text('').hide();

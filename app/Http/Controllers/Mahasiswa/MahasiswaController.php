@@ -31,20 +31,18 @@ class MahasiswaController extends Controller
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
+            DB::beginTransaction();
 
-            return DB::transaction(function () use ($dataField) {
-                $Crud = new CrudController(Mahasiswa::class, dataField: $dataField, description: 'Menambah Mahasiswa', content: 'Mahasiswa');
-                return $Crud->insertWithReturnJson();
-            });
+            $Crud = new CrudController(Mahasiswa::class, dataField: $dataField, description: 'Menambah Mahasiswa', content: 'Mahasiswa');
+            $action = $Crud->insertWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -64,20 +62,18 @@ class MahasiswaController extends Controller
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
+            DB::beginTransaction();
 
-            return DB::transaction(function () use ($dataField, $request) {
-                $Crud = new CrudController(Mahasiswa::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Mahasiswa', content: 'Mahasiswa');
-                return $Crud->updateWithReturnJson();
-            });
+            $Crud = new CrudController(Mahasiswa::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Mahasiswa', content: 'Mahasiswa');
+            $action = $Crud->updateWithReturnJson();
+
+            DB::commit();
+            return $action;
         } catch (\Throwable $e) {
-            if (app()->environment('local')) {
-                $message = $e->getMessage() . ' Line: ' . $e->getLine() . ' on ' . $e->getFile();
-            } else {
-                $message = $e->getMessage();
-            }
+            DB::rollBack();
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
