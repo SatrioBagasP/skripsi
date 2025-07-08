@@ -24,5 +24,13 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('admin', function (User $user) {
             return $user->role_id == 1;
         });
+
+        Gate::define('unit-kemahasiswaan', function (User $user) {
+            return $user->role_id == 2;
+        });
+
+        Gate::define('dosen', function (User $user) {
+            return $user->role_id != 2; // semua dosen selain unit kemahasiswaan
+        });
     }
 }

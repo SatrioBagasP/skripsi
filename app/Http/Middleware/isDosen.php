@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class isUnitMahasiswa
+class isDosen
 {
     /**
      * Handle an incoming request.
@@ -18,7 +18,7 @@ class isUnitMahasiswa
     {
         $role_id = Auth::user()->role_id;
 
-        if ($role_id == 2 || $role_id == 1) {
+        if ($role_id >= 3 || $role_id == 1) {
             return $next($request);
         } else {
             if ($request->ajax()) {

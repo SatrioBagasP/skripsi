@@ -18,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(EnsureTokenIsValid::class);
         $middleware->alias([
             'isAdmin' => App\Http\Middleware\isAdmin::class,
+            'isUnitMahasiswa' => App\Http\Middleware\isUnitMahasiswa::class,
+            'isDosen' => App\Http\Middleware\isDosen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
