@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/store', 'store')->name('store');
         Route::post('/update', 'update')->name('update');
         Route::post('/delete', 'delete')->name('delete');
+        Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
         Route::get('/get-data', 'getData')->name('getData');
     });
 });

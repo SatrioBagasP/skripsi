@@ -49,14 +49,14 @@ trait ProposalRequestValidator
     }
 
     // membalidasi dosen yang dipilih
-    public function validateDosen($request)
+    public function validateDosen($id)
     {
-        $dosenEligible = Dosen::where('id', $request->dosen_id)
+        $dosenEligible = Dosen::where('id', $id)
             ->lockForUpdate()
             ->first();
 
         if ($dosenEligible->status == false) {
-            throw new \Exception('Dosen yang anda pilih sudah tidak aktif, silahkan refresh halamanan ini');
+            throw new \Exception('Dosen yang anda pilih sudah tidak aktif! Silahkan pilih dosen yang lain');
         }
 
         return $dosenEligible;
@@ -126,6 +126,21 @@ trait ProposalRequestValidator
             throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
         } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
             throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
+        }
+
+        return $data;
+    }
+
+    public function validatePengajuanProposalStatus($request)
+    {
+        $data = Proposal::where('id', decrypt($request->id))
+            ->lockForUpdate()
+            ->first();
+
+        if (!$data) {
+            throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini');
+        } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
+            throw new \Exception('Tidak bisa mengajukan data proposal karena sudah proposal ini sudah diajukan');
         }
 
         return $data;

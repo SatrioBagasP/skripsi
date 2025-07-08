@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Dosen;
 use App\Models\Proposal;
+use Mockery\Matcher\Not;
 use Illuminate\Http\Request;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +18,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Helper\CrudController;
 use App\Traits\ProposalRequestValidator;
+use App\Http\Controllers\Helper\CrudController;
+use App\Http\Controllers\Notifikasi\NotifikasiController;
 
 class ProposalController extends Controller
 {
@@ -92,7 +94,7 @@ class ProposalController extends Controller
             $proposal = $this->validateProposal($kodeJurusan, $romawi, $tahun);
 
             DB::beginTransaction();
-            $dosenEligible = $this->validateDosen($request);
+            $dosenEligible = $this->validateDosen($request->dosen_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
             $filePath = $this->storageStore($request->file('file'), 'proposal');
@@ -240,7 +242,7 @@ class ProposalController extends Controller
             $data = $this->validateProposalStatus($request);
 
             $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
-            $dosenEligible = $this->validateDosen($request);
+            $dosenEligible = $this->validateDosen($request->dosen_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
             $dataField = [
@@ -315,6 +317,43 @@ class ProposalController extends Controller
 
             DB::commit();
             return $action;
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function pengajuan(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $this->validatePengajuanProposalStatus($request);
+            $dosen = $this->validateDosen($data->dosen_id);
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($dosen, 'Tolong ACC');
+
+            $notifGagal = false;
+            $alasanNotif = '';
+            if ($response['status'] == false) {
+                $notifGagal = true;
+                $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
+            }
+
+            $data->status = 'Pending Dosen';
+            $data->save();
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Pengajuan Berhasil Diajukan Ke Dosen Penanggung Jawab' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan' . $alasanNotif . '. Silakan hubungi dosen secara langsung atau minta admin memperbarui nomor dosen.' : ''),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             $message = $this->getErrorMessage($e);
