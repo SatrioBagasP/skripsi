@@ -29,7 +29,8 @@ class ProposalController extends Controller
     public function index()
     {
         $head = ['No Proposal', 'Nama', 'Dosen'];
-        if (Auth::user()->role_id == 1) {
+        $admin = Gate::allows('admin');
+        if ($admin) {
             $head[] = 'Organisasi';
             $head[] = 'Jurusan';
         }
@@ -389,8 +390,8 @@ class ProposalController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'no_proposal' => $item->no_proposal,
-                'organisasi' => $item->user->userable->name,
-                'jurusan' => $item->user->userable->jurusan->name,
+                'organisasi' => $admin == true ? $item->user->userable->name : '',
+                'jurusan' => $admin == true ? $item->user->userable->jurusan->name : '',
                 'status' => $item->status,
                 'admin' => $admin,
                 'dosen' => $item->dosen->name,
