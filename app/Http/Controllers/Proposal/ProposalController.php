@@ -18,9 +18,12 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Helper\CrudController;
+use App\Traits\ProposalRequestValidator;
 
 class ProposalController extends Controller
 {
+    use ProposalRequestValidator;
+
     public function index()
     {
         $head = ['No Proposal', 'Nama', 'Dosen'];
@@ -76,79 +79,27 @@ class ProposalController extends Controller
             'file.max' => 'Ukuran file maksimal 2MB.',
             'file.mimes' => 'File harus berupa PDF.',
         ]);
-
+        $proposal = null;
+        $filePath = '';
         try {
-            $filePath = '';
-            $filePath = $this->storageStore($request->file('file'), 'proposal');
-
             $admin = Gate::allows('admin');
-            if ($admin) {
-                $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
-            } else {
-                $unitKemahasiswaan = Auth::user()->userable;
-                if (!($unitKemahasiswaan instanceof UnitKemahasiswaan)) {
-                    throw new \Exception('Organisasi yang dipilih bukan dari unit kemahasiswaan');
-                }
-            }
-            $kodeJurusan = $unitKemahasiswaan->jurusan->kode;
+            $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
+            $kodeJurusan = $unitKemahasiswaanEligible->jurusan->kode;
             $romawi = $this->getRomawi(Carbon::now()->format('m'));
             $tahun = Carbon::now()->format('Y');
 
+            // buat temp proposal
+            $proposal = $this->validateProposal($kodeJurusan, $romawi, $tahun);
+
             DB::beginTransaction();
+            $dosenEligible = $this->validateDosen($request);
+            [$startDate, $endDate] = $this->validateDate($request);
 
-            $dosenEligible = Dosen::where('id', $request->dosen_id)
-                ->lockForUpdate()
-                ->first();
-
-            if ($dosenEligible->status == false) {
-                throw new \Exception('Dosen yang anda pilih sudah tidak aktif, silahkan refresh halamanan ini');
-            }
-
-            $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
-                ->orderBy('no_proposal', 'desc')
-                ->first();
-
-            if ($lastRecord == null) {
-                $got = DB::selectOne("SELECT GET_LOCK('nomor_lock', 10)")->{"GET_LOCK('nomor_lock', 10)"};
-                if ($got !== 1) {
-                    throw new \Exception('Server sedang sibuk, Silahkan coba lagi!');
-                }
-            } else {
-                $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
-                    ->orderBy('no_proposal', 'desc')
-                    ->lockForUpdate()
-                    ->first();
-            }
-            $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
-                ->orderBy('no_proposal', 'desc')
-                ->lockForUpdate()
-                ->first();
-
-            $lastNumber = $lastRecord ? intval(explode('/', $lastRecord->no_proposal)[0]) : 0;
-            $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-            $noProposal = $newNumber  . '/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun;
-
-            if ($request->boolean('is_harian')) {
-                $range = strpos($request->range_date, 'to');
-                if ($range == false) {
-                    throw new \Exception('Start - End Date tidak boleh satu hari saja!, jika harian, silahkan click checkbox harian');
-                }
-                list($startDate, $endDate) = explode(' to ', $request->range_date);
-                $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
-                $endDate = Carbon::createFromFormat('Y-m-d', $endDate)->startOfDay();
-            } else {
-                $startDate = Carbon::createFromFormat('Y-m-d H:i', $request->start_date);
-                $endDate = Carbon::createFromFormat('Y-m-d H:i', $request->end_date);
-
-                if ($endDate->isBefore($startDate)) {
-                    throw new \Exception('Ups...! End date anda lebih duluan dari pada start date');
-                }
-            }
+            $filePath = $this->storageStore($request->file('file'), 'proposal');
 
             $dataField = [
                 'name' => $request->name,
                 'desc' => $request->desc,
-                'no_proposal' => $noProposal,
                 'dosen_id' => $request->dosen_id,
                 'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
                 'file' => $filePath,
@@ -158,12 +109,9 @@ class ProposalController extends Controller
                 'end_date' => $endDate,
             ];
 
-            $Crud = new CrudController(Proposal::class, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
-            $data = $Crud->insertWithReturnData();
-            // Lepas lock
-            if ($lastRecord == null) {
-                DB::select("SELECT RELEASE_LOCK('bukti_lock')");
-            }
+            $Crud = new CrudController(Proposal::class, data: $proposal, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
+            $data = $Crud->updateWithReturnData();
+
             // insert mahasiswanya pakai table aja biar tidak mengulang
             $rows = collect($request->mahasiswa_id)->map(function ($id) use ($data) {
                 return [
@@ -182,6 +130,9 @@ class ProposalController extends Controller
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
+            if ($proposal) {
+                $proposal->delete();
+            }
             $this->storageDelete($filePath);
             $message = $this->getErrorMessage($e);
             return response()->json([
@@ -238,6 +189,7 @@ class ProposalController extends Controller
             }
             return $item;
         });
+
         $range = null;
         if ($data->is_harian) {
             $range = Carbon::parse($data->start_date)->format('Y-m-d') . ' to ' . Carbon::parse($data->end_date)->format('Y-m-d');
@@ -285,48 +237,11 @@ class ProposalController extends Controller
 
             $admin = Gate::allows('admin');
             $filePath = '';
-            $data = Proposal::with(['mahasiswa'])->where('id', decrypt($request->id))
-                ->lockForUpdate()
-                ->first();
+            $data = $this->validateProposalStatus($request);
 
-            if (!$data) {
-                throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
-            } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
-                throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
-            }
-
-            if ($admin) {
-                $unitKemahasiswaan = UnitKemahasiswaan::where('id', $request->user_id)->first();
-            } else {
-                $unitKemahasiswaan = Auth::user()->userable;
-                if (!($unitKemahasiswaan instanceof UnitKemahasiswaan)) {
-                    throw new \Exception('Organisasi yang dipilih bukan dari unit kemahasiswaan');
-                }
-            }
-
-            $dosenEligible = Dosen::where('id', $request->dosen_id)
-                ->lockForUpdate()
-                ->first();
-
-            if ($dosenEligible->status == false) {
-                throw new \Exception('Dosen yang anda pilih sudah tidak aktif, silahkan refresh halamanan ini');
-            }
-
-            if ($request->boolean('is_harian')) {
-                $range = strpos($request->range_date, 'to');
-                if ($range == false) {
-                    throw new \Exception('Start - End Date tidak boleh satu hari saja!, jika harian, silahkan click checkbox harian');
-                }
-                list($startDate, $endDate) = explode(' to ', $request->range_date);
-                $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
-                $endDate = Carbon::createFromFormat('Y-m-d', $endDate)->startOfDay();
-            } else {
-                $startDate = Carbon::createFromFormat('Y-m-d H:i', $request->start_date);
-                $endDate = Carbon::createFromFormat('Y-m-d H:i', $request->end_date);
-                if ($endDate->isBefore($startDate)) {
-                    throw new \Exception('Ups...! End date anda lebih duluan dari pada start date');
-                }
-            }
+            $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
+            $dosenEligible = $this->validateDosen($request);
+            [$startDate, $endDate] = $this->validateDate($request);
 
             $dataField = [
                 'name' => $request->name,
@@ -364,7 +279,7 @@ class ProposalController extends Controller
             })->toArray();
             DB::table('proposal_has_mahasiswa')->insert($rows);
 
-            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
+            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Merubah Proposal', content: 'Proposal');
             $data = $Crud->updateWithReturnData();
 
             if ($request->file('file')) {
@@ -393,15 +308,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = Proposal::where('id', decrypt($request->id))
-                ->lockForUpdate()
-                ->first();
-
-            if (!$data) {
-                throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
-            } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
-                throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
-            }
+            $data = $this->validateProposalStatus($request);
 
             $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, description: 'Menghapus Proposal', content: 'Proposal');
             $action = $Crud->deleteWithReturnJson();

@@ -16,9 +16,10 @@ class CrudController extends Controller
     protected $description;
     protected $dataField;
     protected $content;
+    protected $withLog;
 
 
-    function __construct($model, $data = null, ?int $id = null, ?string $field = null, $answer = null, $user = null, $description = null, $dataField = [], $content = 'default')
+    function __construct($model, $data = null, ?int $id = null, ?string $field = null, $answer = null, $user = null, $description = null, $dataField = [], $content = 'default', $withLog = true)
     {
         $this->model = new $model;
         $this->id = $id;
@@ -29,24 +30,31 @@ class CrudController extends Controller
         $this->dataField  = $dataField;
         $this->content = $content;
         $this->data = $data;
+        $this->withLog = $withLog;
     }
 
 
     public function insertWithReturnData()
     {
         $data = $this->model->create($this->dataField);
-        $this->setLog($this->user, $data, $this->description, [
-            'changed' => $data,
-        ], $this->content);
+        if ($this->withLog) {
+            $this->setLog($this->user, $data, $this->description, [
+                'changed' => $data,
+            ], $this->content);
+        }
+
         return $data;
     }
 
     public function insertWithReturnJson()
     {
         $data = $this->model->create($this->dataField);
-        $this->setLog($this->user, $data, $this->description, [
-            'changed' => $data,
-        ], $this->content);
+        if ($this->withLog) {
+            $this->setLog($this->user, $data, $this->description, [
+                'changed' => $data,
+            ], $this->content);
+        }
+
         return response()->json([
             'status' => 200,
             'message' => 'Data Berhasil Ditambahkan',
@@ -69,15 +77,17 @@ class CrudController extends Controller
 
         if ($data->isDirty()) {
             $data->save();
-            $change = $data->getChanges();
-            $oldField = array_intersect_key(
-                $old,
-                array_flip(array_keys($change))
-            );
-            $this->setLog($this->user, $data, $this->description, [
-                'old' => $oldField,
-                'changed' => $change,
-            ], $this->content);
+            if ($this->withLog) {
+                $change = $data->getChanges();
+                $oldField = array_intersect_key(
+                    $old,
+                    array_flip(array_keys($change))
+                );
+                $this->setLog($this->user, $data, $this->description, [
+                    'old' => $oldField,
+                    'changed' => $change,
+                ], $this->content);
+            }
         }
         return $data;
     }
@@ -97,15 +107,17 @@ class CrudController extends Controller
 
         if ($data->isDirty()) {
             $data->save();
-            $change = $data->getChanges();
-            $oldField = array_intersect_key(
-                $old,
-                array_flip(array_keys($change))
-            );
-            $this->setLog($this->user, $data, $this->description, [
-                'old' => $oldField,
-                'changed' => $change,
-            ], $this->content);
+            if ($this->withLog) {
+                $change = $data->getChanges();
+                $oldField = array_intersect_key(
+                    $old,
+                    array_flip(array_keys($change))
+                );
+                $this->setLog($this->user, $data, $this->description, [
+                    'old' => $oldField,
+                    'changed' => $change,
+                ], $this->content);
+            }
         }
         return response()->json([
             'status' => 200,
@@ -125,9 +137,12 @@ class CrudController extends Controller
         }
         $old = $data->getOriginal();
         $data->delete();
-        $this->setLog($this->user, $data, $this->description, [
-            'old' => $old
-        ], $this->content);
+        if ($this->withLog) {
+            $this->setLog($this->user, $data, $this->description, [
+                'old' => $old
+            ], $this->content);
+        }
+
         return $old;
     }
 
@@ -143,9 +158,12 @@ class CrudController extends Controller
         }
         $old = $data->getOriginal();
         $data->delete();
-        $this->setLog($this->user, $data, $this->description, [
-            'old' => $old
-        ], $this->content);
+        if ($this->withLog) {
+            $this->setLog($this->user, $data, $this->description, [
+                'old' => $old
+            ], $this->content);
+        }
+
 
         return response()->json([
             'status' => 200,
