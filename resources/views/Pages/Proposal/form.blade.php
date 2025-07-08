@@ -19,14 +19,18 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <label>Dosen Penanggung Jawab</label>
-                <div class="mb-3">
-                    @include('Component.select', [
-                        'name' => 'dosen_id',
-                        'id' => 'dosen_id',
-                        'data' => $dosenOption,
-                    ])
+                <label>File Proposal</label>
+                @if (isset($data))
+                    <small>
+                        (<a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline">view file</a>)
+                    </small>
+                @endif
+                <div class="mb-2">
+                    <input type="file" class="form-control" name="file" id="file" accept="application/pdf">
+                    <small>pdf 2mb</small>
+                    <div class="invalid-feedback" id="fileError"></div>
                 </div>
+
             </div>
             <div class="col-md-6">
                 <label>Deskripsi</label>
@@ -36,23 +40,20 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <label>File Proposal</label>
-                @if (isset($data))
-                    <small>
-                        (<a href="{{ $data['file_url'] }}" target="_blank">view file</a>)
-                    </small>
-                @endif
-                <div class="mb-2">
-                    <input type="file" class="form-control" name="file" id="file" accept="application/pdf">
-                    <small>pdf 2mb</small>
-                    <div class="invalid-feedback" id="fileError"></div>
-                </div>
                 <label>Organisasi</label>
                 <div class="mb-2">
                     @include('Component.select', [
                         'name' => 'user_id',
                         'id' => 'user_id',
                         'data' => $organisasiOption,
+                    ])
+                </div>
+                <label>Dosen Penanggung Jawab</label>
+                <div class="mb-3">
+                    @include('Component.select', [
+                        'name' => 'dosen_id',
+                        'id' => 'dosen_id',
+                        'data' => $dosenOption,
                     ])
                 </div>
                 <label>Mahasiswa</label>
@@ -99,7 +100,7 @@
                     @include('Component.button', [
                         'class' => 'fixed-plugin-button mt-2',
                         'id' => 'btn-submit',
-                        'label' => $edit == true ? 'Rubah Data' : 'Ajukan Proposal',
+                        'label' => $edit == true ? 'Rubah Data' : 'Tambah Data',
                     ])
                 </div>
             </div>

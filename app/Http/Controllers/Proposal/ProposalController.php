@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers\Proposal;
 
+use PDO;
 use Dom\Attr;
 use Carbon\Carbon;
 use App\Models\User;
+use App\Models\Dosen;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\ProposalHasMahasiswa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Helper\CrudController;
-use App\Models\ProposalHasMahasiswa;
-use PDO;
 
 class ProposalController extends Controller
 {
     public function index()
     {
-        $head = ['No Proposal', 'Nama'];
+        $head = ['No Proposal', 'Nama', 'Dosen'];
         if (Auth::user()->role_id == 1) {
             $head[] = 'Organisasi';
             $head[] = 'Jurusan';
@@ -36,8 +37,9 @@ class ProposalController extends Controller
     public function create()
     {
         $admin = Gate::allows('admin');
+        $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
-        $dosenOption = $this->getDosenOption();
+        $dosenOption = $this->getDosenOption($jurusan);
         $mahasiswaOption = $this->getMahasiswaOption();
         if (!$admin) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->id)->map(function ($item) {
@@ -93,6 +95,14 @@ class ProposalController extends Controller
             $tahun = Carbon::now()->format('Y');
 
             DB::beginTransaction();
+
+            $dosenEligible = Dosen::where('id', $request->dosen_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($dosenEligible->status == false) {
+                throw new \Exception('Dosen yang anda pilih sudah tidak aktif, silahkan refresh halamanan ini');
+            }
 
             $lastRecord = Proposal::where('no_proposal', 'LIKE', '%/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun)
                 ->orderBy('no_proposal', 'desc')
@@ -187,8 +197,9 @@ class ProposalController extends Controller
         $edit = true;
 
         $admin = Gate::allows('admin');
+        $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
-        $dosenOption = $this->getDosenOption();
+        $dosenOption = $this->getDosenOption($jurusan);
         $mahasiswaOption = $this->getMahasiswaOption();
         $listMahasiswa = ProposalHasMahasiswa::where('proposal_id', $data->id)->pluck('mahasiswa_id')->toArray();
 
@@ -293,6 +304,14 @@ class ProposalController extends Controller
                 }
             }
 
+            $dosenEligible = Dosen::where('id', $request->dosen_id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($dosenEligible->status == false) {
+                throw new \Exception('Dosen yang anda pilih sudah tidak aktif, silahkan refresh halamanan ini');
+            }
+
             if ($request->boolean('is_harian')) {
                 $range = strpos($request->range_date, 'to');
                 if ($range == false) {
@@ -319,7 +338,7 @@ class ProposalController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ];
-            
+
             $oldPath = $data->file;
             if ($request->file('file')) {
                 $filePath = $this->storageStore($request->file('file'), 'proposal');
@@ -404,7 +423,7 @@ class ProposalController extends Controller
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan'])->select('name', 'no_proposal', 'status', 'id', 'user_id')
+        $data = Proposal::with(['user.userable.jurusan', 'dosen'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id')
             ->when($admin == false, function ($query) {
                 $query->where('user_id', Auth::user()->id);
             })
@@ -428,7 +447,9 @@ class ProposalController extends Controller
                 'jurusan' => $item->user->userable->jurusan->name,
                 'status' => $item->status,
                 'admin' => $admin,
+                'dosen' => $item->dosen->name,
                 'edit' => in_array($item->status, ['draft', 'Draft']),
+                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'revisi']),
                 'delete' => in_array($item->status, ['Draft', 'draft', 'revisi']),
             ];
         });

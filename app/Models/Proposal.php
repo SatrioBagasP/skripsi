@@ -30,7 +30,7 @@ class Proposal extends Model
         return $this->belongsTo(User::class,'user_id','id');
     }
 
-    public function dosenPJ(){
+    public function dosen(){
         return $this->belongsTo(Dosen::class,'dosen_id','id');
     }
 

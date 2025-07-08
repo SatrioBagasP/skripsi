@@ -70,16 +70,21 @@ abstract class Controller
         return $data;
     }
 
-    function getDosenOption()
+    function getDosenOption($jurusan = null)
     {
         $data = [];
 
-        $data = Dosen::where('status', true)->get()->map(function ($item) {
-            return [
-                'value' => $item->id,
-                'label' => $item->name,
-            ];
-        });
+        $data = Dosen::where('status', true)
+            ->when($jurusan != null, function ($query) use ($jurusan) {
+                $query->where('jurusan_id', $jurusan);
+            })
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ];
+            });
 
         return $data;
     }
