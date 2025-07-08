@@ -8,6 +8,7 @@ use App\Http\Controllers\TestingTwilloController;
 use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
+use App\Http\Controllers\Proposal\ApprovalController;
 use App\Http\Controllers\Proposal\ProposalController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 
@@ -63,7 +64,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
     });
 
-    Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
+    Route::middleware(['isUnitMahasiswa'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/create', 'create')->name('create');
         Route::get('/edit/{id}', 'edit')->name('edit');
@@ -71,6 +72,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/update', 'update')->name('update');
         Route::post('/delete', 'delete')->name('delete');
         Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
+        Route::get('/get-data', 'getData')->name('getData');
+    });
+
+    Route::middleware(['isDosen'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/edit/{id}', 'edit')->name('edit');
         Route::get('/get-data', 'getData')->name('getData');
     });
 });
