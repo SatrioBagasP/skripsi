@@ -147,7 +147,7 @@ class ProposalController extends Controller
 
     public function edit(Request $request, $id)
     {
-        $data = Proposal::findOrFail(decrypt($id));
+        $data = $this->validateProposalEligible($request);
         $edit = true;
 
         $admin = Gate::allows('admin');
@@ -171,10 +171,6 @@ class ProposalController extends Controller
                 }
                 return $item;
             });
-        }
-
-        if (!in_array($data->status, ['Draft', 'Tolak'])) {
-            return abort(404);
         }
 
         // set dosen agar ke select
@@ -240,7 +236,7 @@ class ProposalController extends Controller
 
             $admin = Gate::allows('admin');
             $filePath = '';
-            $data = $this->validateProposalStatus($request);
+            $data = $this->validateProposalEligible($request);
 
             $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
             $dosenEligible = $this->validateDosen($request->dosen_id);
@@ -311,7 +307,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->validateProposalStatus($request);
+            $data = $this->validateProposalEligible($request);
 
             $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, description: 'Menghapus Proposal', content: 'Proposal');
             $action = $Crud->deleteWithReturnJson();
@@ -334,7 +330,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->validatePengajuanProposalStatus($request);
+            $data = $this->validateProposalEligible($request);
             $dosen = $this->validateDosen($data->dosen_id);
 
             $notifikasi = new NotifikasiController();
@@ -395,9 +391,9 @@ class ProposalController extends Controller
                 'status' => $item->status,
                 'admin' => $admin,
                 'dosen' => $item->dosen->name,
-                'edit' => in_array($item->status, ['draft', 'Draft']),
-                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'revisi']),
-                'delete' => in_array($item->status, ['Draft', 'draft', 'revisi']),
+                'edit' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Tolak']),
+                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Tolak']),
+                'delete' => in_array($item->status, ['Draft', 'draft', 'tolak', 'Tolak']),
             ];
         });
 

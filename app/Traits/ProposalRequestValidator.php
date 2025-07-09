@@ -117,30 +117,29 @@ trait ProposalRequestValidator
     }
 
     // validasi proposal status , untuk update dan delete
-    public function validateProposalStatus($request)
+    public function validateProposalEligible($request)
     {
         $data = Proposal::with(['mahasiswa'])->where('id', decrypt($request->id))
             ->lockForUpdate()
             ->first();
         if (!$data) {
-            throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
+            if ($request->ajax()) {
+                throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini atau kembali ke halaman proposal');
+            } else {
+                return abort(404);
+            }
         } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
-            throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
-        }
-
-        return $data;
-    }
-
-    public function validatePengajuanProposalStatus($request)
-    {
-        $data = Proposal::where('id', decrypt($request->id))
-            ->lockForUpdate()
-            ->first();
-
-        if (!$data) {
-            throw new \Exception('Data proposal tidak ada atau telah dihapus, silahkan refresh halaman ini');
-        } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
-            throw new \Exception('Tidak bisa mengajukan data proposal karena sudah proposal ini sudah diajukan');
+            if ($request->ajax()) {
+                throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
+            } else {
+                return abort(404);
+            }
+        } elseif ($data->user_id != Auth::user()->id) {
+            if ($request->ajax()) {
+                throw new \Exception('Anda tidak memiliki akses data proposal ini');
+            } else {
+                return abort(404);
+            }
         }
 
         return $data;
