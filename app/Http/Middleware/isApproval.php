@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class isDosen
+class isApproval
 {
     /**
      * Handle an incoming request.
@@ -18,7 +18,7 @@ class isDosen
     {
         $role_id = Auth::user()->role_id;
 
-        if ($role_id == 3 || $role_id == 1) {
+        if (in_array($role_id, [1, 3, 4, 5, 6, 7])) {
             return $next($request);
         } else {
             if ($request->ajax()) {

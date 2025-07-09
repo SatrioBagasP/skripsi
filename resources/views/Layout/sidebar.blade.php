@@ -200,7 +200,7 @@
                         </a>
                     </li>
                 @endcan
-                @can('dosen')
+                @can('approval')
                     <li class="nav-item">
                         <a class="nav-link  @if (Str::startsWith($currentRouteName, 'approval-proposal.')) active @endif "
                             href="{{ route('approval-proposal.index') }}">
