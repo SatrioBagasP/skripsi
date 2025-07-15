@@ -369,14 +369,7 @@ class ProposalController extends Controller
             $dosen = $this->validateDosen($data->dosen_id);
             $noHp = $dosen ? $dosen->no_hp : 0;
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC');
-
-            $notifGagal = false;
-            $alasanNotif = '';
-            if ($response['status'] == false) {
-                $notifGagal = true;
-                $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
-            }
+            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC', 'Dosen');
 
             $data->status = 'Pending Dosen';
             $data->save();
@@ -384,7 +377,7 @@ class ProposalController extends Controller
             DB::commit();
             return response()->json([
                 'status' => 200,
-                'message' => 'Pengajuan Berhasil Diajukan Ke Dosen Penanggung Jawab' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan' . $alasanNotif . '. Silakan hubungi dosen secara langsung atau minta admin memperbarui nomor dosen.' : ''),
+                'message' => $response,
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -426,7 +419,7 @@ class ProposalController extends Controller
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id','mahasiswa_id')
+        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
             ->when($admin == false, function ($query) {
                 $query->where('user_id', Auth::user()->id);
             })
@@ -444,13 +437,13 @@ class ProposalController extends Controller
         $dataFormated = $data->getCollection()->transform(function ($item) use ($admin) {
             return [
                 'id' => encrypt($item->id),
+                'status' => $item->status,
                 'name' => $item->name,
                 'ketua' => $item->ketua->name,
                 'npm_ketua' => $item->ketua->npm,
                 'no_proposal' => $item->no_proposal,
                 'organisasi' => $admin == true ? $item->user->userable->name : '',
-                'jurusan' => $admin == true ? $item->user->userable->jurusan->name : '',
-                'status' => $item->status,
+                'jurusan' => $admin == true ? ($item->user->userable->jurusan  ?  $item->user->userable->jurusan->name : $item->ketua->jurusan->name) : '',
                 'admin' => $admin,
                 'dosen' => $item->dosen->name,
                 'edit' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Tolak']),

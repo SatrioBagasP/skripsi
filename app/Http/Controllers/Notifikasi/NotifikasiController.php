@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 class NotifikasiController extends Controller
 {
-    public function sendMessage($noHp, $message)
+    public function sendMessage($noHp, $message, $target)
     {
         $curl = curl_init();
 
@@ -36,12 +36,19 @@ class NotifikasiController extends Controller
         curl_close($curl);
 
         if (isset($error_msg)) {
-            return json_decode($error_msg, true);
+            $response = json_decode($error_msg, true);
         }
-        return json_decode($response, true);
+        $response = json_decode($response, true);
+
+        $notifGagal = false;
+        $alasanNotif = '';
+        if ($response['status'] == false) {
+            $notifGagal = true;
+            $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
+        }
+
+        return 'Pengajuan Berhasil Diajukan Ke ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
     }
 
-    public function generateMessageForKaprodi(){
-        
-    }
+    public function generateMessageForKaprodi() {}
 }

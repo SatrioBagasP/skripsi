@@ -36,6 +36,10 @@ class ApprovalController extends Controller
     public function edit(Request $request, $id)
     {
         $data = $this->validateApprovalProposalEligible($request, true);
+        $valid = $this->showApprovalEligible($data);
+        if (!$valid) {
+            abort(404);
+        }
         $data = [
             'id' => encrypt($data->id),
             'ketua_id' => $data->mahasiswa_id,
@@ -65,54 +69,12 @@ class ApprovalController extends Controller
         }
         $dataField = [
             $field => $approve,
-            'status' => 'Pending Kaprodi',
+            'status' => $status,
         ];
-        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Dosen telah menyetujui proposal anda', content: 'Approval Proposal');
+        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
         $data = $Crud->updateWithReturnData();
 
         return $data;
-    }
-
-    public function rejectProposal(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-
-            $data = $this->validateApprovalProposalEligible($request);
-            $dataField = [
-                $request->field => false,
-                'status' => 'Tolak',
-                'alasan_tolak' => $request->reason,
-            ];
-            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Dosen telah menolak pengajuan proposal anda, silahkan revisi dan ajukan kembali!', content: 'Approval Proposal');
-            $data = $Crud->updateWithReturnData();
-
-            $user = $data->user->userable;
-
-            $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($user, 'Ditolak Wlee');
-
-            $notifGagal = false;
-            $alasanNotif = '';
-            if ($response['status'] == false) {
-                $notifGagal = true;
-                $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
-            }
-
-            DB::commit();
-            return response()->json([
-                'status' => 200,
-                'message' => 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan' . $alasanNotif . '. Silakan hubungi organisasi secara langsung atau minta admin memperbarui nomor organisasi.' : ''),
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            $message = $this->getErrorMessage($e);
-
-            return response()->json([
-                'status' => 400,
-                'message' => $message,
-            ], 400);
-        }
     }
 
     public function approvalDosen(Request $request)
@@ -139,11 +101,161 @@ class ApprovalController extends Controller
             $noHp = $kaprodi ? $kaprodi->no_hp : '0';
 
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Acc kaprodi');
-
-            dd($response);
+            $response = $notifikasi->sendMessage($noHp, 'Acc dong kaprodi', 'Kaprodi');
 
             DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function approvalKaprodi(Request $request)
+    {
+        $request->validate([
+            'reason' => [
+                Rule::requiredIf($request->boolean('approve') == false),
+            ],
+        ], [
+            'reason.required' => 'Alasan penolakan harus diisi.',
+        ]);
+
+        try {
+            $approve = $request->boolean('approve');
+            DB::beginTransaction();
+
+            $data =  $this->accProposal($request, $approve, 'is_acc_kaprodi', 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!');
+            $kepalaBagianMinatBakat = $this->getKepalaBagianMinatBakat();
+            $noHp = $kepalaBagianMinatBakat->isNotEmpty() ? $kepalaBagianMinatBakat->take(1)->no_hp : '0';
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($noHp, 'Acc dong Minat dan Bakat', 'Kepala Bagian Minat dan Bakat');
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function approvalMinatBakat(Request $request)
+    {
+        $request->validate([
+            'reason' => [
+                Rule::requiredIf($request->boolean('approve') == false),
+            ],
+        ], [
+            'reason.required' => 'Alasan penolakan harus diisi.',
+        ]);
+
+        try {
+            $approve = $request->boolean('approve');
+            DB::beginTransaction();
+
+            $data =  $this->accProposal($request, $approve, 'is_acc_minat_bakat', 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!');
+            $layananMahasiswa = $this->getLayananMahasiswa();
+            $noHp = $layananMahasiswa->isNotEmpty() ? $layananMahasiswa->take(1)->no_hp : '0';
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($noHp, 'Acc dong Layanan Mahasiswa', 'Layanan Mahasiswa');
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function approvalLayananMahasiswa(Request $request)
+    {
+        $request->validate([
+            'reason' => [
+                Rule::requiredIf($request->boolean('approve') == false),
+            ],
+        ], [
+            'reason.required' => 'Alasan penolakan harus diisi.',
+        ]);
+
+        try {
+            $approve = $request->boolean('approve');
+            DB::beginTransaction();
+
+            $data =  $this->accProposal($request, $approve, 'is_acc_layanan_mahasiswa', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
+            $wakilRektor = $this->getWakilRektor1();
+            $noHp = $wakilRektor->isNotEmpty() ? $wakilRektor->take(1)->no_hp : '0';
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($noHp, 'Acc dong wakil rektor', 'Wakil Rektor');
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function approvalWakilRektor(Request $request)
+    {
+        $request->validate([
+            'reason' => [
+                Rule::requiredIf($request->boolean('approve') == false),
+            ],
+        ], [
+            'reason.required' => 'Alasan penolakan harus diisi.',
+        ]);
+
+        try {
+            $approve = $request->boolean('approve');
+            DB::beginTransaction();
+
+            $data =  $this->accProposal($request, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
+            $mahasiswa = $data->ketua;
+            $noHp = $mahasiswa->no_hp;
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($noHp, 'Udah diterima nih , selamat ya', 'Ketua Pelaksana');
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             $message = $this->getErrorMessage($e);
@@ -159,10 +271,22 @@ class ApprovalController extends Controller
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
-            ->when($admin == false, function ($query) {
-                $query->where('dosen_id', Auth::user()->userable_id)
-                    ->where('status', '!=', 'Draft');
+        $dosen = Gate::allows('dosen');
+        $kaprodi = Gate::allows('kaprodi');
+        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])
+            ->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
+            ->where('status', '!=', 'Draft')
+            ->when($dosen == true, function ($query) {
+                $query->where('dosen_id', Auth::user()->userable_id);
+            })
+            ->when($kaprodi == true, function ($query) {
+                if ($query->jurusan == null) {
+                    $query->whereRelation('ketua', 'jurusan_id', Auth::user()->userable->jurusan_id)
+                        ->where('status', 'Pending Kaprodi');
+                } else {
+                    $query->whereRelation('user.userable', 'jurusan_id', Auth::user()->userable->jurusan_id)
+                        ->where('status', 'Pending Kaprodi');
+                }
             })
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where(function ($item) use ($request) {
@@ -183,7 +307,7 @@ class ApprovalController extends Controller
                 'npm_ketua' => $item->ketua->npm,
                 'no_proposal' => $item->no_proposal,
                 'organisasi' => $item->user->userable->name,
-                'jurusan' => $admin == true ? $item->user->userable->jurusan->name : '',
+                'jurusan' => $admin == true ? ($item->user->userable->jurusan  ?  $item->user->userable->jurusan->name : $item->ketua->jurusan->name) : '',
                 'status' => $item->status,
                 'admin' => $admin,
                 'dosen' => $admin == true ? $item->dosen->name : '',

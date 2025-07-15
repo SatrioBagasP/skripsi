@@ -80,6 +80,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/approval-dosen','approvalDosen')->name('approvalDosen');
+        Route::post('/approval-kaprodi','approvalKaprodi')->name('approvalKaprodi');
+        Route::post('/approval-minat-bakat','approvalMinatBakat')->name('approvalMinatBakat');
+        Route::post('/approval-layanan-mahasiswa','approvalLayananMahasiswa')->name('approvalLayananMahasiswa');
+        Route::post('/approval-wakil-rektor','approvalWakilRektor')->name('approvalWakilRektor');
         Route::get('/get-data', 'getData')->name('getData');
     });
 });

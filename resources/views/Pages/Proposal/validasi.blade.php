@@ -53,8 +53,8 @@
             <div class="col-md-8 mb-2">
                 <ul class="row list">
                     @foreach ($data['mahasiswa'] as $mhs)
-                        <li class="col-3 mb-2" style='margin-right: 10px' class='text-sm'> <span class='text-sm'> {{ $mhs->npm }} </span> | <span
-                                class='text-sm'>{{ $mhs->name }}</span>
+                        <li class="col-3 mb-2" style='margin-right: 10px' class='text-sm'> <span class='text-sm'>
+                                {{ $mhs->npm }} </span> | <span class='text-sm'>{{ $mhs->name }}</span>
                             @if ($mhs->id == $data['ketua_id'])
                                 <br>
                                 <span class='text-sm'>
@@ -94,7 +94,12 @@
                     </div>
                 @else
                     <div class="d-flex justify-content-end gap-2 mt-2 mb-2">
-                        -- Waiting For Approval --
+                        @if ($data['status'] == 'Accepted')
+                            -- No Action Needed --
+                        @else
+                            -- Waiting For Approval --
+                        @endif
+
                     </div>
                 @endif
             </div>
