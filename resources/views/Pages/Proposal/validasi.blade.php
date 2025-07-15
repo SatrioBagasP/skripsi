@@ -96,7 +96,7 @@
                     <div class="d-flex justify-content-end gap-2 mt-2 mb-2">
                         @if ($data['status'] == 'Accepted')
                             -- No Action Needed --
-                        @elseif($data['status'] == '')
+                        @elseif($data['status'] == 'Rejected')
                             -- Waiting For Revision --
                         @else
                             -- Waiting For Approval --

@@ -354,6 +354,9 @@ class ApprovalController extends Controller
         $admin = Gate::allows('admin');
         $dosen = Gate::allows('dosen');
         $kaprodi = Gate::allows('kaprodi');
+        $minatBakat = Gate::allows('minat-bakat');
+        $layananMahasiswa = Gate::allows('layanan-mahasiswa');
+        $wakilRektor = Gate::allows('wakil-rektor');
         $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])
             ->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
             ->where('status', '!=', 'Draft')
@@ -366,6 +369,15 @@ class ApprovalController extends Controller
                         ->orWhereRelation('ketua', 'jurusan_id', Auth::user()->userable->jurusan_id)
                         ->orWhereRelation('user.userable', 'jurusan_id', Auth::user()->userable->jurusan_id);
                 })->where('dosen_id', Auth::user()->userable_id);
+            })
+            ->when($minatBakat == true, function ($query) {
+                $query->where('is_acc_dosen', true);
+            })
+            ->when($layananMahasiswa == true, function ($query) {
+                $query->where('is_acc_minat_bakat', true);
+            })
+            ->when($wakilRektor == true, function ($query) {
+                $query->where('is_acc_layanan', true);
             })
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where(function ($item) use ($request) {

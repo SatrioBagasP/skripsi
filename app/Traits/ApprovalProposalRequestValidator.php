@@ -50,17 +50,17 @@ trait ApprovalProposalRequestValidator
         $dosenPj = $admin ? '' : $proposal->dosen_id == Auth::user()->userable_id;
         $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
         $kaprodiJurusan = $admin ? '' : Auth::user()->userable->jurusan_id == $jurusanId;
-        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft') && Gate::allows('approval') ) {
+        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && ($dosenPj || $admin)) {
             return false;
-        } elseif (($proposal->status == 'Pending Dosen' && Gate::allows('approval') && $dosenPj)) {
+        } elseif (($proposal->is_acc_dosen == false && Gate::allows('approval') && $dosenPj)) {
             return true;
-        } elseif (($proposal->status == 'Pending Kaprodi' && Gate::allows('kaprodi') && $kaprodiJurusan) || $admin) {
+        } elseif (($proposal->is_acc_kaprodi == false && Gate::allows('kaprodi') && $kaprodiJurusan) || $admin) {
             return true;
-        } elseif (($proposal->status == 'Pending Minat dan Bakat' && Gate::allows('minat-bakat') || $admin)) {
+        } elseif (($proposal->is_acc_minat_bakat == false && Gate::allows('minat-bakat') || $admin)) {
             return true;
-        } elseif (($proposal->status == 'Pending Layanan Mahasiswa' && Gate::allows('layanan-mahasiswa') || $admin)) {
+        } elseif (($proposal->is_acc_layanan == false && Gate::allows('layanan-mahasiswa') || $admin)) {
             return true;
-        } elseif (($proposal->status == 'Pending Wakil Rektor' && Gate::allows('wakil-rektor') || $admin)) {
+        } elseif (($proposal->is_acc_wakil_rektor == false && Gate::allows('wakil-rektor') || $admin)) {
             return true;
         } else {
             return false;
@@ -73,15 +73,17 @@ trait ApprovalProposalRequestValidator
         $dosenPj = $admin ? '' : $proposal->dosen_id == Auth::user()->userable_id;
         $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
         $kaprodiJurusan = $admin ? '' : Auth::user()->userable->jurusan_id == $jurusanId;
-        if (($proposal->status == 'Pending Dosen' && Gate::allows('dosen') && $dosenPj) || $admin) {
+        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && $dosenPj) {
             return true;
-        } elseif (($proposal->status == 'Pending Kaprodi' && Gate::allows('kaprodi') && $kaprodiJurusan) || $dosenPj || $admin) {
+        } elseif (($proposal->is_acc_dosen == false && Gate::allows('approval') && $dosenPj)) {
             return true;
-        } elseif (($proposal->status == 'Pending Minat dan Bakat' && Gate::allows('minat-bakat') || $dosenPj || $admin)) {
+        } elseif (($proposal->is_acc_kaprodi == false && Gate::allows('kaprodi') && $kaprodiJurusan) || $dosenPj || $admin) {
             return true;
-        } elseif (($proposal->status == 'Pending Layanan Mahasiswa' && Gate::allows('layanan-mahasiswa') || $dosenPj || $admin)) {
+        } elseif (($proposal->is_acc_minat_bakat == false && Gate::allows('minat-bakat') || $dosenPj || $admin)) {
             return true;
-        } elseif (($proposal->status == 'Pending Wakil Rektor' && Gate::allows('wakil-rektor') || $dosenPj || $admin)) {
+        } elseif (($proposal->is_acc_layanan == false && Gate::allows('layanan-mahasiswa') || $dosenPj || $admin)) {
+            return true;
+        } elseif (($proposal->is_acc_wakil_rektor == false && Gate::allows('wakil-rektor') || $dosenPj || $admin)) {
             return true;
         } else {
             return false;
