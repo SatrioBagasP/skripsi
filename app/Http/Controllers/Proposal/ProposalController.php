@@ -367,9 +367,9 @@ class ProposalController extends Controller
 
             $data = $this->validateProposalEligible($request);
             $dosen = $this->validateDosen($data->dosen_id);
-
+            $noHp = $dosen ? $dosen->no_hp : 0;
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($dosen, 'Tolong ACC');
+            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC');
 
             $notifGagal = false;
             $alasanNotif = '';

@@ -21,7 +21,7 @@ class ApprovalController extends Controller
     use ApprovalProposalRequestValidator;
     public function index()
     {
-        $head = ['No Proposal', 'Nama', 'Organisasi'];
+        $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Organisasi'];
         $admin = Gate::allows('admin');
         if ($admin) {
             $head[] = 'Dosen';
@@ -38,6 +38,7 @@ class ApprovalController extends Controller
         $data = $this->validateApprovalProposalEligible($request, true);
         $data = [
             'id' => encrypt($data->id),
+            'ketua_id' => $data->mahasiswa_id,
             'name' => $data->name,
             'no_proposal' => $data->no_proposal,
             'desc' => $data->desc,
@@ -59,7 +60,7 @@ class ApprovalController extends Controller
 
         $data = $this->validateApprovalProposalEligible($request);
         $valid = $this->approvalEligible($data);
-        if(!$valid){
+        if (!$valid) {
             throw new \Exception('Data tidak valid untuk disetujui atau ditolak, silahkan refersh halaman ini!');
         }
         $dataField = [
@@ -158,7 +159,7 @@ class ApprovalController extends Controller
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan', 'dosen'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id')
+        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
             ->when($admin == false, function ($query) {
                 $query->where('dosen_id', Auth::user()->userable_id)
                     ->where('status', '!=', 'Draft');
@@ -178,6 +179,8 @@ class ApprovalController extends Controller
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,
+                'ketua' => $item->ketua->name,
+                'npm_ketua' => $item->ketua->npm,
                 'no_proposal' => $item->no_proposal,
                 'organisasi' => $item->user->userable->name,
                 'jurusan' => $admin == true ? $item->user->userable->jurusan->name : '',

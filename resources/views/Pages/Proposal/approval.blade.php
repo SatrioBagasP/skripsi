@@ -35,10 +35,11 @@
                     $('#tableBody').append(`
                         <tr class="data-item" data-index="${index}">
                             <td class='align-middle text-center text-sm'>${i}</td>
-                            <td> ${item.no_proposal} </td>
-                            <td> ${item.name} </td>
-                            ${item.admin == true ? `<td>${item.dosen}</td>` : ''}
-                            ${item.admin == true ? `<td>${item.jurusan}</td>` : ''}
+                            <td class='text-sm'> ${item.no_proposal} </td>
+                            <td class='text-sm'> ${item.name} </td>
+                            <td class='align-middle text-center text-sm'> ${item.ketua} <br> <small >(${item.npm_ketua})<small> </td>
+                            ${item.admin == true ? `<td class='text-sm'>${item.dosen}</td>` : ''}
+                            ${item.admin == true ? `<td class='text-sm'>${item.jurusan}</td>` : ''}
                             <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
                             <td class='align-middle text-center text-sm'> ${item.status} </td>
                             <td class='align-middle text-center text-sm'>
@@ -71,6 +72,8 @@
                             data.push({
                                 id: item.id,
                                 name: item.name,
+                                ketua: item.ketua,
+                                npm_ketua: item.npm_ketua,
                                 no_proposal: item.no_proposal,
                                 organisasi: item.organisasi,
                                 dosen: item.dosen,
