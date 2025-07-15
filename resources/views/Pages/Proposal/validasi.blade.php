@@ -53,7 +53,7 @@
             <div class="col-md-8 mb-2">
                 <ul class="row list">
                     @foreach ($data['mahasiswa'] as $mhs)
-                        <li class="col-3 mb-2" class='text-sm'> <span class='text-sm'> {{ $mhs->npm }} </span> | <span
+                        <li class="col-3 mb-2" style='margin-right: 10px' class='text-sm'> <span class='text-sm'> {{ $mhs->npm }} </span> | <span
                                 class='text-sm'>{{ $mhs->name }}</span>
                             @if ($mhs->id == $data['ketua_id'])
                                 <br>

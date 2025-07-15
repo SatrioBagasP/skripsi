@@ -9,7 +9,8 @@ trait ApprovalProposalRequestValidator
 {
     public function validateApprovalProposalEligible($request, $show = false)
     {
-        $data = Proposal::where('id', decrypt($request->id))
+        $data = Proposal::with('mahasiswa')
+            ->where('id', decrypt($request->id))
             ->lockForUpdate()
             ->first();
 
