@@ -22,7 +22,8 @@
                 <label>File Proposal</label>
                 @if (isset($data))
                     <small>
-                        (<a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline">view file</a>)
+                        (<a href="{{ $data['file_url'] }}" target="_blank"
+                            class="text-primary text-decoration-underline">view file</a>)
                     </small>
                 @endif
                 <div class="mb-2">
@@ -48,16 +49,27 @@
                         'data' => $organisasiOption,
                     ])
                 </div>
+                <label>Ketua Pelaksana</label>
+                <div class="mb-2">
+                    @include('Component.select', [
+                        'name' => 'ketua_id',
+                        'id' => 'ketua_id',
+                        'data' => $ketuaOption,
+                    ])
+                </div>
                 <label>Dosen Penanggung Jawab</label>
                 <div class="mb-3">
                     @include('Component.select', [
                         'name' => 'dosen_id',
                         'id' => 'dosen_id',
                         'data' => $dosenOption,
+                        'placeholder' => empty($dosenOption)
+                            ? '-- Pilih Ketua Pelaksana Terlebih Dahulu --'
+                            : null,
                     ])
                 </div>
                 <label>Mahasiswa</label>
-                <div class="mb-2">
+                <div class="">
                     @include('Component.select', [
                         'name' => 'mahasiswa_id',
                         'id' => 'mahasiswa_id',
@@ -65,6 +77,7 @@
                         'multiple' => true,
                     ])
                 </div>
+                <small class='mb-2'>Ketua pelaksana tidak perlu dipilih, karena akan terpilih otomatis oleh sistem</small>
             </div>
             <div class="col-md-6">
                 <div class="form-check form-switch">
@@ -114,8 +127,10 @@
         (function() {
             let edit = @json($edit ?? false);
             let dataSet = {};
+            let hasJurusan = false;
             if (edit) {
                 dataSet = @json($data ?? null);
+                hasJurusan = @json($hasJurusan);
 
                 Object.entries(dataSet).forEach(function([key, value]) {
                     if (key != 'file_url') {
@@ -132,6 +147,7 @@
                 }
 
             } else {
+                hasJurusan = @json($hasJurusan);
                 dataSet = {
                     id: null,
                     name: null,
@@ -173,7 +189,43 @@
                     }
                 });
 
-                $('.select2').trigger('change');
+                $('#ketua_id').change(function(e) {
+                    e.preventDefault();
+                    dataSet.dosen_id = null;
+                    let ketuaId = $(this).val();
+                    if (!hasJurusan) {
+                        $.ajax({
+                            type: "GET",
+                            url: "{{ route('proposal.getDosen') }}",
+                            data: {
+                                ketuaId: ketuaId,
+                            },
+                            success: function(response) {
+                                var options = '';
+                                if (response.data.length > 0) {
+                                    options +=
+                                        '<option value="" disabled selected>---Pilih Dosen Penanggung Jawab---</option>';
+                                    $.each(response.data, function(index, value) {
+                                        options +=
+                                            `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                                    });
+                                    console.log(options);
+                                } else {
+                                    options +=
+                                        '<option value="" disabled selected>Tidak Ada Data Dosen Hubungi Admin Aplikasi!</option>';
+                                }
+
+                                $('#dosen_id').html(options);
+
+                            }
+                        });
+                    }
+                });
+
+                if (edit) {
+                    $('.select2').trigger('change');
+                }
+
 
                 $('#is_harian').change(function(e) {
                     e.preventDefault();
@@ -225,7 +277,7 @@
                         }
                     });
                 });
-                
+
             });
         })()
     </script>

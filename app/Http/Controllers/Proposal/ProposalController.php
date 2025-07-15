@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Traits\ProposalRequestValidator;
 use App\Http\Controllers\Helper\CrudController;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
+use App\Models\Mahasiswa;
 
 class ProposalController extends Controller
 {
@@ -45,8 +46,10 @@ class ProposalController extends Controller
         $admin = Gate::allows('admin');
         $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
-        $dosenOption = $this->getDosenOption($jurusan);
-        $mahasiswaOption = $this->getMahasiswaOption();
+        $dosenOption = $jurusan ? $this->getDosenOption($jurusan) : [];
+        $ketuaOption = $this->getMahasiswaOption($jurusan);
+        $mahasiswaOption = $this->getMahasiswaOption($jurusan);
+        $hasJurusan = $jurusan == null ? false : true;
         if (!$admin) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
                 if ($item['value'] == Auth::user()->userable_id) {
@@ -56,13 +59,14 @@ class ProposalController extends Controller
             });
         }
 
-        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'dosenOption'));
+        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption', 'hasJurusan'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required',
+            'ketua_id' => 'required',
             'dosen_id' => 'required',
             'desc' => 'required',
             'start_date' => 'required_if:is_harian,false',
@@ -72,6 +76,7 @@ class ProposalController extends Controller
             'file' => ['required', File::types(['pdf'])->max(2 * 1024)],
         ], [
             'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
+            'ketua_id.required' => 'Ketua Pelaksana Wajib Diisi',
             'name.required' => 'Judul proposal wajib diisi',
             'desc.required' => 'Deskripsi wajib diisi',
             'start_date.required_if' => 'Jadwal mulai wajib diisi',
@@ -87,7 +92,7 @@ class ProposalController extends Controller
         try {
             $admin = Gate::allows('admin');
             $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
-            $kodeJurusan = $unitKemahasiswaanEligible->jurusan->kode;
+            $kodeJurusan = $this->validateJurusan($unitKemahasiswaanEligible, $request);
             $romawi = $this->getRomawi(Carbon::now()->format('m'));
             $tahun = Carbon::now()->format('Y');
 
@@ -96,12 +101,14 @@ class ProposalController extends Controller
 
             DB::beginTransaction();
             $dosenEligible = $this->validateDosen($request->dosen_id);
+            $ketuaEligible = $this->validateKetua($request->ketua_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
             $filePath = $this->storageStore($request->file('file'), 'proposal');
 
             $dataField = [
                 'name' => $request->name,
+                'mahasiswa_id' => $request->ketua_id,
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
                 'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
@@ -115,8 +122,15 @@ class ProposalController extends Controller
             $Crud = new CrudController(Proposal::class, data: $proposal, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
             $data = $Crud->updateWithReturnData();
 
+            $mahasiswaId = $request->mahasiswa_id ?? [];
+            $ketuaId = $request->ketua_id;
+
+            if (!in_array($ketuaId, $mahasiswaId)) {
+                array_unshift($mahasiswaId, $ketuaId);
+            }
+
             // insert mahasiswanya pakai table aja biar tidak mengulang
-            $rows = collect($request->mahasiswa_id)->map(function ($id) use ($data) {
+            $rows = collect($mahasiswaId)->map(function ($id) use ($data) {
                 return [
                     'proposal_id'  => $data->id,
                     'mahasiswa_id' => $id,
@@ -154,8 +168,10 @@ class ProposalController extends Controller
         $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
         $dosenOption = $this->getDosenOption($jurusan);
-        $mahasiswaOption = $this->getMahasiswaOption();
+        $mahasiswaOption = $this->getMahasiswaOption($jurusan);
+        $ketuaOption = $this->getMahasiswaOption($jurusan);
         $listMahasiswa = ProposalHasMahasiswa::where('proposal_id', $data->id)->pluck('mahasiswa_id')->toArray();
+        $hasJurusan = $jurusan == null ? false : true;
 
         if (!$admin) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
@@ -172,10 +188,18 @@ class ProposalController extends Controller
                 return $item;
             });
         }
+        if ($hasJurusan) {
+            // set dosen agar ke select
+            $dosenOption = $dosenOption->map(function ($item) use ($data) {
+                if ($item['value'] == $data->dosen_id) {
+                    $item['selected'] = true;
+                }
+                return $item;
+            });
+        }
 
-        // set dosen agar ke select
-        $dosenOption = $dosenOption->map(function ($item) use ($data) {
-            if ($item['value'] == $data->dosen_id) {
+        $ketuaOption = $ketuaOption->map(function ($item) use ($data) {
+            if ($item['value'] == $data->mahasiswa_id) {
                 $item['selected'] = true;
             }
             return $item;
@@ -204,15 +228,17 @@ class ProposalController extends Controller
             'start_date' => Carbon::parse($data->start_date)->format('Y-m-d H:i'),
             'end_date' => Carbon::parse($data->end_date)->format('Y-m-d H:i'),
             'range_date' => $range,
+            'dosen_id' => $data->dosen_id,
         ];
 
-        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'dosenOption', 'data', 'edit'));
+        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption', 'data', 'edit', 'hasJurusan'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
             'name' => 'required',
+            'ketua_id' => 'required',
             'dosen_id' => 'required',
             'desc' => 'required',
             'start_date' => 'required_if:is_harian,false',
@@ -222,6 +248,7 @@ class ProposalController extends Controller
             'file' => ['sometimes', File::types(['pdf'])->max(2 * 1024)],
         ], [
             'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
+            'ketua_id.required' => 'Judul proposal wajib diisi',
             'name.required' => 'Judul proposal wajib diisi',
             'desc.required' => 'Deskripsi wajib diisi',
             'start_date.required_if' => 'Jadwal mulai wajib diisi',
@@ -240,10 +267,12 @@ class ProposalController extends Controller
 
             $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
             $dosenEligible = $this->validateDosen($request->dosen_id);
+            $ketuaEligible = $this->validateKetua($request->ketua_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
             $dataField = [
                 'name' => $request->name,
+                'ketua_id' => $request->ketua_id,
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
                 'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
@@ -266,6 +295,12 @@ class ProposalController extends Controller
             ProposalHasMahasiswa::where('proposal_id', $data->id)
                 ->whereIn('mahasiswa_id', $mahasiswaDeleted)
                 ->delete();
+
+            $ketuaId = $request->ketua_id;
+
+            if (!in_array($ketuaId, $mahasiswaInsert)) {
+                array_unshift($mahasiswaInsert, $ketuaId);
+            }
 
             // insert mahasiswanya pakai table aja agar tidak mengulang
             $rows = collect($mahasiswaInsert)->map(function ($id) use ($data) {
@@ -355,6 +390,31 @@ class ProposalController extends Controller
             DB::rollBack();
             $message = $this->getErrorMessage($e);
 
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function getDosen(Request $request)
+    {
+        try {
+            $mahasiswa = Mahasiswa::select('jurusan_id')
+                ->where('id', $request->ketuaId)
+                ->first();
+
+            if (!$mahasiswa) {
+                throw new \Exception('Data mahasiswa tidak ditemukan, silahkan refresh halaman ini');
+            }
+
+            $data = $this->getDosenOption($mahasiswa->jurusan_id);
+            return response()->json([
+                'status' => 200,
+                'data' => $data,
+            ], 200);
+        } catch (\Throwable $e) {
+            $message = $this->getErrorMessage($e);
             return response()->json([
                 'status' => 400,
                 'message' => $message,

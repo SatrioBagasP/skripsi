@@ -9,6 +9,7 @@ use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Helper\CrudController;
+use App\Models\Mahasiswa;
 
 trait ProposalRequestValidator
 {
@@ -62,6 +63,19 @@ trait ProposalRequestValidator
         return $dosenEligible;
     }
 
+    public function validateKetua($id)
+    {
+        $ketuaEligible = Mahasiswa::where('id', $id)
+            ->lockForUpdate()
+            ->first();
+
+        if ($ketuaEligible->status == false) {
+            throw new \Exception('Ketua yang anda pilih sudah tidak aktif! Silahkan pilih ketua yang lain');
+        }
+
+        return $ketuaEligible;
+    }
+
     // memvalidasi proposal untuk membuat proposal semeentara
     public function validateProposal($kodeJurusan, $romawi, $tahun)
     {
@@ -95,6 +109,7 @@ trait ProposalRequestValidator
         $dataField = [
             'name' => '',
             'desc' => '',
+            'mahasiswa_id' => '1',
             'no_proposal' => $noProposal,
             'dosen_id' => 1,
             'user_id' => 1,
@@ -143,5 +158,15 @@ trait ProposalRequestValidator
         }
 
         return $data;
+    }
+
+    public function validateJurusan($unitKemahasiswaan, $request)
+    {
+        $kodeJurusanUnitKemahasiswaan = $unitKemahasiswaan->jurusan?->kode;
+        if (!$kodeJurusanUnitKemahasiswaan) {
+            $kodeJurusan = Mahasiswa::select('jurusan_id')->where('id', $request->ketua_id)->first()->jurusan->kode;
+            return $kodeJurusan;
+        }
+        return $kodeJurusanUnitKemahasiswaan;
     }
 }

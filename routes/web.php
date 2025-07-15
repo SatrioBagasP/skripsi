@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['isUnitMahasiswa'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/dosen-option', 'getDosen')->name('getDosen');
         Route::get('/create', 'create')->name('create');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/store', 'store')->name('store');

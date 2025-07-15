@@ -102,7 +102,7 @@ abstract class Controller
             ->map(function ($item) {
                 return [
                     'value' => $item->id,
-                    'label' => $item->name,
+                    'label' => $item->npm . ' | ' . $item->name,
                 ];
             });
 

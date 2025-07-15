@@ -12,11 +12,11 @@
         ],
     ];
     $multiple = $multiple ?? false;
+    $placeholder = $placeholder ?? '--Pilih Data--';
 @endphp
-<select class="select2 form-control" name="{{ $name }}" id="{{ $id }}" @if ($multiple) multiple="{{ $multiple }} @endif">
-    @if (!$multiple)
-        <option value="" selected disabled>--Pilih Data--</option>
-    @endif
+<select class="select2 form-control" name="{{ $name }}" id="{{ $id }}"
+    @if ($multiple) multiple="{{ $multiple }} @endif">
+    <option value="" @if (!$multiple) selected @endif disabled>{{ $placeholder }}</option>
     @foreach ($data as $item)
         <option value="{{ $item['value'] }}" {{ !empty($item['selected']) ? 'selected' : '' }}>{{ $item['label'] }}
         </option>
