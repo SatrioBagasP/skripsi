@@ -33,6 +33,13 @@ class UserController extends Controller
             DB::beginTransaction();
             list($id, $type) = explode('|', $request->user_id,);
             $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
+            $hasUser = User::where('userable_type', $type)
+                ->where('userable_id', $id)
+                ->exists();
+
+            if ($hasUser) {
+                throw new \Exception('Organisasi / Dosen sudah memiliki akun');
+            }
 
             $dataField = [
                 'name' => $request->name,
@@ -75,6 +82,13 @@ class UserController extends Controller
 
             list($id, $type) = explode('|', $request->user_id,);
             $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
+            $hasUser = User::where('userable_type', $type)
+                ->where('userable_id', $id)
+                ->exists();
+
+            if ($hasUser) {
+                throw new \Exception('Organisasi / Dosen sudah memiliki akun');
+            }
 
             $dataField = [
                 'name' => $request->name,

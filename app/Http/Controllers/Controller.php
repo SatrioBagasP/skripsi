@@ -40,19 +40,25 @@ abstract class Controller
     {
         $data = [];
 
-        $dataUnit = UnitKemahasiswaan::where('status', true)->get()->map(function ($item) {
-            return [
-                'value' => $item->id . '|Unit',
-                'label' => $item->name,
-            ];
-        });
+        $dataUnit = UnitKemahasiswaan::where('status', true)
+            ->whereDoesntHave('user')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id . '|Unit',
+                    'label' => $item->name,
+                ];
+            });
 
-        $dataDosen = Dosen::where('status', true)->get()->map(function ($item) {
-            return [
-                'value' => $item->id . '|Dosen',
-                'label' => $item->name,
-            ];
-        });
+        $dataDosen = Dosen::where('status', true)
+            ->whereDoesntHave('user')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id . '|Dosen',
+                    'label' => $item->name,
+                ];
+            });
         $data = $dataUnit->concat($dataDosen)->sortBy('label')->values();
         return $data;
     }
