@@ -9,27 +9,27 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('dosen', function (Blueprint $table) {
-            $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
-        });
-        Schema::table('unit_kemahasiswaan', function (Blueprint $table) {
-            $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
-        });
-    }
+    // public function up(): void
+    // {
+    //     Schema::table('dosen', function (Blueprint $table) {
+    //         $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
+    //     });
+    //     Schema::table('unit_kemahasiswaan', function (Blueprint $table) {
+    //         $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
+    //     });
+    // }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('dosen', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('jurusan_id');
-        });
-        Schema::table('dosen', function (Blueprint $table) {
-            //
-            $table->dropConstrainedForeignId('jurusan_id');
-        });
-    }
+    // /**
+    //  * Reverse the migrations.
+    //  */
+    // public function down(): void
+    // {
+    //     Schema::table('dosen', function (Blueprint $table) {
+    //         $table->dropConstrainedForeignId('jurusan_id');
+    //     });
+    //     Schema::table('dosen', function (Blueprint $table) {
+    //         //
+    //         $table->dropConstrainedForeignId('jurusan_id');
+    //     });
+    // }
 };

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('dosen', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
             $table->string('nip')->unique();
             $table->string('name');
             $table->string('alamat');
