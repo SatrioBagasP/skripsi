@@ -143,7 +143,7 @@ trait ProposalRequestValidator
             } else {
                 return abort(404);
             }
-        } elseif (!in_array($data->status, ['Draft', 'Tolak'])) {
+        } elseif (!in_array($data->status, ['Draft', 'Rejected'])) {
             if ($request->ajax()) {
                 throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
             } else {

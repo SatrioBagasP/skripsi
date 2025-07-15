@@ -77,6 +77,29 @@ class ApprovalController extends Controller
         return $data;
     }
 
+    public function rejectProposal(Request $request, $approve, $field, $reason, $status, $desc)
+    {
+
+        $data = $this->validateApprovalProposalEligible($request);
+        $valid = $this->approvalEligible($data);
+        if (!$valid) {
+            throw new \Exception('Data tidak valid untuk disetujui atau ditolak, silahkan refersh halaman ini!');
+        }
+        $dataField = [
+            'is_acc_dosen' => $approve,
+            'is_acc_kaprodi' => $approve,
+            'is_acc_minat_bakat' => $approve,
+            'is_acc_layanan' => $approve,
+            'is_acc_wakil_rektor' => $approve,
+            'status' => 'Rejected',
+            'alasan_tolak' => $reason
+        ];
+        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
+        $data = $Crud->updateWithReturnData();
+
+        return $data;
+    }
+
     public function approvalDosen(Request $request)
     {
         $request->validate([
@@ -91,17 +114,27 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
 
-            $data =  $this->accProposal($request, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
+            if ($approve) {
+                $data =  $this->accProposal($request, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
+                $noProposal = explode('/', $data->no_proposal);
+                $kodeJurusan = $noProposal[1];
 
-            $noProposal = explode('/', $data->no_proposal);
-            $kodeJurusan = $noProposal[1];
-
-            $jurusan = Jurusan::select(['id'])->where('kode', $kodeJurusan)->first();
-            $kaprodi = $this->getKaprodi($jurusan->id);
-            $noHp = $kaprodi ? $kaprodi->no_hp : '0';
-
+                $jurusan = Jurusan::select(['id'])->where('kode', $kodeJurusan)->first();
+                $kaprodi = $this->getKaprodi($jurusan->id);
+                $noHp = $kaprodi ? $kaprodi->no_hp : '0';
+                $message = 'Acc Dong Kaprodi';
+                $target = 'Kaprodi';
+                $messageFor = 'Pengajuan';
+            } else {
+                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Dosen Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $mahasiswa = $data->ketua;
+                $noHp = $mahasiswa->no_hp;
+                $message = 'DITOLAK BRO';
+                $target = 'Ketua Pelaksana';
+                $messageFor = 'Ditolak';
+            }
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Acc dong kaprodi', 'Kaprodi');
+            $response = $notifikasi->sendMessage($noHp, $message, $target, $messageFor);
 
             DB::commit();
             return response()->json([
@@ -133,12 +166,24 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
 
-            $data =  $this->accProposal($request, $approve, 'is_acc_kaprodi', 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!');
-            $kepalaBagianMinatBakat = $this->getKepalaBagianMinatBakat();
-            $noHp = $kepalaBagianMinatBakat->isNotEmpty() ? $kepalaBagianMinatBakat->take(1)->no_hp : '0';
+            if ($approve) {
+                $data =  $this->accProposal($request, $approve, 'is_acc_kaprodi', 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!');
+                $kepalaBagianMinatBakat = $this->getKepalaBagianMinatBakat();
+                $noHp = $kepalaBagianMinatBakat->isNotEmpty() ? $kepalaBagianMinatBakat->take(1)->no_hp : '0';
+                $message = 'Acc dong minat bakat';
+                $target = 'Kepala Bagian Minat dan Bakat';
+                $messageFor = 'Pengajuan';
+            } else {
+                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Kaprodi Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $mahasiswa = $data->ketua;
+                $noHp = $mahasiswa->no_hp;
+                $message = 'DITOLAK BRO';
+                $target = 'Ketua Pelaksana';
+                $messageFor = 'Ditolak';
+            }
 
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Acc dong Minat dan Bakat', 'Kepala Bagian Minat dan Bakat');
+            $response = $notifikasi->sendMessage($noHp, $message, $target, $messageFor);
 
             DB::commit();
             return response()->json([
@@ -170,12 +215,24 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
 
-            $data =  $this->accProposal($request, $approve, 'is_acc_minat_bakat', 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!');
-            $layananMahasiswa = $this->getLayananMahasiswa();
-            $noHp = $layananMahasiswa->isNotEmpty() ? $layananMahasiswa->take(1)->no_hp : '0';
+            if ($approve) {
+                $data =  $this->accProposal($request, $approve, 'is_acc_minat_bakat', 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!');
+                $layananMahasiswa = $this->getLayananMahasiswa();
+                $noHp = $layananMahasiswa->isNotEmpty() ? $layananMahasiswa->take(1)->no_hp : '0';
+                $message = 'Acc Dong layanan mahasiswa';
+                $target = 'Layanan Mahasiswa';
+                $messageFor = 'Pengajuan';
+            } else {
+                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Kepala Bagian Minat dan Bakat Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $mahasiswa = $data->ketua;
+                $noHp = $mahasiswa->no_hp;
+                $message = 'DITOLAK BRO';
+                $target = 'Ketua Pelaksana';
+                $messageFor = 'Ditolak';
+            }
 
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Acc dong Layanan Mahasiswa', 'Layanan Mahasiswa');
+            $response = $notifikasi->sendMessage($noHp, $message, $target, $messageFor);
 
             DB::commit();
             return response()->json([
@@ -207,12 +264,25 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
 
-            $data =  $this->accProposal($request, $approve, 'is_acc_layanan_mahasiswa', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
-            $wakilRektor = $this->getWakilRektor1();
-            $noHp = $wakilRektor->isNotEmpty() ? $wakilRektor->take(1)->no_hp : '0';
+            if ($approve) {
+                $data =  $this->accProposal($request, $approve, 'is_acc_layanan', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
+                $wakilRektor = $this->getWakilRektor1();
+                $noHp = $wakilRektor->isNotEmpty() ? $wakilRektor->take(1)->no_hp : '0';
+                $message = 'Acc dong wakil rektor';
+                $target = 'Wakil Rektor';
+                $messageFor = 'Pengajuan';
+            } else {
+                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $mahasiswa = $data->ketua;
+                $noHp = $mahasiswa->no_hp;
+                $message = 'DITOLAK BRO';
+                $target = 'Ketua Pelaksana';
+                $messageFor = 'Ditolak';
+            }
+
 
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Acc dong wakil rektor', 'Wakil Rektor');
+            $response = $notifikasi->sendMessage($noHp, $message, $target, $messageFor);
 
             DB::commit();
             return response()->json([
@@ -244,12 +314,23 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
 
-            $data =  $this->accProposal($request, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
+            if ($approve) {
+                $data =  $this->accProposal($request, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
+                $message = 'Ditrima nih, selamat yaa';
+                $messageFor = 'Pengajuan';
+            } else {
+                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $mahasiswa = $data->ketua;
+                $noHp = $mahasiswa->no_hp;
+                $message = 'DITOLAK BRO';
+                $messageFor = 'Ditolak';
+            }
             $mahasiswa = $data->ketua;
             $noHp = $mahasiswa->no_hp;
+            $target = 'Ketua Pelaksana';
 
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Udah diterima nih , selamat ya', 'Ketua Pelaksana');
+            $response = $notifikasi->sendMessage($noHp, $message, $target, $messageFor);
 
             DB::commit();
             return response()->json([
@@ -280,13 +361,11 @@ class ApprovalController extends Controller
                 $query->where('dosen_id', Auth::user()->userable_id);
             })
             ->when($kaprodi == true, function ($query) {
-                if ($query->jurusan == null) {
-                    $query->whereRelation('ketua', 'jurusan_id', Auth::user()->userable->jurusan_id)
-                        ->where('status', 'Pending Kaprodi');
-                } else {
-                    $query->whereRelation('user.userable', 'jurusan_id', Auth::user()->userable->jurusan_id)
-                        ->where('status', 'Pending Kaprodi');
-                }
+                $query->where(function ($query) {
+                    $query->where('status', 'Pending Kaprodi')
+                        ->orWhereRelation('ketua', 'jurusan_id', Auth::user()->userable->jurusan_id)
+                        ->orWhereRelation('user.userable', 'jurusan_id', Auth::user()->userable->jurusan_id);
+                })->where('dosen_id', Auth::user()->userable_id);
             })
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where(function ($item) use ($request) {

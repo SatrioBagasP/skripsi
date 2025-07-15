@@ -21,7 +21,7 @@ trait ApprovalProposalRequestValidator
             } else {
                 return abort(404);
             }
-        } elseif (in_array($data->status, ['Draft', 'Tolak']) && !$show) {
+        } elseif (in_array($data->status, ['Draft', 'Rejected']) && !$show) {
             if ($request->ajax()) {
                 throw new \Exception('Proposal masih dalam status draft / revisi, tidak bisa memvalidasi proposal ini');
             } else {
@@ -50,7 +50,9 @@ trait ApprovalProposalRequestValidator
         $dosenPj = $admin ? '' : $proposal->dosen_id == Auth::user()->userable_id;
         $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
         $kaprodiJurusan = $admin ? '' : Auth::user()->userable->jurusan_id == $jurusanId;
-        if (($proposal->status == 'Pending Dosen' && Gate::allows('dosen') && $dosenPj) || $admin) {
+        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft') && Gate::allows('approval') ) {
+            return false;
+        } elseif (($proposal->status == 'Pending Dosen' && Gate::allows('approval') && $dosenPj)) {
             return true;
         } elseif (($proposal->status == 'Pending Kaprodi' && Gate::allows('kaprodi') && $kaprodiJurusan) || $admin) {
             return true;

@@ -369,7 +369,7 @@ class ProposalController extends Controller
             $dosen = $this->validateDosen($data->dosen_id);
             $noHp = $dosen ? $dosen->no_hp : 0;
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC', 'Dosen');
+            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC', 'Dosen Penanggung Jawab','Pengajuan');
 
             $data->status = 'Pending Dosen';
             $data->save();
@@ -446,9 +446,9 @@ class ProposalController extends Controller
                 'jurusan' => $admin == true ? ($item->user->userable->jurusan  ?  $item->user->userable->jurusan->name : $item->ketua->jurusan->name) : '',
                 'admin' => $admin,
                 'dosen' => $item->dosen->name,
-                'edit' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Tolak']),
-                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Tolak']),
-                'delete' => in_array($item->status, ['Draft', 'draft', 'tolak', 'Tolak']),
+                'edit' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Rejected']),
+                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Rejected']),
+                'delete' => in_array($item->status, ['Draft', 'draft', 'tolak', 'Rejected']),
             ];
         });
 

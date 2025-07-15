@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 class NotifikasiController extends Controller
 {
-    public function sendMessage($noHp, $message, $target)
+    public function sendMessage($noHp, $message, $target, $messageFor)
     {
         $curl = curl_init();
 
@@ -46,8 +46,13 @@ class NotifikasiController extends Controller
             $notifGagal = true;
             $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
         }
-
-        return 'Pengajuan Berhasil Diajukan Ke ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+        if ($messageFor == 'Pengajuan') {
+            return 'Pengajuan Berhasil Diajukan ke Verifikator ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+        } elseif ($messageFor == 'Ditolak') {
+            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+        } elseif ($messageFor == 'Diterima') {
+            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+        }
     }
 
     public function generateMessageForKaprodi() {}
