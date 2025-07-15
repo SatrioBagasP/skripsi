@@ -69,7 +69,7 @@ class UnitKemahasiswaanController extends Controller
 
             $dataField = [
                 'name' => $request->name,
-                // 'jurusan_id' => $request->jurusan_id,
+                'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
 
