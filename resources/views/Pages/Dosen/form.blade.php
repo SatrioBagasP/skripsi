@@ -2,13 +2,13 @@
 
 @section('titleSidebarForm', 'Tambah Data')
 
-@section('sub-titleSidebarForm', 'Unit Kemahasiswaan')
+@section('sub-titleSidebarForm', 'Dosen')
 
 @section('contentSidebarForm')
     <form action="">
         <label>Dosen</label>
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="name" id="name">
+            <input type="text" class="form-control" placeholder="Nama Dosen" name="name" id="name">
             <div class="invalid-feedback" id="nameError"></div>
         </div>
         <label>No Hp</label>
