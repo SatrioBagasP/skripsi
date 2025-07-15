@@ -87,6 +87,7 @@
                                 name: item.name,
                                 npm: item.npm,
                                 jurusan: item.jurusan,
+                                no_hp: item.no_hp,
                                 jurusan_id: item.jurusan_id,
                                 status: item.status,
                             });
@@ -113,6 +114,7 @@
                 id: null,
                 name: null,
                 npm: null,
+                no_hp: null,
                 jurusan_id: null,
                 status: false,
             }
@@ -144,6 +146,7 @@
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data[index].name).trigger('change');
                     $('#npm').val(data[index].npm).trigger('change');
+                    $('#no_hp').val(data[index].no_hp).trigger('change');
                     $('#jurusan_id').val(data[index].jurusan_id).trigger('change');
                     $('#status').prop('checked', data[index].status == 1).trigger('change');
                 });
@@ -163,6 +166,7 @@
                         id: null,
                         name: null,
                         npm: null,
+                        no_hp: null,
                         jurusan_id: null,
                         status: false,
                     };

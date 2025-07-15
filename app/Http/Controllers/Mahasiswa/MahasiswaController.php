@@ -21,6 +21,7 @@ class MahasiswaController extends Controller
         $request->validate([
             'name' => 'required',
             'npm' => 'required',
+            'no_hp' => 'required',
             'jurusan_id' => 'required',
         ]);
 
@@ -28,6 +29,7 @@ class MahasiswaController extends Controller
             $dataField = [
                 'name' => $request->name,
                 'npm' => $request->npm,
+                'no_hp' => $request->no_hp,
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
@@ -52,6 +54,7 @@ class MahasiswaController extends Controller
         $request->validate([
             'name' => 'required',
             'npm' => 'required',
+            'no_hp' => 'required',
             'jurusan_id' => 'required',
         ]);
 
@@ -59,6 +62,7 @@ class MahasiswaController extends Controller
             $dataField = [
                 'name' => $request->name,
                 'npm' => $request->npm,
+                'no_hp' => $request->no_hp,
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
@@ -81,7 +85,7 @@ class MahasiswaController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = Mahasiswa::with(['jurusan'])->select('name', 'npm', 'status', 'id', 'jurusan_id')
+        $data = Mahasiswa::with(['jurusan'])->select('name', 'npm', 'status', 'id', 'jurusan_id','no_hp')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('npm', 'like', '%' . $request->search . '%')
@@ -97,6 +101,7 @@ class MahasiswaController extends Controller
                 'npm' => $item->npm,
                 'jurusan' => $item->jurusan->name ?? '-',
                 'jurusan_id' => $item->jurusan_id,
+                'no_hp' => $item->no_hp,
                 'status' => $item->status,
             ];
         });

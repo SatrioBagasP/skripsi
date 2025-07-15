@@ -8,13 +8,18 @@
     <form action="">
         <label>Mahasiswa</label>
         <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="name" id="name">
+            <input type="text" class="form-control" placeholder="Nama Mahasiswa" name="name" id="name">
             <div class="invalid-feedback" id="nameError"></div>
         </div>
         <label>NPM</label>
         <div class="mb-3">
             <input type="text" class="form-control" placeholder="NPM" name="npm" id="npm">
             <div class="invalid-feedback" id="npmError"></div>
+        </div>
+        <label>No Hp</label>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="No Handphone" name="no_hp" id="no_hp">
+            <div class="invalid-feedback" id="no_hpError"></div>
         </div>
         <label>Jurusan</label>
         <div class="mb-3">
