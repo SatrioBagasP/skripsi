@@ -29,7 +29,7 @@ class ProposalController extends Controller
 
     public function index()
     {
-        $head = ['No Proposal', 'Nama', 'Dosen'];
+        $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Dosen'];
         $admin = Gate::allows('admin');
         if ($admin) {
             $head[] = 'Organisasi';
@@ -426,7 +426,7 @@ class ProposalController extends Controller
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan', 'dosen'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id')
+        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id','mahasiswa_id')
             ->when($admin == false, function ($query) {
                 $query->where('user_id', Auth::user()->id);
             })
@@ -445,6 +445,8 @@ class ProposalController extends Controller
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,
+                'ketua' => $item->ketua->name,
+                'npm_ketua' => $item->ketua->npm,
                 'no_proposal' => $item->no_proposal,
                 'organisasi' => $admin == true ? $item->user->userable->name : '',
                 'jurusan' => $admin == true ? $item->user->userable->jurusan->name : '',
