@@ -10,11 +10,11 @@
         <input type="text" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="name" id="name">
         <div class="invalid-feedback" id="nameError"></div>
     </div>
-    <label>No Hp</label>
+    {{-- <label>No Hp</label>
     <div class="mb-3">
         <input type="text" class="form-control" placeholder="Nomor Handphone Penanggung Jawab" name="no_hp" id="no_hp">
         <div class="invalid-feedback" id="no_hpError"></div>
-    </div>
+    </div> --}}
     <label>Jurusan</label>
     <div class="mb-3">
         @include('Component.select', [

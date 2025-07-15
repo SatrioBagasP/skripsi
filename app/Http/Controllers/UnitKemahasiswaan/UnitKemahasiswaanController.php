@@ -23,8 +23,7 @@ class UnitKemahasiswaanController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'no_hp' => 'required',
-            'jurusan_id' => 'required',
+            // 'jurusan_id' => 'required',
             'image' => ['sometimes', File::types(['jpg', 'jpeg', 'png'])->max(2 * 1024)]
         ]);
 
@@ -36,7 +35,6 @@ class UnitKemahasiswaanController extends Controller
 
             $dataField = [
                 'name' => $request->name,
-                'no_hp' => $request->no_hp,
                 'jurusan_id' => $request->jurusan_id,
                 'image' => $imagePath,
                 'status' => $request->boolean('status'),
@@ -62,8 +60,7 @@ class UnitKemahasiswaanController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'no_hp' => 'required',
-            'jurusan_id' => 'required',
+            // 'jurusan_id' => 'required',
         ]);
 
         try {
@@ -72,8 +69,7 @@ class UnitKemahasiswaanController extends Controller
 
             $dataField = [
                 'name' => $request->name,
-                'no_hp' => $request->no_hp,
-                'jurusan_id' => $request->jurusan_id,
+                // 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ];
 
