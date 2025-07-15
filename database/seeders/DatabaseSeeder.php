@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Jurusan;
 use App\Models\Roles;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;

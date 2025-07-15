@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('proposal', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('mahasiswa_id')->constrained('mahasiswa')->onDelete('cascade');
             $table->foreignId('dosen_id')->constrained('dosen');
             $table->string('no_proposal')->unique();
             $table->string('name');
