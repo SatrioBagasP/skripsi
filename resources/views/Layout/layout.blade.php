@@ -94,6 +94,7 @@
     <script src="{{ asset('/js/plugins/smooth-scrollbar.min.js') }}"></script>
     <script src="{{ asset('/js/plugins/chartjs.min.js') }}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@flasher/flasher@1.2.4/dist/flasher.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             $.ajaxSetup({

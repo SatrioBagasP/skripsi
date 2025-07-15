@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 class NotifikasiController extends Controller
 {
-    public function sendMessage($user, $message)
+    public function sendMessage($noHp, $message)
     {
         $curl = curl_init();
 
@@ -20,7 +20,7 @@ class NotifikasiController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => array(
-                'target' => $user->no_hp,
+                'target' => $noHp,
                 'message' => $message,
                 'countryCode' => '62', //optional
             ),
@@ -39,5 +39,9 @@ class NotifikasiController extends Controller
             return json_decode($error_msg, true);
         }
         return json_decode($response, true);
+    }
+
+    public function generateMessageForKaprodi(){
+        
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Dosen;
 use App\Models\Roles;
 use App\Models\Jurusan;
@@ -106,6 +107,17 @@ abstract class Controller
             });
 
         return $data;
+    }
+
+    function getKaprodi($jurusanId)
+    {
+        $kaprodi = User::where('role_id', 4) // role user untuk kaprodi
+            ->whereHas('userable', function ($query) use ($jurusanId) {
+                $query->where('jurusan_id', $jurusanId);
+            })
+            ->first();
+
+        return $kaprodi;
     }
 
     function getRoleOption()

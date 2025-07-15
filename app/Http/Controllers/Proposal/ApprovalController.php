@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers\Proposal;
 
+use App\Models\User;
+use App\Models\Jurusan;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\ApprovalProposalRequestValidator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\Helper\CrudController;
+use App\Traits\ApprovalProposalRequestValidator;
+use App\Http\Controllers\Notifikasi\NotifikasiController;
 
 class ApprovalController extends Controller
 {
@@ -29,8 +35,9 @@ class ApprovalController extends Controller
 
     public function edit(Request $request, $id)
     {
-        $data = $this->validateApprovalProposalStatus($request);
+        $data = $this->validateApprovalProposalEligible($request, true);
         $data = [
+            'id' => encrypt($data->id),
             'name' => $data->name,
             'no_proposal' => $data->no_proposal,
             'desc' => $data->desc,
@@ -41,8 +48,110 @@ class ApprovalController extends Controller
             'end_date' => $data->end_date,
             'status' => $data->status,
             'mahasiswa' => $data->mahasiswa,
+            'approvalBtn' => $this->approvalEligible($data),
+            'approvalUrl' => $this->urlProposalEligible($data),
         ];
         return view('Pages.Proposal.validasi', compact('data'));
+    }
+
+    public function accProposal(Request $request, $approve, $field, $status, $desc)
+    {
+
+        $data = $this->validateApprovalProposalEligible($request);
+        $valid = $this->approvalEligible($data);
+        if(!$valid){
+            throw new \Exception('Data tidak valid untuk disetujui atau ditolak, silahkan refersh halaman ini!');
+        }
+        $dataField = [
+            $field => $approve,
+            'status' => 'Pending Kaprodi',
+        ];
+        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Dosen telah menyetujui proposal anda', content: 'Approval Proposal');
+        $data = $Crud->updateWithReturnData();
+
+        return $data;
+    }
+
+    public function rejectProposal(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $this->validateApprovalProposalEligible($request);
+            $dataField = [
+                $request->field => false,
+                'status' => 'Tolak',
+                'alasan_tolak' => $request->reason,
+            ];
+            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Dosen telah menolak pengajuan proposal anda, silahkan revisi dan ajukan kembali!', content: 'Approval Proposal');
+            $data = $Crud->updateWithReturnData();
+
+            $user = $data->user->userable;
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($user, 'Ditolak Wlee');
+
+            $notifGagal = false;
+            $alasanNotif = '';
+            if ($response['status'] == false) {
+                $notifGagal = true;
+                $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan' . $alasanNotif . '. Silakan hubungi organisasi secara langsung atau minta admin memperbarui nomor organisasi.' : ''),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
+    }
+
+    public function approvalDosen(Request $request)
+    {
+        $request->validate([
+            'reason' => [
+                Rule::requiredIf($request->boolean('approve') == false),
+            ],
+        ], [
+            'reason.required' => 'Alasan penolakan harus diisi.',
+        ]);
+
+        try {
+            $approve = $request->boolean('approve');
+            DB::beginTransaction();
+
+            $data =  $this->accProposal($request, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
+
+            $noProposal = explode('/', $data->no_proposal);
+            $kodeJurusan = $noProposal[1];
+
+            $jurusan = Jurusan::select(['id'])->where('kode', $kodeJurusan)->first();
+            $kaprodi = $this->getKaprodi($jurusan->id);
+            $noHp = $kaprodi ? $kaprodi->no_hp : '0';
+
+            $notifikasi = new NotifikasiController();
+            $response = $notifikasi->sendMessage($noHp, 'Acc kaprodi');
+
+            dd($response);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            $message = $this->getErrorMessage($e);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $message,
+            ], 400);
+        }
     }
 
     public function getData(Request $request)
@@ -85,10 +194,5 @@ class ApprovalController extends Controller
             'currentPage' => $data->currentPage(),
             'totalPage' => $data->lastPage(),
         ], 200);
-    }
-
-    public function accDosen(Request $request)
-    {
-        $request->dd();
     }
 }

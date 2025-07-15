@@ -75,9 +75,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/get-data', 'getData')->name('getData');
     });
 
-    Route::middleware(['isDosen'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
+    Route::middleware(['isApproval'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/edit/{id}', 'edit')->name('edit');
+        Route::post('/approval-dosen','approvalDosen')->name('approvalDosen');
         Route::get('/get-data', 'getData')->name('getData');
     });
 });

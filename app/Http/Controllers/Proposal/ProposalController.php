@@ -48,8 +48,8 @@ class ProposalController extends Controller
         $dosenOption = $this->getDosenOption($jurusan);
         $mahasiswaOption = $this->getMahasiswaOption();
         if (!$admin) {
-            $organisasiOption = $organisasiOption->where('value', Auth::user()->id)->map(function ($item) {
-                if ($item['value'] == Auth::id()) {
+            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
+                if ($item['value'] == Auth::user()->userable_id) {
                     $item['selected'] = true;
                 }
                 return $item;
@@ -158,8 +158,8 @@ class ProposalController extends Controller
         $listMahasiswa = ProposalHasMahasiswa::where('proposal_id', $data->id)->pluck('mahasiswa_id')->toArray();
 
         if (!$admin) {
-            $organisasiOption = $organisasiOption->where('value', Auth::user()->id)->map(function ($item) {
-                if ($item['value'] == Auth::id()) {
+            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
+                if ($item['value'] == Auth::user()->userable_id) {
                     $item['selected'] = true;
                 }
                 return $item;

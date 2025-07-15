@@ -42,7 +42,7 @@
                             <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
                             <td class='align-middle text-center text-sm'> ${item.status} </td>
                             <td class='align-middle text-center text-sm'>
-                                ${item.detail == true ? `<button class='btn btn-info detail w-50 mb-1'> <i class="fa fa-eye me-1"></i>Detail</button><br>` : ''}
+                                ${item.detail == true ? `<button class='btn btn-info detail w-full mb-1'> <i class="fa fa-eye me-1"></i>Detail</button><br>` : ''}
                             </td>
                         </tr>
                     `);

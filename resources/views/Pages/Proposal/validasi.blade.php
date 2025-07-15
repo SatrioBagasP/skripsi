@@ -71,20 +71,100 @@
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
-                <div class="d-flex justify-content-end gap-2">
-                    @include('Component.button', [
-                        'class' => 'btn-danger mt-2',
-                        'id' => 'btn-submit',
-                        'label' => 'Tolak Proposal',
-                    ])
-                    @include('Component.button', [
-                        'class' => 'btn-primary mt-2',
-                        'id' => 'btn-submit',
-                        'label' => 'Setujui Proposal',
-                    ])
-                </div>
+                @if ($data['approvalBtn'])
+                    <div class="d-flex justify-content-end gap-2">
+                        @include('Component.button', [
+                            'class' => 'btn-danger mt-2',
+                            'id' => 'btn-tolak',
+                            'label' => 'Tolak Proposal',
+                        ])
+                        @include('Component.button', [
+                            'class' => 'btn-primary mt-2',
+                            'id' => 'btn-setujui',
+                            'label' => 'Setujui Proposal',
+                        ])
+                    </div>
+                @else
+                   <div class="d-flex justify-content-end gap-2 mt-2 mb-2">
+                    -- Waiting For Approval -- 
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 
 @endsection
+
+@push('js')
+    <script>
+        (function() {
+            const id = @json($data['id']);
+            const approvalUrl = @json($data['approvalUrl']);
+            $(document).ready(function() {
+                $('#btn-setujui').click(function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Setujui Proposal?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Setujui!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: approvalUrl,
+                                data: {
+                                    id: id,
+                                    approve: true,
+                                },
+                                success: function(response) {
+                                    flasher.success(response.message)
+                                },
+                                error: function(xhr, status, error) {
+                                    flasher.error(xhr.responseJSON.message)
+                                }
+                            });
+                        }
+                    });
+                });
+
+                $('#btn-tolak').click(function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Tolak Proposal?',
+                        input: "text",
+                        inputAttributes: {
+                            autocapitalize: "off"
+                        },
+                        text: "Jika anda menolak proposal, silahkan masukkan alasan penolakan.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, tolak!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: approvalUrl,
+                                data: {
+                                    id: id,
+                                    reason: result.value,
+                                    approve: false,
+                                },
+                                success: function(response) {
+                                    flasher.success(response.message)
+                                },
+                                error: function(xhr, status, error) {
+                                    flasher.error(xhr.responseJSON.message)
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+        })()
+    </script>
+@endpush
