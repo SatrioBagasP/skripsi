@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
             $table->string('npm')->unique();
             $table->string('name');
+            $table->string('no_hp',25);
             $table->boolean('status');
             $table->timestamps();
         });

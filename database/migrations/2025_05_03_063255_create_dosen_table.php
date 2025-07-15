@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nip')->unique();
             $table->string('name');
             $table->string('alamat');
-            $table->string('no_hp',25)->nullable();
+            $table->string('no_hp',25);
             $table->boolean('status');
             $table->timestamps();
         });
