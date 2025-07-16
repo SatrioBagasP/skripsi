@@ -27,18 +27,25 @@ class AuthController extends Controller
         ]);
 
         // login via nim,nip,email,username
-        $user = User::where('email', $request->username)
-            ->orWhere('name', $request->username)
-            ->orWhereHasMorph(
-                'userable',
-                [UnitKemahasiswaan::class, Dosen::class],
-                function ($q, $type) use ($request) {
-                    $column = $type === UnitKemahasiswaan::class ? 'name' : 'nip';
+        $user = User::where(function ($query) use ($request) {
+            $query->where('email', $request->username)
+                ->orWhere('name', $request->username)
+                ->orWhereHasMorph(
+                    'userable',
+                    [UnitKemahasiswaan::class, Dosen::class],
+                    function ($q, $type) use ($request) {
+                        $column = $type === UnitKemahasiswaan::class ? 'name' : 'nip';
 
-                    $q->where($column, $request->username)->where('status',true);
-                }
-            )
-            ->first();
+                        $q->where($column, $request->username)->where('status', true);
+                    }
+                );
+        })->whereHasMorph(
+            'userable',
+            [UnitKemahasiswaan::class, Dosen::class],
+            function ($q) {
+                $q->where('status', true);
+            }
+        )->first();
 
 
         if ($user && Hash::check($request->password, $user->password)) {
