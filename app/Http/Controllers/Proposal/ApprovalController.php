@@ -53,38 +53,26 @@ class ApprovalController extends Controller
             'end_date' => $data->end_date,
             'status' => $data->status,
             'mahasiswa' => $data->mahasiswa,
-            'approvalBtn' => $this->approvalEligible($data),
+            'approvalBtn' => $this->approvalBtnEligible($data),
             'approvalUrl' => $this->urlProposalEligible($data),
         ];
         return view('Pages.Proposal.validasi', compact('data'));
     }
 
-    public function accProposal(Request $request, $approve, $field, $status, $desc)
+    public function accProposal($proposal, $approve, $field, $status, $desc)
     {
-
-        $data = $this->validateApprovalProposalEligible($request);
-        $valid = $this->approvalEligible($data);
-        if (!$valid) {
-            throw new \Exception('Data tidak valid untuk disetujui atau ditolak, silahkan refersh halaman ini!');
-        }
         $dataField = [
             $field => $approve,
             'status' => $status,
         ];
-        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
+        $Crud = new CrudController(Proposal::class, data: $proposal, id: $proposal->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
         $data = $Crud->updateWithReturnData();
 
         return $data;
     }
 
-    public function rejectProposal(Request $request, $approve, $field, $reason, $status, $desc)
+    public function rejectProposal($proposal, $approve, $field, $reason, $status, $desc)
     {
-
-        $data = $this->validateApprovalProposalEligible($request);
-        $valid = $this->approvalEligible($data);
-        if (!$valid) {
-            throw new \Exception('Data tidak valid untuk disetujui atau ditolak, silahkan refersh halaman ini!');
-        }
         $dataField = [
             'is_acc_dosen' => $approve,
             'is_acc_kaprodi' => $approve,
@@ -94,7 +82,7 @@ class ApprovalController extends Controller
             'status' => 'Rejected',
             'alasan_tolak' => $reason
         ];
-        $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
+        $Crud = new CrudController(Proposal::class, data: $proposal, id: $proposal->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
         $data = $Crud->updateWithReturnData();
 
         return $data;
@@ -113,9 +101,10 @@ class ApprovalController extends Controller
         try {
             $approve = $request->boolean('approve');
             DB::beginTransaction();
-
+            $data = $this->validateApprovalProposalEligible($request);
+            $this->approvalDosenEligible($data);
             if ($approve) {
-                $data =  $this->accProposal($request, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
                 $noProposal = explode('/', $data->no_proposal);
                 $kodeJurusan = $noProposal[1];
 
@@ -165,16 +154,17 @@ class ApprovalController extends Controller
         try {
             $approve = $request->boolean('approve');
             DB::beginTransaction();
-
+            $data = $this->validateApprovalProposalEligible($request);
+            $this->approvalKaprodiEligible($data);
             if ($approve) {
-                $data =  $this->accProposal($request, $approve, 'is_acc_kaprodi', 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_kaprodi', 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!');
                 $kepalaBagianMinatBakat = $this->getKepalaBagianMinatBakat();
                 $noHp = $kepalaBagianMinatBakat->isNotEmpty() ? $kepalaBagianMinatBakat->take(1)->no_hp : '0';
                 $message = 'Acc dong minat bakat';
                 $target = 'Kepala Bagian Minat dan Bakat';
                 $messageFor = 'Pengajuan';
             } else {
-                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Kaprodi Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Kaprodi Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
                 $mahasiswa = $data->ketua;
                 $noHp = $mahasiswa->no_hp;
                 $message = 'DITOLAK BRO';
@@ -214,16 +204,17 @@ class ApprovalController extends Controller
         try {
             $approve = $request->boolean('approve');
             DB::beginTransaction();
-
+            $data = $this->validateApprovalProposalEligible($request);
+            $this->approvalMinatBakatEligible($data);
             if ($approve) {
-                $data =  $this->accProposal($request, $approve, 'is_acc_minat_bakat', 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_minat_bakat', 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!');
                 $layananMahasiswa = $this->getLayananMahasiswa();
                 $noHp = $layananMahasiswa->isNotEmpty() ? $layananMahasiswa->take(1)->no_hp : '0';
                 $message = 'Acc Dong layanan mahasiswa';
                 $target = 'Layanan Mahasiswa';
                 $messageFor = 'Pengajuan';
             } else {
-                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Kepala Bagian Minat dan Bakat Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Kepala Bagian Minat dan Bakat Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
                 $mahasiswa = $data->ketua;
                 $noHp = $mahasiswa->no_hp;
                 $message = 'DITOLAK BRO';
@@ -263,16 +254,17 @@ class ApprovalController extends Controller
         try {
             $approve = $request->boolean('approve');
             DB::beginTransaction();
-
+            $data = $this->validateApprovalProposalEligible($request);
+            $this->approvalMinatBakatEligible($data);
             if ($approve) {
-                $data =  $this->accProposal($request, $approve, 'is_acc_layanan', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_layanan', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
                 $wakilRektor = $this->getWakilRektor1();
                 $noHp = $wakilRektor->isNotEmpty() ? $wakilRektor->take(1)->no_hp : '0';
                 $message = 'Acc dong wakil rektor';
                 $target = 'Wakil Rektor';
                 $messageFor = 'Pengajuan';
             } else {
-                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
                 $mahasiswa = $data->ketua;
                 $noHp = $mahasiswa->no_hp;
                 $message = 'DITOLAK BRO';
@@ -313,13 +305,14 @@ class ApprovalController extends Controller
         try {
             $approve = $request->boolean('approve');
             DB::beginTransaction();
-
+            $data = $this->validateApprovalProposalEligible($request);
+            $this->approvalMinatBakatEligible($data);
             if ($approve) {
-                $data =  $this->accProposal($request, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
                 $message = 'Ditrima nih, selamat yaa';
                 $messageFor = 'Pengajuan';
             } else {
-                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
                 $mahasiswa = $data->ketua;
                 $noHp = $mahasiswa->no_hp;
                 $message = 'DITOLAK BRO';

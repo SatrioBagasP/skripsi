@@ -116,6 +116,17 @@
             const id = @json($data['id']);
             const approvalUrl = @json($data['approvalUrl']);
             $(document).ready(function() {
+
+                const message = localStorage.getItem('flash_message');
+                const type = localStorage.getItem('flash_type');
+
+                if (message && type && typeof flasher !== 'undefined') {
+                    flasher[type](message);
+                    localStorage.removeItem('flash_message');
+                    localStorage.removeItem('flash_type');
+                }
+
+
                 $('#btn-setujui').click(function(e) {
                     e.preventDefault();
                     Swal.fire({
@@ -135,7 +146,12 @@
                                     approve: true,
                                 },
                                 success: function(response) {
-                                    flasher.success(response.message)
+                                    localStorage.setItem('flash_message', response
+                                        .message);
+                                    localStorage.setItem('flash_type',
+                                        'success');
+
+                                    location.reload();
                                 },
                                 error: function(xhr, status, error) {
                                     flasher.error(xhr.responseJSON.message)
@@ -170,7 +186,12 @@
                                     approve: false,
                                 },
                                 success: function(response) {
-                                    flasher.success(response.message)
+                                    localStorage.setItem('flash_message', response
+                                        .message);
+                                    localStorage.setItem('flash_type',
+                                        'success');
+
+                                    location.reload();
                                 },
                                 error: function(xhr, status, error) {
                                     flasher.error(xhr.responseJSON.message)

@@ -34,36 +34,92 @@ trait ApprovalProposalRequestValidator
 
     public function urlProposalEligible($proposal)
     {
-        return match ($proposal->status) {
-            'Pending Dosen' => route('approval-proposal.approvalDosen'),
-            'Pending Kaprodi' => route('approval-proposal.approvalKaprodi'),
-            'Pending Minat dan Bakat' => route('approval-proposal.approvalMinatBakat'),
-            'Pending Layanan Mahasiswa' => route('approval-proposal.approvalLayananMahasiswa'),
-            'Pending Wakil Rektor' => route('approval-proposal.approvalWakilRektor'),
-            default => null,
-        };
+        if ($proposal->is_acc_dosen == false) {
+            return route('approval-proposal.approvalDosen');
+        } elseif ($proposal->is_acc_kaprodi == false) {
+            return route('approval-proposal.approvalKaprodi');
+        } elseif ($proposal->is_acc_minat_bakat == false) {
+            return route('approval-proposal.approvalMinatBakat');
+        } elseif ($proposal->is_acc_layanan == false) {
+            return route('approval-proposal.approvalLayananMahasiswa');
+        } elseif ($proposal->is_acc_wakil_rektor == false) {
+            return route('approval-proposal.approvalWakilRektor');
+        } else {
+            return null;
+        }
     }
-
-    public function approvalEligible($proposal)
+    public function approvalBtnEligible($proposal)
     {
         $admin = Gate::allows('admin');
-        $dosenPj = $admin ? '' : $proposal->dosen_id == Auth::user()->userable_id;
+        $dosenPj = $admin ? false : $proposal->dosen_id == Auth::user()->userable_id;
         $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
-        $kaprodiJurusan = $admin ? '' : Auth::user()->userable->jurusan_id == $jurusanId;
+        $kaprodiJurusan = $admin ? false : Auth::user()->userable->jurusan_id == $jurusanId;
         if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && ($dosenPj || $admin)) {
             return false;
-        } elseif (($proposal->is_acc_dosen == false && Gate::allows('approval') && $dosenPj)) {
+        } elseif ($proposal->status == 'Pending Dosen' && ((Gate::allows('approval') && $dosenPj) || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_kaprodi == false && Gate::allows('kaprodi') && $kaprodiJurusan) || $admin) {
+        } elseif ($proposal->status == 'Pending Kaprodi' && ((Gate::allows('kaprodi') && $kaprodiJurusan) || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_minat_bakat == false && Gate::allows('minat-bakat') || $admin)) {
+        } elseif ($proposal->status == 'Pending Minat dan Bakat' && (Gate::allows('minat-bakat') || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_layanan == false && Gate::allows('layanan-mahasiswa') || $admin)) {
+        } elseif ($proposal->status == 'Pending Layanan Mahasiswa' && (Gate::allows('layanan-mahasiswa') || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_wakil_rektor == false && Gate::allows('wakil-rektor') || $admin)) {
+        } elseif ($proposal->status == 'Pending Wakil Rektor' && (Gate::allows('wakil-rektor') || $admin)) {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public function approvalDosenEligible($proposal)
+    {
+        $admin = Gate::allows('admin');
+        $dosenPj = Gate::allows('approval') && $proposal->dosen_id == Auth::user()->userable_id;
+        $canAcc = $admin || $dosenPj;
+        if ($proposal->status != 'Pending Dosen' || !$canAcc) {
+            throw new \Exception("Data Tidak valid untuk di acc atau ditolak, silahkan refresh halaman ini!");
+        } else {
+            return true;
+        }
+    }
+
+    public function approvalKaprodiEligible($proposal)
+    {
+        $admin = Gate::allows('admin');
+        $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
+        $kaprodiJurusan = Gate::allows('kaprodi') && Auth::user()->userable->jurusan_id == $jurusanId;
+        $canAcc = $admin || $kaprodiJurusan;
+        if ($proposal->status != 'Pending Kaprodi' || !$canAcc) {
+            throw new \Exception("Data Tidak valid untuk di acc atau ditolak, silahkan refresh halaman ini!");
+        } else {
+            return true;
+        }
+    }
+
+    public function approvalMinatBakatEligible($proposal)
+    {
+        if ($proposal->status != 'Pending Minat dan Bakat' || !(Gate::allows('minat-bakat') || Gate::allows('admin'))) {
+            throw new \Exception("Data Tidak valid untuk di acc atau ditolak, silahkan refresh halaman ini!");
+        } else {
+            return true;
+        }
+    }
+
+    public function approvalLayananMahasiswaEligible($proposal)
+    {
+        if ($proposal->status != 'Pending Layanan Mahasiswa' || !(Gate::allows('layanan-mahasiswa') || Gate::allows('admin'))) {
+            throw new \Exception("Data Tidak valid untuk di acc atau ditolak, silahkan refresh halaman ini!");
+        } else {
+            return true;
+        }
+    }
+
+    public function approvalWakilRektorEligible($proposal)
+    {
+        if ($proposal->status != 'Pending Wakil Rektor' || !(Gate::allows('wakil-rektor') || Gate::allows('admin'))) {
+            throw new \Exception("Data Tidak valid untuk di acc atau ditolak, silahkan refresh halaman ini!");
+        } else {
+            return true;
         }
     }
 
@@ -73,17 +129,17 @@ trait ApprovalProposalRequestValidator
         $dosenPj = $admin ? '' : $proposal->dosen_id == Auth::user()->userable_id;
         $jurusanId = $proposal->user->userable->jurusan  ?  $proposal->user->userable->jurusan_id : $proposal->ketua->jurusan_id;
         $kaprodiJurusan = $admin ? '' : Auth::user()->userable->jurusan_id == $jurusanId;
-        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && $dosenPj) {
+        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && ($dosenPj || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_dosen == false && Gate::allows('approval') && $dosenPj)) {
+        } elseif ($proposal->status == 'Pending Dosen' && ((Gate::allows('approval') && $dosenPj) || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_kaprodi == false && Gate::allows('kaprodi') && $kaprodiJurusan) || $dosenPj || $admin) {
+        } elseif ($proposal->status == 'Pending Kaprodi' && ((Gate::allows('kaprodi') && $kaprodiJurusan) || $dosenPj || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_minat_bakat == false && Gate::allows('minat-bakat') || $dosenPj || $admin)) {
+        } elseif ($proposal->status == 'Pending Minat dan Bakat' && (Gate::allows('minat-bakat') || $dosenPj || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_layanan == false && Gate::allows('layanan-mahasiswa') || $dosenPj || $admin)) {
+        } elseif ($proposal->status == 'Pending Layanan Mahasiswa' && (Gate::allows('layanan-mahasiswa') || $dosenPj || $admin)) {
             return true;
-        } elseif (($proposal->is_acc_wakil_rektor == false && Gate::allows('wakil-rektor') || $dosenPj || $admin)) {
+        } elseif ($proposal->status == 'Pending Wakil Rektor' && (Gate::allows('wakil-rektor') || $dosenPj || $admin)) {
             return true;
         } else {
             return false;
