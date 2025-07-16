@@ -41,7 +41,7 @@ abstract class Controller
         $data = [];
 
         $dataUnit = UnitKemahasiswaan::where('status', true)
-            ->whereDoesntHave('user')
+            // ->whereDoesntHave('user')
             ->get()
             ->map(function ($item) {
                 return [
@@ -51,7 +51,10 @@ abstract class Controller
             });
 
         $dataDosen = Dosen::where('status', true)
-            ->whereDoesntHave('user')
+            // ->whereDoesntHave('user')
+            // ->orWhereHas('user', function ($query){
+
+            // })
             ->get()
             ->map(function ($item) {
                 return [
