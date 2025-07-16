@@ -41,6 +41,12 @@ class UserController extends Controller
                 throw new \Exception('Organisasi / Dosen sudah memiliki akun');
             }
 
+            $model = new $type;
+            $userAble = $model->where('id', $id)->lockForUpdate()->first();
+            if ($userAble->status == 0) {
+                throw new \Exception('Organisasi / Dosen Yang Dipilih Tidak Aktif');
+            }
+
             $dataField = [
                 'name' => $request->name,
                 'email' => $request->email,
@@ -50,11 +56,6 @@ class UserController extends Controller
                 'status' => $request->boolean('status'),
                 'role_id' => $request->role_id,
             ];
-            $model = new $type;
-            $userAble = $model->where('id', $id)->lockForUpdate()->first();
-            if ($userAble->status == 0) {
-                throw new \Exception('User Tidak Aktif');
-            }
             $Crud = new CrudController(User::class, dataField: $dataField, description: 'Menambah User', content: 'User');
             $action = $Crud->insertWithReturnJson();
             DB::commit();
@@ -88,6 +89,12 @@ class UserController extends Controller
 
             if ($hasUser) {
                 throw new \Exception('Organisasi / Dosen sudah memiliki akun');
+            }
+
+            $model = new $type;
+            $userAble = $model->where('id', $id)->lockForUpdate()->first();
+            if ($userAble->status == 0) {
+                throw new \Exception('Tidak Bisa merubah Organisasi / Dosen Dikarenakan Tidak Aktif');
             }
 
             $dataField = [
