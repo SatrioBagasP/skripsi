@@ -38,11 +38,15 @@ class AuthController extends Controller
                         $query->where($column, $request->username);
                     }
                 );
-        })->where(function ($query) use ($request) {
-            $query->whereHasMorph('userable', '*', function ($q) {
+        })->where(function ($q) use ($request) {
+            $q->whereHasMorph('userable', '*', function ($q) {
                 $q->where('status', true);
-            })->whereDoesntHave('userable', function ($query) use ($request) {
-                $query->where('name', $request->username);
+            })->orWhere(function ($q) use ($request) {
+                $q->whereDoesntHave('userable')
+                    ->where(function ($q) use ($request) {
+                        $q->where('email', $request->username)
+                            ->orWhere('name', $request->username);
+                    });
             });
         })->first();
 
@@ -51,9 +55,13 @@ class AuthController extends Controller
             Auth::login($user);
             $request->session()->regenerate();
             return redirect()->route('dashboard.index');
-        } else {
+        } elseif (!$user) {
             return back()->withErrors([
                 'loginFailed' => 'User belum terdaftar atau tidak aktif, silahkan hubungi Admin!',
+            ]);
+        } else {
+            return back()->withErrors([
+                'loginFailed' => 'Username / Password Salah',
             ]);
         }
     }
