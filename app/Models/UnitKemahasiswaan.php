@@ -10,7 +10,7 @@ class UnitKemahasiswaan extends Model
     protected $fillable = [
         'name',
         'image',
-        'no_hp',
+        'is_non_jurusan',
         'status',
         'jurusan_id',
     ];

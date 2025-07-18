@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('unit_kemahasiswaan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
+            $table->boolean('is_non_jurusan');
             $table->string('name');
-            $table->string('no_hp',25)->nullable();
             $table->string('image')->nullable();
             $table->boolean('status');
             $table->timestamps();
