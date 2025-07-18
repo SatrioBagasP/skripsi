@@ -126,7 +126,7 @@ abstract class Controller
             })
             ->first();
 
-        return $kaprodi->userable;
+        return $kaprodi->userable ?? null;
     }
 
     function getLayananMahasiswa()

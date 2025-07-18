@@ -255,7 +255,7 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
             $data = $this->validateApprovalProposalEligible($request);
-            $this->approvalMinatBakatEligible($data);
+            $this->approvalLayananMahasiswaEligible($data);
             if ($approve) {
                 $data =  $this->accProposal($data, $approve, 'is_acc_layanan', 'Pending Wakil Rektor', 'Layanan Mahasiswa Menyetujui Proposal Anda!');
                 $wakilRektor = $this->getWakilRektor1();
@@ -306,7 +306,7 @@ class ApprovalController extends Controller
             $approve = $request->boolean('approve');
             DB::beginTransaction();
             $data = $this->validateApprovalProposalEligible($request);
-            $this->approvalMinatBakatEligible($data);
+            $this->approvalWakilRektorEligible($data);
             if ($approve) {
                 $data =  $this->accProposal($data, $approve, 'is_acc_wakil_rektor', 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!');
                 $message = 'Ditrima nih, selamat yaa';
