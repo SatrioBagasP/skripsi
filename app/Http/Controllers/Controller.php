@@ -88,6 +88,7 @@ abstract class Controller
             ->when($jurusan != null, function ($query) use ($jurusan) {
                 $query->where('jurusan_id', $jurusan);
             })
+            ->whereHas('user')
             ->get()
             ->map(function ($item) {
                 return [
