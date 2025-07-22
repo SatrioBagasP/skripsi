@@ -103,16 +103,25 @@ class ApprovalController extends Controller
             DB::beginTransaction();
             $data = $this->validateApprovalProposalEligible($request);
             $this->approvalDosenEligible($data);
+            $nonJurusan = $this->checkNonJurusan($data);
+            $status = $nonJurusan ? 'Pending Layanan Mahasiswa' : 'Pending Kaprodi';
+
             if ($approve) {
-                $data =  $this->accProposal($data, $approve, 'is_acc_dosen', 'Pending Kaprodi', 'Dosen Telah Menyetujui Proposal Anda!');
+                $data =  $this->accProposal($data, $approve, 'is_acc_dosen', $status, 'Dosen Telah Menyetujui Proposal Anda!');
                 $noProposal = explode('/', $data->no_proposal);
                 $kodeJurusan = $noProposal[1];
 
-                $jurusan = Jurusan::select(['id'])->where('kode', $kodeJurusan)->first();
-                $kaprodi = $this->getKaprodi($jurusan->id);
-                $noHp = $kaprodi ? $kaprodi->no_hp : '0';
-                $message = 'Acc Dong Kaprodi';
-                $target = 'Kaprodi';
+                if ($nonJurusan) {
+                    $layananMahasiswa = $this->getLayananMahasiswa();
+                    $noHp = $layananMahasiswa->isNotEmpty() ? $layananMahasiswa->take(1)->no_hp : '0';
+                } else {
+                    $jurusan = Jurusan::select(['id'])->where('kode', $kodeJurusan)->first();
+                    $kaprodi = $nonJurusan  ?: $this->getKaprodi($jurusan->id);
+                    $noHp =  $kaprodi ? $kaprodi->no_hp : '0';
+                }
+
+                $message = 'Acc Dong';
+                $target = $nonJurusan ? 'Layanan Mahasiswa' : 'Kaprodi';
                 $messageFor = 'Pengajuan';
             } else {
                 $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Dosen Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);

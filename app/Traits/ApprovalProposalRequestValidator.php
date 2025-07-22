@@ -32,6 +32,11 @@ trait ApprovalProposalRequestValidator
         return $data;
     }
 
+    public function checkNonJurusan($proposal)
+    {
+        return $proposal->user->userable->is_non_jurusan == false;
+    }
+
     public function urlProposalEligible($proposal)
     {
         if ($proposal->status == 'Pending Dosen') {
