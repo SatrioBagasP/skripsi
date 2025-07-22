@@ -47,13 +47,37 @@ class NotifikasiController extends Controller
             $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
         }
         if ($messageFor == 'Pengajuan') {
-            return 'Pengajuan Berhasil Diajukan ke Verifikator ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+            return 'Pengajuan Berhasil Diajukan ke Verifikator ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
         } elseif ($messageFor == 'Ditolak') {
-            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
         } elseif ($messageFor == 'Diterima') {
-            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin memperbarui atau mengecek nomor ' . $target : '');
+            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
         }
     }
 
-    public function generateMessageForKaprodi() {}
+    public function generateMessageForVerifikator($nama = 'dummy', $jenisPengajuan = 'dummy', $judulKegiatan = 'dummy', $unitKemahasiswaan = 'dummy', $route = 'dummy')
+    {
+        $pesan = "Yth. Bapak/Ibu, " . $nama . ",\n\nTerdapat pengajuan baru yang memerlukan verifikasi dari Anda dalam sistem informasi kegiatan kemahasiswaan, dengan detail sebagai berikut:\n\n"
+            . "- Jenis Pengajuan: " . $jenisPengajuan . "\n"
+            . "- Judul Kegiatan: " . $judulKegiatan . "\n"
+            . "- Unit Kemahasiswaan: " . $unitKemahasiswaan . "\n";
+
+        $pesan .= "\nMohon untuk dapat segera melakukan verifikasi agar proses selanjutnya dapat berjalan dengan lancar.\nAnda dapat memeriksa dan memproses pengajuan melalui tautan berikut:\n"  . $route .  "\n\nTerima kasih atas perhatian dan kerjasamanya\n\nHormat kami,\nTim Sistem Informasi Kegiatan Kemahasiswaan";
+
+        return $pesan;
+    }
+
+    public function generateMessageForRejected($jenisPengajuan = 'dummy', $judulKegiatan = 'dummy', $unitKemahasiswaan = 'dummy', $alasanTolak = 'dummy', $route = 'dummy')
+    {
+        $pesan = "Yth. " . $unitKemahasiswaan . ",\n\nPengajuan " . $jenisPengajuan . " dengan judul kegiatan " . $judulKegiatan . " yang Anda ajukan melalui sistem informasi kegiatan kemahasiswaan telah ditolak oleh verifikator dengan alasan sebagai berikut:\n\n'*_" . $alasanTolak . "_*'\n\nMohon untuk melakukan revisi sesuai catatan di atas, dan ajukan kembali melalui sistem agar dapat diproses lebih lanjut.Anda dapat melihat dan memperbaiki pengajuan Anda melalui tautan berikut:\n" . $route . "\n\nTerima kasih atas perhatian dan kerjasamanya\n\nHormat kami,\nTim Sistem Informasi Kegiatan Kemahasiswaan";
+
+        return $pesan;
+    }
+
+    public function generateMessageForAccepted($jenisPengajuan = 'dummy', $judulKegiatan = 'dummy', $unitKemahasiswaan = 'dummy')
+    {
+        $pesan = "Yth. " . $unitKemahasiswaan . ",\n\nPengajuan " . $jenisPengajuan . " dengan judul kegiatan " . $judulKegiatan . " yang Anda ajukan melalui sistem informasi kegiatan kemahasiswaan telah disetujui sepenuhnya (ACC Final)\n\nTerima kasih atas perhatian dan kerjasamanya\n\nHormat kami,\nTim Sistem Informasi Kegiatan Kemahasiswaan";
+
+        return $pesan;
+    }
 }

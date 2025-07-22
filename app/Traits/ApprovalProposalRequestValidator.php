@@ -34,7 +34,7 @@ trait ApprovalProposalRequestValidator
 
     public function checkNonJurusan($proposal)
     {
-        return $proposal->user->userable->is_non_jurusan == false;
+        return $proposal->user->userable->is_non_jurusan == true;
     }
 
     public function urlProposalEligible($proposal)

@@ -297,8 +297,7 @@ class ProposalController extends Controller
                 ->delete();
 
             $ketuaId = $request->ketua_id;
-
-            if (!in_array($ketuaId, $mahasiswaInsert)) {
+            if (!in_array($ketuaId, $mahasiswaInsert) && !in_array($ketuaId, $mahasiswaDefault->toArray())) {
                 array_unshift($mahasiswaInsert, $ketuaId);
             }
 
@@ -369,7 +368,8 @@ class ProposalController extends Controller
             $dosen = $this->validateDosen($data->dosen_id);
             $noHp = $dosen ? $dosen->no_hp : 0;
             $notifikasi = new NotifikasiController();
-            $response = $notifikasi->sendMessage($noHp, 'Tolong ACC', 'Dosen Penanggung Jawab','Pengajuan');
+            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Proposal', nama: $dosen->name, judulKegiatan: $data->name, unitKemahasiswaan: $data->user->userable->name, route: route('approval-proposal.edit', encrypt($data->id))) : '-';
+            $response = $notifikasi->sendMessage($noHp, $message, 'Dosen Penanggung Jawab', 'Pengajuan');
 
             $data->status = 'Pending Dosen';
             $data->save();
