@@ -23,7 +23,7 @@ class UnitKemahasiswaanController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            // 'jurusan_id' => 'required',
+            'jurusan_id' => 'required_if:is_non_jurusan,false',
             'image' => ['sometimes', File::types(['jpg', 'jpeg', 'png'])->max(2 * 1024)]
         ]);
 
@@ -35,7 +35,8 @@ class UnitKemahasiswaanController extends Controller
 
             $dataField = [
                 'name' => $request->name,
-                'jurusan_id' => $request->jurusan_id,
+                'is_non_jurusan' => false,
+                'jurusan_id' =>  $request->boolean('is_non_jurusan') ? null : $request->jurusan_id,
                 'image' => $imagePath,
                 'status' => $request->boolean('status'),
             ];
@@ -60,16 +61,33 @@ class UnitKemahasiswaanController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            // 'jurusan_id' => 'required',
+            'jurusan_id' => 'required_if:is_non_jurusan,false',
         ]);
 
         try {
             $imagePath = null;
-            $imageOld = UnitKemahasiswaan::select('image')->where('id', decrypt($request->id))->first();
+            $data = UnitKemahasiswaan::with('user.proposal')
+                ->where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
+            $imageOld = $data->image;
+
+            // jika dia awalnya itu non jurusan lalu dirubah ke non jurusan atau sebalik nya, bakalan ada alert ga bisa krn ada proposal yang sudah dalam pengajuan 
+            if (!$data) {
+                throw new \Exception('Data unit kemahasiswaan tidak ada atau telah dihapus, silahkan refresh halaman ini');
+            } elseif ($data->is_non_jurusan != $request->boolean('is_non_jurusan') && $data->user && $data->user->proposal->isNotEmpty()) {
+                $data->user->proposal->each(function ($item) {
+                    if (!in_array($item->status, ['Draft', 'Rejected', 'Accepted'])) {
+                        throw new \Exception('Tidak bisa merubah unit kegiatan menjadi ke jurusan / non jurusan, dikarenakan ada proposal pada unit ini masih tahap pengecekan oleh verifikator');
+                    }
+                });
+            }
 
             $dataField = [
                 'name' => $request->name,
-                'jurusan_id' => $request->jurusan_id,
+                'jurusan_id' =>  $request->boolean('is_non_jurusan') ? null : $request->jurusan_id,
+                'is_non_jurusan' => $request->boolean('is_non_jurusan'),
                 'status' => $request->boolean('status'),
             ];
 
@@ -79,17 +97,17 @@ class UnitKemahasiswaanController extends Controller
             }
             DB::beginTransaction();
 
-            $Crud = new CrudController(UnitKemahasiswaan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
+            $Crud = new CrudController(UnitKemahasiswaan::class, data: $data, dataField: $dataField, description: 'Merubah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
             $action = $Crud->updateWithReturnJson();
 
             if ($request->file('image')) {
-                $this->storageDelete($imageOld->image);
+                $this->storageDelete($imageOld);
             }
 
             DB::commit();
             return $action;
         } catch (\Throwable $e) {
-            $this->storageDelete($imagePath);
+            // $this->storageDelete($imagePath);
             DB::rollBack();
             return response()->json([
                 'status' => 400,
@@ -101,7 +119,7 @@ class UnitKemahasiswaanController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = UnitKemahasiswaan::with(['jurusan'])->select('name', 'no_hp', 'image', 'status', 'id', 'jurusan_id')
+        $data = UnitKemahasiswaan::with(['jurusan'])->select('name', 'image', 'status', 'id', 'jurusan_id', 'is_non_jurusan')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
@@ -113,6 +131,7 @@ class UnitKemahasiswaanController extends Controller
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,
+                'is_non_jurusan' => $item->is_non_jurusan,
                 'no_hp' => $item->no_hp,
                 'jurusan' => $item->jurusan->name ?? '-',
                 'image' => $item->image ? Storage::temporaryUrl($item->image, now()->addMinutes(5)) : null,

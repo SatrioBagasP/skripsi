@@ -83,11 +83,18 @@ class UserController extends Controller
 
             list($id, $type) = explode('|', $request->user_id,);
             $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
+            
+            $dataUser = User::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
             $hasUser = User::where('userable_type', $type)
                 ->where('userable_id', $id)
                 ->exists();
 
-            if ($hasUser) {
+            if (!$dataUser) {
+                throw new \Exception('Data User tidak ada atau telah dihapus, silahkan refresh halaman ini');
+            } elseif ($id != $dataUser->userable_id && $hasUser) {
                 throw new \Exception('Organisasi / Dosen sudah memiliki akun');
             }
 
@@ -107,7 +114,7 @@ class UserController extends Controller
                 'role_id' => $request->role_id,
             ];
 
-            $Crud = new CrudController(User::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah User', content: 'User');
+            $Crud = new CrudController(User::class, data: $dataUser, id: decrypt($request->id), dataField: $dataField, description: 'Merubah User', content: 'User');
             $action = $Crud->updateWithReturnJson();
 
             DB::commit();

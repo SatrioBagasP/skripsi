@@ -82,7 +82,7 @@ class ApprovalController extends Controller
             'status' => 'Rejected',
             'alasan_tolak' => $reason
         ];
-        $Crud = new CrudController(Proposal::class, data: $proposal, id: $proposal->id, dataField: $dataField, description: $desc, content: 'Approval Proposal');
+        $Crud = new CrudController(Proposal::class, data: $proposal, dataField: $dataField, description: $desc, content: 'Approval Proposal');
         $data = $Crud->updateWithReturnData();
 
         return $data;
@@ -115,7 +115,7 @@ class ApprovalController extends Controller
                 $target = 'Kaprodi';
                 $messageFor = 'Pengajuan';
             } else {
-                $data =  $this->rejectProposal($request, $approve, null, $request->reason, '', 'Dosen Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $data =  $this->rejectProposal($data, $approve, null, $request->reason, '', 'Dosen Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
                 $mahasiswa = $data->ketua;
                 $noHp = $mahasiswa->no_hp;
                 $message = 'DITOLAK BRO';

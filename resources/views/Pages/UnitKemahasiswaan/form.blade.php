@@ -15,22 +15,31 @@
         <input type="text" class="form-control" placeholder="Nomor Handphone Penanggung Jawab" name="no_hp" id="no_hp">
         <div class="invalid-feedback" id="no_hpError"></div>
     </div> --}}
-    <label>Jurusan</label>
-    <div class="mb-3">
-        @include('Component.select', [
-            'name' => 'jurusan_id',
-            'id' => 'jurusan_id',
-            'data' => $optionJurusan,
-        ])
+    <label class="form-check-label">Apakah ini unit kegiatan umum (non-jurusan)?</label>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="is_non_jurusan" name="is_non_jurusan" >
     </div>
+    <div id='input_jurusan'>
+        <label>Jurusan</label>
+        <div class="mb-3">
+            @include('Component.select', [
+                'name' => 'jurusan_id',
+                'id' => 'jurusan_id',
+                'data' => $optionJurusan,
+            ])
+        </div>
+    </div>
+
     <label>Image</label>
     <div class="mb-3">
-        <input type="file" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="image" id="image" accept="image/*">
+        <input type="file" class="form-control" placeholder="Nama Unit Kemahasiswaan" name="image" id="image"
+            accept="image/*">
         <div class="invalid-feedback" id="imageError"></div>
     </div>
-    <img id="imagePreview" src="" alt="Preview Image" class="d-none" style="max-width: 150px; border-radius: 5px; border: 1px solid #ddd; padding: 5px;">
+    <img id="imagePreview" src="" alt="Preview Image" class="d-none"
+        style="max-width: 150px; border-radius: 5px; border: 1px solid #ddd; padding: 5px;">
     <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="status" name="status" checked="">
+        <input class="form-check-input" type="checkbox" id="status" name="status" >
         <label class="form-check-label">Status</label>
     </div>
     <div class="d-flex justify-content-end">

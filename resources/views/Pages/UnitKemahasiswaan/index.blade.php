@@ -88,6 +88,7 @@
                                 image: item.image,
                                 no_hp: item.no_hp,
                                 jurusan: item.jurusan,
+                                is_non_jurusan: item.is_non_jurusan,
                                 jurusan_id: item.jurusan_id,
                                 status: item.status,
                             });
@@ -115,6 +116,7 @@
                 name: null,
                 image: null,
                 no_hp: null,
+                is_non_jurusan: false,
                 jurusan_id: null,
                 status: false,
             }
@@ -155,6 +157,16 @@
                     }
                 });
 
+                $('#is_non_jurusan').change(function(e) {
+                    e.preventDefault();
+                    if ($(this).prop('checked') == false) {
+                        $('#input_jurusan').removeAttr('hidden');
+                    } else {
+
+                        $('#input_jurusan').attr('hidden', true);
+                    }
+                });
+
                 $(document).on('click', '.edit', function() {
                     resetDataSet();
                     $('#btn-tambah').hide();
@@ -177,6 +189,8 @@
                     $('#npm').val(data[index].npm).trigger('change');
                     $('#jurusan_id').val(data[index].jurusan_id).trigger('change');
                     $('#status').prop('checked', data[index].status == 1).trigger('change');
+                    $('#is_non_jurusan').prop('checked', data[index].is_non_jurusan == 1).trigger(
+                        'change');
                 });
 
                 $('#btn-tambah').click(function(e) {
@@ -195,18 +209,20 @@
                         name: null,
                         image: null,
                         no_hp: null,
+                        is_non_jurusan: false,
                         jurusan_id: null,
                         status: false,
                     };
                     $('.select2').val('').trigger('change');
                     $('#imagePreview').attr('src', '').addClass('d-none');
-                    $('#status').prop('checked', dataSet.status);
+                    $('#status').prop('checked', false).trigger('change');
+                    $('#is_non_jurusan').prop('checked', false).trigger('change');
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');
                 }
 
                 function submitForm(button, type) {
-                    button.attr('disabled', true);
+                    // button.attr('disabled', true);
                     let route = ''
                     if (type == 'store') {
                         route = '{{ route('master.unit-kemahasiswaan.store') }}'
