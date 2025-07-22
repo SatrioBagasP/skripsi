@@ -63,9 +63,6 @@
                         'name' => 'dosen_id',
                         'id' => 'dosen_id',
                         'data' => $dosenOption,
-                        'placeholder' => empty($dosenOption)
-                            ? '-- Pilih Ketua Pelaksana Terlebih Dahulu --'
-                            : null,
                     ])
                 </div>
                 <label>Mahasiswa</label>
@@ -127,10 +124,8 @@
         (function() {
             let edit = @json($edit ?? false);
             let dataSet = {};
-            let hasJurusan = false;
             if (edit) {
                 dataSet = @json($data ?? null);
-                hasJurusan = @json($hasJurusan);
 
                 Object.entries(dataSet).forEach(function([key, value]) {
                     if (key != 'file_url') {
@@ -147,7 +142,6 @@
                 }
 
             } else {
-                hasJurusan = @json($hasJurusan);
                 dataSet = {
                     id: null,
                     name: null,
@@ -189,38 +183,38 @@
                     }
                 });
 
-                $('#ketua_id').change(function(e) {
-                    e.preventDefault();
-                    dataSet.dosen_id = null;
-                    let ketuaId = $(this).val();
-                    if (!hasJurusan) {
-                        $.ajax({
-                            type: "GET",
-                            url: "{{ route('proposal.getDosen') }}",
-                            data: {
-                                ketuaId: ketuaId,
-                            },
-                            success: function(response) {
-                                var options = '';
-                                if (response.data.length > 0) {
-                                    options +=
-                                        '<option value="" disabled selected>---Pilih Dosen Penanggung Jawab---</option>';
-                                    $.each(response.data, function(index, value) {
-                                        options +=
-                                            `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
-                                    });
-                                    console.log(options);
-                                } else {
-                                    options +=
-                                        '<option value="" disabled selected>Tidak Ada Data Dosen Hubungi Admin Aplikasi!</option>';
-                                }
+                // $('#ketua_id').change(function(e) {
+                //     e.preventDefault();
+                //     dataSet.dosen_id = null;
+                //     let ketuaId = $(this).val();
+                //     if (!hasJurusan) {
+                //         $.ajax({
+                //             type: "GET",
+                //             url: "{{ route('proposal.getDosen') }}",
+                //             data: {
+                //                 ketuaId: ketuaId,
+                //             },
+                //             success: function(response) {
+                //                 var options = '';
+                //                 if (response.data.length > 0) {
+                //                     options +=
+                //                         '<option value="" disabled selected>---Pilih Dosen Penanggung Jawab---</option>';
+                //                     $.each(response.data, function(index, value) {
+                //                         options +=
+                //                             `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                //                     });
+                //                     console.log(options);
+                //                 } else {
+                //                     options +=
+                //                         '<option value="" disabled selected>Tidak Ada Data Dosen Hubungi Admin Aplikasi!</option>';
+                //                 }
 
-                                $('#dosen_id').html(options);
+                //                 $('#dosen_id').html(options);
 
-                            }
-                        });
-                    }
-                });
+                //             }
+                //         });
+                //     }
+                // });
 
                 if (edit) {
                     $('.select2').trigger('change');
@@ -242,6 +236,7 @@
 
                 $('#btn-submit').click(function(e) {
                     e.preventDefault();
+                    const button = $(this);
                     const formData = new FormData();
                     for (const key in dataSet) {
                         if (dataSet[key] !== null && key !== 'mahasiswa_id') {
@@ -254,6 +249,7 @@
                             formData.append('mahasiswa_id[]', id);
                         });
                     }
+                    // button.attr('disabled', true);
                     $.ajax({
                         type: "POST",
                         url: edit ? '{{ route('proposal.update') }}' :
@@ -262,7 +258,12 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
+                            localStorage.setItem('flash_message', response
+                                .message);
+                            localStorage.setItem('flash_type',
+                                'success');
                             window.location.href = '{{ route('proposal.index') }}';
+
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
@@ -273,7 +274,7 @@
                                 $('#' + key).addClass('is-invalid');
                             });
                             flasher.error(xhr.responseJSON.message);
-                            // button.attr('disabled', false);
+                            button.attr('disabled', false);
                         }
                     });
                 });

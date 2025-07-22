@@ -115,6 +115,16 @@
             // END BUNDLE
 
             $(document).ready(function() {
+
+                const message = localStorage.getItem('flash_message');
+                const type = localStorage.getItem('flash_type');
+
+                if (message && type && typeof flasher !== 'undefined') {
+                    flasher[type](message);
+                    localStorage.removeItem('flash_message');
+                    localStorage.removeItem('flash_type');
+                }
+
                 const editUrlTemplate = @json(route('proposal.edit', ['id' => ':id']));
                 const tambahProposalUrl = "{{ route('proposal.create') }}";
 

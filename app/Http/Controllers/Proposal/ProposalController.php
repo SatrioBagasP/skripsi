@@ -46,10 +46,10 @@ class ProposalController extends Controller
         $admin = Gate::allows('admin');
         $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
-        $dosenOption = $jurusan ? $this->getDosenOption($jurusan) : [];
+        $dosenOption = $this->getDosenOption($jurusan);
         $ketuaOption = $this->getMahasiswaOption($jurusan);
         $mahasiswaOption = $this->getMahasiswaOption($jurusan);
-        $hasJurusan = $jurusan == null ? false : true;
+
         if (!$admin) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
                 if ($item['value'] == Auth::user()->userable_id) {
@@ -59,7 +59,7 @@ class ProposalController extends Controller
             });
         }
 
-        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption', 'hasJurusan'));
+        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption'));
     }
 
     public function store(Request $request)

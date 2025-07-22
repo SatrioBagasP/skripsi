@@ -34,15 +34,15 @@ trait ApprovalProposalRequestValidator
 
     public function urlProposalEligible($proposal)
     {
-        if ($proposal->is_acc_dosen == false) {
+        if ($proposal->status == 'Pending Dosen') {
             return route('approval-proposal.approvalDosen');
-        } elseif ($proposal->is_acc_kaprodi == false) {
+        } elseif ($proposal->status == 'Pending Kaprodi') {
             return route('approval-proposal.approvalKaprodi');
-        } elseif ($proposal->is_acc_minat_bakat == false) {
+        } elseif ($proposal->status == 'Pending Minat dan Bakat') {
             return route('approval-proposal.approvalMinatBakat');
-        } elseif ($proposal->is_acc_layanan == false) {
+        } elseif ($proposal->status == 'Pending Layanan Mahasiswa') {
             return route('approval-proposal.approvalLayananMahasiswa');
-        } elseif ($proposal->is_acc_wakil_rektor == false) {
+        } elseif ($proposal->status == 'Pending Wakil Rektor') {
             return route('approval-proposal.approvalWakilRektor');
         } else {
             return null;
