@@ -44,6 +44,6 @@ class Proposal extends Model
     }
 
     public function mahasiswa(){
-        return $this->belongsToMany(Mahasiswa::class,'proposal_has_mahasiswa','proposal_id','mahasiswa_id')->orderBy('id','asc');
+        return $this->belongsToMany(Mahasiswa::class,'proposal_has_mahasiswa','proposal_id','mahasiswa_id')->orderBy('proposal_has_mahasiswa.mahasiswa_id', 'desc');
     }
 }
