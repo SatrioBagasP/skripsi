@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('jurusan', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('ketua_id')->nullable()->constrained('dosen')->nullOnDelete();
             $table->string('name')->unique();
             $table->string('kode',10);
             $table->boolean('status');

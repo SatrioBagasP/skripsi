@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dosen', function (Blueprint $table) {
+        Schema::create('akademik', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
-            $table->string('nip')->unique();
-            $table->string('name');
-            $table->string('alamat');
+            $table->foreignId('ketua_id')->nullable()->constrained('dosen')->nullOnDelete();
+            $table->string('name')->unique();
             $table->string('no_hp',25);
             $table->boolean('status');
             $table->timestamps();
@@ -28,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dosen');
+        Schema::dropIfExists('akademik');
     }
 };
