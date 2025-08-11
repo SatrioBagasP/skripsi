@@ -27,7 +27,7 @@ Route::controller(AuthController::class)->group(function () {
 Route::middleware(['auth'])->group(function () {
 
     // Master
-    Route::prefix('/master')->name('master.')->middleware('isAdmin')->group(function () {
+    Route::prefix('/master')->name('master.')->middleware('can:admin')->group(function () {
         Route::prefix('/unit-kemahasiswaan')->name('unit-kemahasiswaan.')->controller(UnitKemahasiswaanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
@@ -64,7 +64,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
     });
 
-    Route::middleware(['isUnitMahasiswa'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
+    Route::middleware(['can:unit-kemahasiswaan'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/dosen-option', 'getDosen')->name('getDosen');
         Route::get('/create', 'create')->name('create');
@@ -76,7 +76,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/get-data', 'getData')->name('getData');
     });
 
-    Route::middleware(['isApproval'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
+    Route::middleware(['can:approval'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/approval-dosen','approvalDosen')->name('approvalDosen');
