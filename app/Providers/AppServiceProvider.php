@@ -21,32 +21,29 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('admin', function (User $user) {
-            return $user->role_id == 1;
+        Gate::define('admin', function () {
+            return in_array(1, session('user_roles', []));
         });
-
-        Gate::define('unit-kemahasiswaan', function (User $user) {
-            return $user->role_id == 2;
+        Gate::define('unit-kemahasiswaan', function () {
+            return in_array(2, session('user_roles', []));
         });
-
-        Gate::define('dosen', function (User $user) {
-            return $user->role_id == 3;
+        Gate::define('dosen', function () {
+            return in_array(3, session('user_roles', []));
         });
-        Gate::define('kaprodi', function (User $user) {
-            return $user->role_id == 4;
+        Gate::define('kaprodi', function () {
+            return in_array(4, session('user_roles', []));
         });
-        Gate::define('minat-bakat', function (User $user) {
-            return $user->role_id == 5;
+        Gate::define('minat-bakat', function () {
+            return in_array(5, session('user_roles', []));
         });
-        Gate::define('layanan-mahasiswa', function (User $user) {
-            return $user->role_id == 6;
+        Gate::define('layanan-mahasiswa', function () {
+            return in_array(6, session('user_roles', []));
         });
-        Gate::define('wakil-rektor', function (User $user) {
-            return $user->role_id == 7;
+        Gate::define('wakil-rektor', function () {
+            return in_array(7, session('user_roles', []));
         });
-        
-        Gate::define('approval', function (User $user) {
-            return in_array($user->role_id, [1, 3, 4, 5, 6, 7]);
+        Gate::define('approval', function () {
+            return (bool) array_intersect([1, 3, 4, 5, 6, 7], session('user_roles', []));
         });
     }
 }

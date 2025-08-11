@@ -52,6 +52,9 @@ class AuthController extends Controller
 
 
         if ($user && Hash::check($request->password, $user->password)) {
+            $roleIds = $user->roles->pluck('id')->toArray();
+            session(['user_roles' => $roleIds]);
+            
             Auth::login($user);
             $request->session()->regenerate();
             return redirect()->route('dashboard.index');
