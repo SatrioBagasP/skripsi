@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Jurusan;
-use App\Models\Roles;
 use App\Models\User;
+use App\Models\Roles;
+use App\Models\Jurusan;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
@@ -16,7 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
 
         Roles::updateOrCreate([
             'name' => 'Admin', 
@@ -41,11 +41,19 @@ class DatabaseSeeder extends Seeder
         ], []);
 
         User::updateOrCreate([
+            'id' => 1,
             'email' => 'admin@example.com',
         ], [
             'name' => 'admin',
             'password' => Hash::make('123'),
+        ]);
+
+        DB::table('user_has_role')->updateOrInsert([
+            'user_id' => 1,
             'role_id' => 1,
+        ],[
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
 }
