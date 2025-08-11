@@ -36,12 +36,8 @@
 
 @push('js')
     <script>
-        (function() {
-
-            // BUNDLE DATATABLE
-            let searching = false;
-            let data = [];
-            @stack('paginate_js')
+    (async function() {
+        const { dataTable } = await import('/js/datatable.js');
 
             function renderTableBody(data) {
                 let i = 1;
@@ -63,48 +59,13 @@
                     i++;
                 });
             }
-            function getData(page = 1) {
-                if(searching){
-                    return;
-                }
-                searching = true;
-                data = [];
-                $('#tableBody').empty(); // Dari data table blade
-                $('#loading-spinner').show();
-                $.ajax({
-                    type: "GET",
-                    url: "{{ route('master.jurusan.getData') }}",
-                    data: {
-                        page: page,
-                        search: paginateControll.search,
-                        itemDisplay: paginateControll.itemDisplay
-                    },
-                    success: function(response) {
-                        response.data.forEach(item => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                                kode: item.kode,
-                                status: item.status,
-                            });
-                        });
-                        paginateControll.currentPage = response.currentPage;
-                        paginateControll.totalPage = response.totalPage;
-                        renderPagination(); // function dari datatable
-                        renderTableBody(data)
-                    },
-                    error: function(xhr, status, error) {
-                        flasher.error(xhr.responseJSON.message);
-                    },
-                    complete: function() {
-                        $('#loading-spinner').hide();
-                        searching = false;
-                    }
-                });
+            const table = dataTable({ renderTableBody });
+            let data = [];
+            async function loadTable(){
+                data = await table.getData( url = '{{ route('master.jurusan.getData') }}' );
             }
-
-            getData();
-            // END BUNDLE
+            
+            await loadTable(); 
 
             let dataSet = {
                 id: null,
@@ -181,7 +142,7 @@
                             flasher.success(response.message);
                             button.attr('disabled', false);
                             $('#sidebar-form').removeClass('show');
-                            getData();
+                            loadTable();
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
