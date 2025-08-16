@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Controllers\Akademik\AkademikController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Dosen\DosenController;
-use App\Http\Controllers\TestingTwilloController;
 use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
@@ -46,6 +46,13 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/update', 'update')->name('update');
             Route::get('/get-data', 'getData')->name('getData');
         });
+        Route::prefix('/akademik')->name('akademik.')->controller(AkademikController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
+
         Route::prefix('/jurusan')->name('jurusan.')->controller(JurusanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
