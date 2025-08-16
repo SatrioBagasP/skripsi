@@ -8,8 +8,7 @@ export function dataTable(options = {}) {
         searching: false,
         search: null,
         itemDisplay: null ?? 10,
-        page: 1,
-        currentPage: null,
+        currentPage: null ?? 1,
         totalPage: null,
         filter: {}
     };
@@ -26,7 +25,7 @@ export function dataTable(options = {}) {
 
         // Tombol Prev
         container.append(
-            `<a  href="javascript:;" class="page-btn page-link ${currentPage === 1 ? 'disabled' : ''}" data-page="${currentPage - 1}">
+            `<a  href="javascript:;" class="page-btn page-link ${currentPage === 1 ? 'disabled' : ''}" data-page="${currentPage - 1}" style="border-radius:6px;">
                     <i class="fa fa-angle-left"></i>
                     <span class="sr-only">Previous</span>
                 </a>`
@@ -42,7 +41,7 @@ export function dataTable(options = {}) {
         }
 
         if (start > 1) {
-            container.append(`<a  href="javascript:;" class="page-btn page-link" data-page="1">1</a>`);
+            container.append(`<a  href="javascript:;" class="page-btn page-link" data-page="1" style="border-radius:6px;">1</a>`);
             if (start > 2) {
                 container.append(`<span>...</span>`);
             }
@@ -50,7 +49,7 @@ export function dataTable(options = {}) {
 
         for (let i = start; i <= end; i++) {
             container.append(
-                `<a  href="javascript:;" class="page-btn page-link ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</a>`
+                `<a  href="javascript:;" class="page-btn page-link ${i === currentPage ? 'active' : ''}" data-page="${i}" style="border-radius:6px;">${i}</a>`
             );
         }
 
@@ -59,16 +58,70 @@ export function dataTable(options = {}) {
                 container.append(`<span>...</span>`);
             }
             container.append(
-                `<a  href="javascript:;" class="page-btn page-link" data-page="${totalPage}">${totalPage}</a>`);
+                `<a  href="javascript:;" class="page-btn page-link" data-page="${totalPage}" style="border-radius:6px;">${totalPage}</a>`);
         }
 
         // Tombol Next
         container.append(
-            `<a  href="javascript:;" class="page-btn page-link ${currentPage === totalPage ? 'disabled' : ''}" data-page="${currentPage + 1}">
+            `<a  href="javascript:;" class="page-btn page-link ${currentPage === totalPage ? 'disabled' : ''}" data-page="${currentPage + 1}" style="border-radius:6px;">
                     <i class="fa fa-angle-right"></i>
                     <span class="sr-only">Next</span>
                 </a>`
         );
+    }
+
+    function renderData(url = null) {
+        if (state.searching == true) {
+            return;
+        }
+        state.url = url;
+        state.searching = true;
+        state.data = [];
+        $('#tableBody').empty(); // Dari data table blade
+        $('#loading-spinner').show();
+
+
+        $.ajax({
+            type: 'GET',
+            url: state.url,
+            data: {
+                page: state.currentPage,
+                search: state.search,
+                itemDisplay: state.itemDisplay,
+                filter: state.filter,
+            },
+            success: function (response) {
+                state.data = response.data;
+                state.currentPage = response.currentPage;
+                state.totalPage = response.totalPage;
+                renderPagination();
+                renderTableBody(state.data);
+            },
+            error: function (xhr) {
+                reject(xhr.responseJSON?.message || 'Error loading data');
+            },
+            complete: function () {
+                $('#loading-spinner').hide();
+                state.searching = false;
+            }
+        });
+    }
+
+    function reload() {
+        renderData(state.url);
+    }
+
+    function filter(newFilters) {
+        state.filter = { ...state.filter, ...newFilters };
+        reload();
+    }
+
+    function getAllData() {
+        return state.data;
+    }
+
+    function getDataByIndex(index) {
+        return state.data[index];
     }
 
     $(document).on('keyup', '#search', function (e) {
@@ -98,7 +151,7 @@ export function dataTable(options = {}) {
         $('.page-btn').addClass('disabled');
         if (!isNaN(page)) {
             state.currentPage = page;
-            getData(page); // fungsi yang ambil data
+            reload();
 
             // update active class
             $('.page-btn').removeClass('active');
@@ -106,56 +159,10 @@ export function dataTable(options = {}) {
         }
     });
 
-    async function getData(url = null) {
-        if (state.searching == true) {
-            return;
-        }
-        state.url = url;
-        state.searching = true;
-        state.data = [];
-        $('#tableBody').empty(); // Dari data table blade
-        $('#loading-spinner').show();
-
-        return new Promise((resolve, reject) => {
-            $.ajax({
-                type: 'GET',
-                url: state.url,
-                data: {
-                    page: state.page,
-                    search: state.search,
-                    itemDisplay: state.itemDisplay,
-                    filter: state.filter,
-                },
-                success: function (response) {
-                    state.data = response.data;
-                    state.currentPage = response.currentPage;
-                    state.totalPage = response.totalPage;
-                    renderPagination();
-                    renderTableBody(state.data);
-                    resolve(state.data);
-                },
-                error: function (xhr) {
-                    reject(xhr.responseJSON?.message || 'Error loading data');
-                },
-                complete: function () {
-                    $('#loading-spinner').hide();
-                    state.searching = false;
-                }
-            });
-        });
-    }
-
-    function reload() {
-        getData(state.url);
-    }
-
-    function filter(newFilters) {
-        state.filter = { ...state.filter, ...newFilters };
-        reload();
-    }
-
     return {
-        getData,
+        getAllData,
+        getDataByIndex,
+        renderData,
         filter,
         reload,
     };

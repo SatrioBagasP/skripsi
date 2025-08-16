@@ -35,9 +35,11 @@
 @endsection
 
 @push('js')
-    <script>
-    (async function() {
-        const { dataTable } = await import('/js/datatable.js');
+    <script type="module">
+        import {
+            dataTable
+        } from '/js/datatable.js';
+        (function() {
 
             function renderTableBody(data) {
                 let i = 1;
@@ -48,9 +50,9 @@
                             <td> ${item.name} </td>
                             <td> ${item.kode} </td>
                             <td class='align-middle text-center text-sm'>
-                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}    
+                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}
                             </td>
-                            <td class='align-middle text-center text-sm'> 
+                            <td class='align-middle text-center text-sm'>
                                 <a href="#" class='edit'><i class="fa fa-pencil me-1"></i></a>
                                 <a href="#"><i class="fa fa-trash me-1"></i></a>
                             </td>
@@ -59,20 +61,12 @@
                     i++;
                 });
             }
-            const table = dataTable({ renderTableBody });
-            let data = [];
-            async function loadTable(){
-                data = await table.getData( url = '{{ route('master.jurusan.getData') }}' );
-            }
-            
-            await loadTable(); 
+            const table = dataTable({
+                renderTableBody
+            });
+            table.renderData("{{ route('master.jurusan.getData') }}");
 
-            let dataSet = {
-                id: null,
-                name: null,
-                kode: null,
-                status: false,
-            };
+            let dataSet = {};
 
             $(document).ready(function() {
 
@@ -90,12 +84,12 @@
 
                 $('#btn-tambah').click(function(e) {
                     e.preventDefault();
-                    submitForm($(this),'store')
+                    submitForm($(this), 'store')
                 });
 
                 $('#btn-edit').click(function(e) {
                     e.preventDefault();
-                    submitForm($(this),'update')
+                    submitForm($(this), 'update')
                 });
 
                 $(document).on('click', '.edit', function() {
@@ -104,24 +98,17 @@
                     $('#btn-edit').show();
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-
-                    dataSet = {
-                        id: data[index].id,
-                    }
+                    let data = table.getDataByIndex(index);
+                    dataSet.id = data.id;
                     $('#sidebar-form').addClass('show');
-                    $('#name').val(data[index].name).trigger('change');
-                    $('#kode').val(data[index].kode).trigger('change');
-                    $('#status').prop('checked', data[index].status == 1).trigger('change');
+                    $('#name').val(data.name).trigger('change');
+                    $('#kode').val(data.kode).trigger('change');
+                    $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 
                 function resetDataSet() {
-                    dataSet = {
-                        id: null,
-                        name: null,
-                        kode: null,
-                        status: false,
-                    };
-                    $('#status').prop('checked', dataSet.status);
+                    dataSet = {};
+                    $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');
                 }
@@ -142,7 +129,7 @@
                             flasher.success(response.message);
                             button.attr('disabled', false);
                             $('#sidebar-form').removeClass('show');
-                            loadTable();
+                            table.reload();
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
