@@ -21,7 +21,7 @@ class MahasiswaController extends Controller
         $request->validate([
             'name' => 'required',
             'npm' => 'required',
-            'no_hp' => 'required',
+            'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'jurusan_id' => 'required',
         ]);
 
@@ -85,7 +85,7 @@ class MahasiswaController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = Mahasiswa::with(['jurusan'])->select('name', 'npm', 'status', 'id', 'jurusan_id','no_hp')
+        $data = Mahasiswa::with(['jurusan'])->select('name', 'npm', 'status', 'id', 'jurusan_id', 'no_hp')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('npm', 'like', '%' . $request->search . '%')

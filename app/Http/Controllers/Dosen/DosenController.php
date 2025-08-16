@@ -22,7 +22,7 @@ class DosenController extends Controller
             'name' => 'required',
             'nip' => 'required',
             'jurusan_id' => 'required',
-            'no_hp' => 'required',
+            'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'alamat' => 'required',
         ]);
 
