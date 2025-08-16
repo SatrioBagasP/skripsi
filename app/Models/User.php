@@ -48,12 +48,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function proposal(){
-        return $this->hasMany(Proposal::class,'user_id','id');
+    public function proposal()
+    {
+        return $this->hasMany(Proposal::class, 'user_id', 'id');
     }
 
-    public function roles(){
-        return $this->belongsTo(Roles::class,'role_id','id');
+    public function roles()
+    {
+        return $this->belongsToMany(Roles::class, 'user_has_role', 'user_id', 'role_id');
     }
 
     public function userable()
