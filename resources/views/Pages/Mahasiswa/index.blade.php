@@ -28,19 +28,18 @@
         </div>
     </div>
 
-    @include('Pages.Mahasiswa.form',[
+    @include('Pages.Mahasiswa.form', [
         'optionJurusan' => $optionJurusan,
     ])
 
 @endsection
 
 @push('js')
-    <script>
+    <script type="module">
+        import {
+            dataTable
+        } from '/js/datatable.js';
         (function() {
-            // BUNDLE DATATABLE
-            let searching = false;
-            let data = [];
-            @stack('paginate_js')
 
             function renderTableBody(data) {
                 let i = 1;
@@ -52,72 +51,22 @@
                             <td> ${item.name} </td>
                             <td> ${item.jurusan} </td>
                             <td class='align-middle text-center text-sm'>
-                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}    
+                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}
                             </td>
-                            <td class='align-middle text-center text-sm'> 
+                            <td class='align-middle text-center text-sm'>
                                 <a href="#" class='edit'><i class="fa fa-pencil me-1"></i></a>
-                                <a href="#"><i class="fa fa-trash me-1"></i></a>
                             </td>
                         </tr>
                     `);
                     i++;
                 });
             }
+            const table = dataTable({
+                renderTableBody
+            });
+            table.renderData("{{ route('master.mahasiswa.getData') }}");
 
-            function getData(page = 1) {
-                if (searching) {
-                    return;
-                }
-                searching = true;
-                data = [];
-                $('#tableBody').empty(); // Dari data table blade
-                $('#loading-spinner').show();
-                $.ajax({
-                    type: "GET",
-                    url: "{{ route('master.mahasiswa.getData') }}",
-                    data: {
-                        page: page,
-                        search: paginateControll.search,
-                        itemDisplay: paginateControll.itemDisplay
-                    },
-                    success: function(response) {
-                        response.data.forEach(item => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                                npm: item.npm,
-                                jurusan: item.jurusan,
-                                no_hp: item.no_hp,
-                                jurusan_id: item.jurusan_id,
-                                status: item.status,
-                            });
-                        });
-                        paginateControll.currentPage = response.currentPage;
-                        paginateControll.totalPage = response.totalPage;
-                        renderPagination(); // function dari datatable
-                        renderTableBody(data)
-                    },
-                    error: function(xhr, status, error) {
-                        flasher.error(xhr.responseJSON.message);
-                    },
-                    complete: function() {
-                        $('#loading-spinner').hide();
-                        searching = false;
-                    }
-                });
-            }
-
-            getData();
-            // END BUNDLE
-
-            let dataSet = {
-                id: null,
-                name: null,
-                npm: null,
-                no_hp: null,
-                jurusan_id: null,
-                status: false,
-            }
+            let dataSet = {}
             $(document).ready(function() {
 
                 $('#sidebarform-btn').click(function(e) {
@@ -138,17 +87,14 @@
                     $('#btn-edit').show();
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-
-                    dataSet = {
-                        id: data[index].id,
-                    }
-
+                    let data = table.getDataByIndex(index);
+                    dataSet.id = data.id;
                     $('#sidebar-form').addClass('show');
-                    $('#name').val(data[index].name).trigger('change');
-                    $('#npm').val(data[index].npm).trigger('change');
-                    $('#no_hp').val(data[index].no_hp).trigger('change');
-                    $('#jurusan_id').val(data[index].jurusan_id).trigger('change');
-                    $('#status').prop('checked', data[index].status == 1).trigger('change');
+                    $('#name').val(data.name).trigger('change');
+                    $('#npm').val(data.npm).trigger('change');
+                    $('#no_hp').val(data.no_hp).trigger('change');
+                    $('#jurusan_id').val(data.jurusan_id).trigger('change');
+                    $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 
                 $('#btn-tambah').click(function(e) {
@@ -162,16 +108,9 @@
                 });
 
                 function resetDataSet() {
-                    dataSet = {
-                        id: null,
-                        name: null,
-                        npm: null,
-                        no_hp: null,
-                        jurusan_id: null,
-                        status: false,
-                    };
+                    dataSet = {};
                     $('.select2').val('').trigger('change');
-                    $('#status').prop('checked', dataSet.status);
+                    $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');
                 }
@@ -192,7 +131,7 @@
                             flasher.success(response.message);
                             button.attr('disabled', false);
                             $('#sidebar-form').removeClass('show');
-                            getData();
+                            table.reload();
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
