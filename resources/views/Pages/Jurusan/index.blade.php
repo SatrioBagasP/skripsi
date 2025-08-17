@@ -54,7 +54,6 @@
                             </td>
                             <td class='align-middle text-center text-sm'>
                                 <a href="#" class='edit'><i class="fa fa-pencil me-1"></i></a>
-                                <a href="#"><i class="fa fa-trash me-1"></i></a>
                             </td>
                         </tr>
                     `);

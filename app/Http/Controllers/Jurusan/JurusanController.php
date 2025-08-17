@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Helper\CrudController;
+use App\Traits\CommonValidation;
 
 class JurusanController extends Controller
 {
+
+    use CommonValidation;
+
     public function index()
     {
         return view('Pages.Jurusan.index');
@@ -23,18 +27,21 @@ class JurusanController extends Controller
         ]);
 
         try {
-            $dataField = [
+            DB::beginTransaction();
+
+            $data = Jurusan::create([
                 'name' => $request->name,
                 'kode' => $request->kode,
                 'status' => $request->boolean('status'),
-            ];
-            DB::beginTransaction();
+            ]);
 
-            $Crud = new CrudController(Jurusan::class, dataField: $dataField, description: 'Menambah Jurusan', content: 'Jurusan');
-            $action = $Crud->insertWithReturnJson();
+            $this->storeLog($data, 'Menambah Jurusan', 'Jurusan');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getStoreSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -52,19 +59,25 @@ class JurusanController extends Controller
         ]);
 
         try {
-            $dataField = [
+            DB::beginTransaction();
+
+            $data = Jurusan::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+            $this->validateExistingData($data);
+
+            $data->fill([
                 'name' => $request->name,
                 'kode' => $request->kode,
                 'status' => $request->boolean('status'),
-            ];
-
-            DB::beginTransaction();
-
-            $Crud = new CrudController(Jurusan::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Jurusan', content: 'Jurusan');
-            $action = $Crud->updateWithReturnJson();
+            ]);
+            $this->updateLog($data, 'Merubah Jurusan', 'Jurusan');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -85,9 +98,7 @@ class JurusanController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);
 
-        // dd($data);
-
-        $dataFormated = $data->getCollection()->transform(function ($item) {
+        $dataFormated = $data->map(function ($item) {
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,
