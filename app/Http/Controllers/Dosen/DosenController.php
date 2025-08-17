@@ -7,9 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Helper\CrudController;
+use App\Traits\JurusanValidation;
 
 class DosenController extends Controller
 {
+
+    use JurusanValidation;
+
     public function index()
     {
         $optionJurusan = $this->getJurusanOption();
@@ -27,21 +31,24 @@ class DosenController extends Controller
         ]);
 
         try {
-            $dataField = [
+            DB::beginTransaction();
+
+            $this->validateJurusanIsActive($request->jurusan_id);
+            $data = Dosen::create([
                 'name' => $request->name,
                 'nip' => $request->nip,
                 'jurusan_id' => $request->jurusan_id,
                 'no_hp' => $request->no_hp,
                 'alamat' => $request->alamat,
                 'status' => $request->boolean('status'),
-            ];
-            DB::beginTransaction();
-
-            $Crud = new CrudController(Dosen::class, dataField: $dataField, description: 'Menambah Dosen', content: 'Dosen');
-            $action = $Crud->insertWithReturnJson();
+            ]);
+            $this->storeLog($data, 'Menambah Dosen', 'Dosen');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getStoreSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -62,21 +69,32 @@ class DosenController extends Controller
         ]);
 
         try {
-            $dataField = [
+            DB::beginTransaction();
+
+            $data = Dosen::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+            $this->validateExistingData($data);
+
+            if ($data->jurusan_id != $request->jurusan_id) {
+                $this->validateJurusanIsActive($request->jurusan_id);
+            }
+
+            $data->fill([
                 'name' => $request->name,
                 'nip' => $request->nip,
                 'jurusan_id' => $request->jurusan_id,
                 'no_hp' => $request->no_hp,
                 'alamat' => $request->alamat,
                 'status' => $request->boolean('status'),
-            ];
-            DB::beginTransaction();
-
-            $Crud = new CrudController(Dosen::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Dosen', content: 'Dosen');
-            $action = $Crud->updateWithReturnJson();
+            ]);
+            $this->updateLog($data, 'Merubah Dosen', 'Dosen');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([

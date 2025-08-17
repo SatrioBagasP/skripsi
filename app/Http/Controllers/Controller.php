@@ -27,12 +27,14 @@ abstract class Controller
     function getJurusanOption()
     {
         $data = [];
-        $data = Jurusan::get()->map(function ($item) {
-            return [
-                'value' => $item->id,
-                'label' => $item->name,
-            ];
-        });
+        $data = Jurusan::where('status', true)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ];
+            });
 
         return $data;
     }
