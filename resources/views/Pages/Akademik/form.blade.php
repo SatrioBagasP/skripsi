@@ -10,12 +10,12 @@
         <input type="text" class="form-control" placeholder="Nama Jurusan" name="name" id="name">
         <div class="invalid-feedback" id="nameError"></div>
     </div>
-    <label>No_HP</label>
+    <label>No HP</label>
     <div class="mb-3">
         <input type="text" class="form-control" placeholder="Nomor Hp layanan" name="no_hp" id="no_hp">
         <div class="invalid-feedback" id="no_hpError"></div>
     </div>
-    <label>Ketua</label>
+    <label>Ketua <small>(Bisa Dikosongkan)</small></label>
     @include('Component.select', [
         'name' => 'ketua_id',
         'id' => 'ketua_id',
