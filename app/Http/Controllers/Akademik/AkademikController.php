@@ -7,9 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Helper\CrudController;
+use App\Traits\CommonValidation;
 
 class AkademikController extends Controller
 {
+    use CommonValidation;
+
     public function index(Request $request)
     {
         $dataDosen = $this->getDosenOption();
@@ -24,19 +27,22 @@ class AkademikController extends Controller
         ]);
 
         try {
-            $dataField = [
+            $dataField = [];
+            DB::beginTransaction();
+
+            $data = Akademik::create([
                 'name' => $request->name,
                 'no_hp' => $request->no_hp,
                 'ketua_id' => $request->ketua_id,
                 'status' => $request->boolean('status'),
-            ];
-            DB::beginTransaction();
-
-            $Crud = new CrudController(Akademik::class, dataField: $dataField, description: 'Menambah Akademik', content: 'Akademik');
-            $action = $Crud->insertWithReturnJson();
+            ]);
+            $this->storeLog($data, 'Menambah Akademik', 'Akademik');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getStoreSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -54,20 +60,26 @@ class AkademikController extends Controller
         ]);
 
         try {
-            $dataField = [
+            DB::beginTransaction();
+
+            $data = Akademik::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+            $this->validateExistingData($data);
+
+            $data->fill([
                 'name' => $request->name,
                 'no_hp' => $request->no_hp,
                 'ketua_id' => $request->ketua_id,
                 'status' => $request->boolean('status'),
-            ];
-
-            DB::beginTransaction();
-
-            $Crud = new CrudController(Akademik::class, id: decrypt($request->id), dataField: $dataField, description: 'Merubah Akademik', content: 'Akademik');
-            $action = $Crud->updateWithReturnJson();
+            ]);
+            $this->updateLog($data, 'Merubah Akademik', 'Akademik');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -88,9 +100,7 @@ class AkademikController extends Controller
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);
 
-        // dd($data);
-
-        $dataFormated = $data->getCollection()->transform(function ($item) {
+        $dataFormated = $data->map(function ($item) {
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,

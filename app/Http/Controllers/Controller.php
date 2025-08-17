@@ -9,11 +9,12 @@ use App\Models\Jurusan;
 use App\Models\Mahasiswa;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 abstract class Controller
 {
-    function setLog($caused, $performed, $log, $properties = null, $content = 'default')
+    function setLog($caused, $performed, $log, $properties = null, $content)
     {
         activity()
             ->causedBy($caused)
@@ -242,5 +243,51 @@ abstract class Controller
             $message = $e->getMessage();
         }
         return $message;
+    }
+
+    function storeLog($data, $description, $content = 'default')
+    {
+        $this->setLog(Auth::user(), $data, $description, [
+            'changed' => $data,
+        ], $content);
+    }
+
+    // automatic save and set log
+    function updateLog($data, $description, $content = 'default')
+    {
+        if ($data->isDirty()) {
+            $old = $data->getOriginal();
+            $data->save();
+            $change = $data->getChanges();
+            $oldField = array_intersect_key(
+                $old,
+                array_flip(array_keys($change))
+            );
+            $this->setLog(Auth::user(), $data, $description, [
+                'old' => $oldField,
+                'changed' => $change,
+            ], $content);
+        }
+    }
+
+    function deleteLog($data, $description, $content = 'default')
+    {
+        $old = $data->getOriginal();
+        $this->setLog(Auth::user(), $data, $description, [
+            'old' => $old
+        ], $content);
+    }
+
+    function getStoreSuccessMessage()
+    {
+        return 'Data Berhasil Disimpan';
+    }
+    function getUpdateSuccessMessage()
+    {
+        return 'Data Berhasil Diperbarui';
+    }
+    function getDeleteSuccessMessage()
+    {
+        return 'Data Berhasil Dihapus';
     }
 }

@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Helper;
 
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Traits\CommonValidation;
 
 class CrudController extends Controller
 {
+    use CommonValidation;
+
     protected $field;
     protected $model;
     protected $data;
@@ -65,9 +68,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            if (!$data) {
-                throw new \Exception('Data tidak ada');
-            }
+            $this->validateExistingData($data);
         } else {
             $data = $this->data;
         }
@@ -96,9 +97,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            if (!$data) {
-                throw new \Exception('Data tidak ada');
-            }
+            $this->validateExistingData($data);
         } else {
             $data = $this->data;
         }
@@ -129,9 +128,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            if (!$data) {
-                throw new \Exception('Data tidak ada');
-            }
+            $this->validateExistingData($data);
         } else {
             $data = $this->data;
         }
@@ -150,9 +147,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            if (!$data) {
-                throw new \Exception('Data tidak ada');
-            }
+            $this->validateExistingData($data);
         } else {
             $data = $this->data;
         }
