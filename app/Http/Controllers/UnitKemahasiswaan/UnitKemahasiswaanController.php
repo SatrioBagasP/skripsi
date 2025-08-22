@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\UnitKemahasiswaan;
 
 use Illuminate\Http\Request;
+use Twilio\TwiML\Voice\Stop;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
+use App\Traits\UnitKemahasiswaanValidation;
 use App\Http\Controllers\Helper\CrudController;
-use Twilio\TwiML\Voice\Stop;
 
 class UnitKemahasiswaanController extends Controller
 {
+    use UnitKemahasiswaanValidation;
+
     public function index()
     {
         $optionJurusan = $this->getJurusanOption();
@@ -32,21 +35,22 @@ class UnitKemahasiswaanController extends Controller
             if ($request->file('image')) {
                 $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
             }
+            DB::beginTransaction();
 
-            $dataField = [
+            $data = UnitKemahasiswaan::create([
                 'name' => $request->name,
-                'is_non_jurusan' => false,
+                'is_non_jurusan' => $request->boolean('is_non_jurusan'),
                 'jurusan_id' =>  $request->boolean('is_non_jurusan') ? null : $request->jurusan_id,
                 'image' => $imagePath,
                 'status' => $request->boolean('status'),
-            ];
-            DB::beginTransaction();
-
-            $Crud = new CrudController(UnitKemahasiswaan::class, dataField: $dataField, description: 'Menambah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
-            $action =  $Crud->insertWithReturnJson();
+            ]);
+            $this->storeLog($data, 'Menambah Unit Kemahasiswaan', 'Unit Kemahasiswaan');
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getStoreSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             $this->storageDelete($imagePath);
             DB::rollBack();
@@ -65,49 +69,49 @@ class UnitKemahasiswaanController extends Controller
         ]);
 
         try {
+
             $imagePath = null;
-            $data = UnitKemahasiswaan::with('user.proposal')
+            DB::beginTransaction();
+            $data = UnitKemahasiswaan::with([
+                'user.proposal' => function ($item) {
+                    $item->lockForUpdate();
+                }
+            ])
                 ->where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
 
             $imageOld = $data->image;
 
-            // jika dia awalnya itu non jurusan lalu dirubah ke non jurusan atau sebalik nya, bakalan ada alert ga bisa krn ada proposal yang sudah dalam pengajuan 
-            if (!$data) {
-                throw new \Exception('Data unit kemahasiswaan tidak ada atau telah dihapus, silahkan refresh halaman ini');
-            } elseif ($data->is_non_jurusan != $request->boolean('is_non_jurusan') && $data->user && $data->user->proposal->isNotEmpty()) {
-                $data->user->proposal->each(function ($item) {
-                    if (!in_array($item->status, ['Draft', 'Rejected', 'Accepted'])) {
-                        throw new \Exception('Tidak bisa merubah unit kegiatan menjadi ke jurusan / non jurusan, dikarenakan ada proposal pada unit ini masih tahap pengecekan oleh verifikator');
-                    }
-                });
+            $this->validateExistingData($data);
+            // jika dia merubah jurusan atau merubah non jursan maka cek pendingnya
+            if ($data->is_non_jurusan != $request->boolean('is_non_jurusan') || $data->jurusan_id != $request->jurusan_id || $data->status != $request->status) {
+                $this->validateUnitKemahasiswaanHasPendingProposal($data);
             }
 
-            $dataField = [
+            if ($request->file('image')) {
+                $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
+            }
+            $data->fill([
                 'name' => $request->name,
                 'jurusan_id' =>  $request->boolean('is_non_jurusan') ? null : $request->jurusan_id,
                 'is_non_jurusan' => $request->boolean('is_non_jurusan'),
                 'status' => $request->boolean('status'),
-            ];
-
-            if ($request->file('image')) {
-                $imagePath = $this->storageStore($request->file('image'), 'unit_kemahasiswaan');
-                $dataField['image'] = $imagePath;
-            }
-            DB::beginTransaction();
-
-            $Crud = new CrudController(UnitKemahasiswaan::class, data: $data, dataField: $dataField, description: 'Merubah Unit Kemahasiswaan', content: 'Unit Kemahasiswaan');
-            $action = $Crud->updateWithReturnJson();
+                'image' => $request->file('image') ? $imagePath : $imageOld,
+            ]);
+            $this->updateLog($data, 'Merubah Unit Kemahasiswaan', 'Unit Kemahasiswaan');
 
             if ($request->file('image')) {
                 $this->storageDelete($imageOld);
             }
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
-            // $this->storageDelete($imagePath);
+            $this->storageDelete($imagePath);
             DB::rollBack();
             return response()->json([
                 'status' => 400,
@@ -132,7 +136,6 @@ class UnitKemahasiswaanController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'is_non_jurusan' => $item->is_non_jurusan,
-                'no_hp' => $item->no_hp,
                 'jurusan' => $item->jurusan->name ?? '-',
                 'image' => $item->image ? Storage::temporaryUrl($item->image, now()->addMinutes(5)) : null,
                 'jurusan_id' => $item->jurusan_id,
