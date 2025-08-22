@@ -25,11 +25,6 @@ return new class extends Migration
             $table->dateTime('end_date');
             $table->string('status');
             $table->text('alasan_tolak')->nullable();
-            $table->boolean('is_acc_dosen')->nullable();
-            $table->boolean('is_acc_kaprodi')->nullable();
-            $table->boolean('is_acc_minat_bakat')->nullable();
-            $table->boolean('is_acc_layanan')->nullable();
-            $table->boolean('is_acc_wakil_rektor')->nullable();
             $table->timestamps();
         });
     }
