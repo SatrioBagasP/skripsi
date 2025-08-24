@@ -102,7 +102,9 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 }
             });
-            $('.select2').select2();
+            $('.select2').select2({
+                placeholder: '-- Pilih Data --'
+            });
             $('#sidebarform-btn').click(function(e) {
                 $('#sidebarForm').find('input, textarea, select').val('').trigger('change');
             });
