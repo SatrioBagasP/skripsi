@@ -1,8 +1,8 @@
 @extends('Layout.layout')
 
-@section('pages', 'Jurusan')
+@section('pages', 'Akademik')
 
-@section('title', config('app.name') . ' | Jurusan')
+@section('title', config('app.name') . ' | Akademik')
 
 @section('content')
 
