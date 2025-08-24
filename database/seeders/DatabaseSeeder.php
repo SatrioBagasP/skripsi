@@ -2,12 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\Akademik;
-use App\Models\Jabatan;
 use App\Models\User;
+use App\Models\Dosen;
 use App\Models\Roles;
+use App\Models\Jabatan;
 use App\Models\Jurusan;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Faker\Factory as Faker;
+use App\Models\Akademik;
+use App\Models\Mahasiswa;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -75,6 +78,13 @@ class DatabaseSeeder extends Seeder
             'status' => true,
         ]);
 
+        Jurusan::updateOrCreate([
+            'id' => 3,
+            'name' => 'Teknik Sipil',
+            'kode' => 6,
+            'status' => true,
+        ]);
+
         Jabatan::updateOrCreate([
             'id' => 1,
             'name' => 'Dosen',
@@ -88,6 +98,72 @@ class DatabaseSeeder extends Seeder
         Jabatan::updateOrCreate([
             'id' => 3,
             'name' => 'Wakil Rektor 1',
+        ]);
+
+
+        $faker = Faker::create('id_ID');
+
+        foreach (range(1, 10) as $i) {
+            Dosen::create([
+                'name' => $faker->name,
+                'nip' => $faker->unique()->numerify('19##########'),
+                'jurusan_id' => $faker->numberBetween(1, 3),
+                'jabatan_id' => 1,
+                'no_hp' => '081336180467',
+                'alamat' => $faker->address,
+                'status' => true,
+            ]);
+        }
+
+        foreach (range(1, 10) as $i) {
+            Mahasiswa::create([
+                'name' => $faker->name,
+                'npm' => $faker->unique()->numerify('19##########'),
+                'jurusan_id' => $faker->numberBetween(1, 3),
+                'no_hp' => '081336180467',
+                'status' => true,
+            ]);
+        }
+
+        UnitKemahasiswaan::updateOrCreate([
+            'id' => 1,
+            'name' => 'Himpunan Mahasiswa Sistem Informasi',
+        ], [
+            'jurusan_id' => 1,
+            'is_non_jurusan' => false,
+            'status' => true,
+        ]);
+        UnitKemahasiswaan::updateOrCreate([
+            'id' => 2,
+            'name' => 'Himpunan Mahasiswa Teknik Informatika',
+        ], [
+            'jurusan_id' => 2,
+            'is_non_jurusan' => false,
+            'status' => true,
+        ]);
+        UnitKemahasiswaan::updateOrCreate([
+            'id' => 3,
+            'name' => 'Himpunan Mahasiswa Teknik Sipil',
+        ], [
+            'jurusan_id' => 3,
+            'is_non_jurusan' => false,
+            'status' => true,
+        ]);
+
+        UnitKemahasiswaan::updateOrCreate([
+            'id' => 4,
+            'name' => 'Mapala',
+        ], [
+            'is_non_jurusan' => true,
+            'status' => true,
+        ]);
+
+        UnitKemahasiswaan::updateOrCreate([
+            'id' => 5,
+            'name' => 'Batminton',
+        ], [
+            'is_non_jurusan' => true,
+            'status' => true,
         ]);
     }
 }
