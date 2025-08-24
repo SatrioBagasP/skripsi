@@ -121,7 +121,7 @@ class MahasiswaController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'npm' => $item->npm,
-                'jurusan' => $item->jurusan->name ?? '-',
+                'jurusan' => ($item->jurusan->name ?? '-') . ($item->jurusan && $item->jurusan->status == false ? ' (inactive)' : ''),
                 'jurusan_id' => $item->jurusan_id,
                 'no_hp' => $item->no_hp,
                 'status' => $item->status,
