@@ -129,7 +129,7 @@ class DosenController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'nip' => $item->nip,
-                'jurusan' => $item->jurusan->name ?? '-',
+                'jurusan' => ($item->jurusan->name ?? '-') . ($item->jurusan && $item->jurusan->status == false ? ' (inactive)' : ''),
                 'jurusan_id' => $item->jurusan_id,
                 'jabatan_id' => $item->jabatan_id,
                 'akademik_id' => $item->akademik->map(function ($item) {
