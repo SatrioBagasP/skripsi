@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('ketua_id')->nullable()->constrained('dosen')->nullOnDelete();
             $table->string('name')->unique();
-            $table->string('kode',10);
+            $table->string('kode', 10)->unique();
             $table->boolean('status');
             $table->timestamps();
         });
