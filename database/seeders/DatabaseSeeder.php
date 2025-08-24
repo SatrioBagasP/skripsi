@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Akademik;
+use App\Models\Jabatan;
 use App\Models\User;
 use App\Models\Roles;
 use App\Models\Jurusan;
@@ -72,6 +73,21 @@ class DatabaseSeeder extends Seeder
             'name' => 'Teknik Informatika',
             'kode' => 12,
             'status' => true,
+        ]);
+
+        Jabatan::updateOrCreate([
+            'id' => 1,
+            'name' => 'Dosen',
+        ]);
+
+        Jabatan::updateOrCreate([
+            'id' => 2,
+            'name' => 'Ketua Program Studi',
+        ]);
+
+        Jabatan::updateOrCreate([
+            'id' => 3,
+            'name' => 'Wakil Rektor 1',
         ]);
     }
 }

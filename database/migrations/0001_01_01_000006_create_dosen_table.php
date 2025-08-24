@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('dosen', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('jurusan_id')->nullable()->constrained('jurusan')->nullOnDelete();
+            $table->foreignId('jabatan_id')->nullable()->constrained('jabatan')->nullOnDelete();
             $table->string('nip')->unique();
             $table->string('name');
             $table->string('alamat');
-            $table->string('no_hp',25);
+            $table->string('no_hp', 25);
             $table->boolean('status');
             $table->timestamps();
         });
