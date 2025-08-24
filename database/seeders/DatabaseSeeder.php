@@ -19,25 +19,13 @@ class DatabaseSeeder extends Seeder
     {
 
         Roles::updateOrCreate([
-            'name' => 'Admin', 
+            'name' => 'Admin',
         ], []);
         Roles::updateOrCreate([
             'name' => 'Unit Kemahasiswaan',
         ], []);
         Roles::updateOrCreate([
-            'name' => 'Dosen',
-        ], []);
-        Roles::updateOrCreate([
-            'name' => 'Kaprodi',
-        ], []);
-        Roles::updateOrCreate([
-            'name' => 'Kepala Bagian Minat Dan Bakat',
-        ], []);
-        Roles::updateOrCreate([
-            'name' => 'Layanan Mahasiswa',
-        ], []);
-        Roles::updateOrCreate([
-            'name' => 'Wakil Rektor Bidang Kemahasiswaan',
+            'name' => 'Verifikator',
         ], []);
 
         User::updateOrCreate([
