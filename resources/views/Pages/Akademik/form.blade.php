@@ -7,7 +7,7 @@
 @section('contentSidebarForm')
     <label>Akademik</label>
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Nama Jurusan" name="name" id="name">
+        <input type="text" class="form-control" placeholder="Nama Akademik" name="name" id="name">
         <div class="invalid-feedback" id="nameError"></div>
     </div>
     <label>No HP</label>
