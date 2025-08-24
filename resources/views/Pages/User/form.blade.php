@@ -32,6 +32,7 @@
         <label>Role</label>
         <div class="mb-3">
             @include('Component.select', [
+                'multiple' => true,
                 'name' => 'role_id',
                 'id' => 'role_id',
                 'data' => $roleOption,

@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Helper\CrudController;
+use App\Traits\UserValidation;
 
 class UserController extends Controller
 {
+    use UserValidation;
     public function index()
     {
         $userAbleOption = $this->getUserableOption();
@@ -26,40 +28,31 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required',
             'user_id' => 'required',
-            'role_id' => 'required',
+            'selected_role' => 'required|array|min:1',
         ]);
 
         try {
             DB::beginTransaction();
             list($id, $type) = explode('|', $request->user_id,);
             $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
-            $hasUser = User::where('userable_type', $type)
-                ->where('userable_id', $id)
-                ->exists();
+            $this->validateUserAlreadyHasAccount($id, $type);
+            $this->validateUserAbleIsActive($id, $type);
 
-            if ($hasUser) {
-                throw new \Exception('Organisasi / Dosen sudah memiliki akun');
-            }
-
-            $model = new $type;
-            $userAble = $model->where('id', $id)->lockForUpdate()->first();
-            if ($userAble->status == 0) {
-                throw new \Exception('Organisasi / Dosen Yang Dipilih Tidak Aktif');
-            }
-
-            $dataField = [
+            $data = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'userable_id' => $id,
                 'userable_type' => $type,
                 'password' => Hash::make($request->password),
                 'status' => $request->boolean('status'),
-                'role_id' => $request->role_id,
-            ];
-            $Crud = new CrudController(User::class, dataField: $dataField, description: 'Menambah User', content: 'User');
-            $action = $Crud->insertWithReturnJson();
+            ]);
+            $data->roles()->attach($request->selected_role);
+            $this->updateLog($data, 'Menambah User', 'User');
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getStoreSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -75,50 +68,39 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required',
             'user_id' => 'required',
-            'role_id' => 'required',
+            'selected_role' => 'required|array|min:1',
         ]);
-
         try {
             DB::beginTransaction();
 
             list($id, $type) = explode('|', $request->user_id,);
             $type = $type == 'Unit' ? UnitKemahasiswaan::class : ($type == 'Dosen' ? Dosen::class : null);
-            
-            $dataUser = User::where('id', decrypt($request->id))
+
+            $data = User::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
+            $this->validateExistingData($data);
 
-            $hasUser = User::where('userable_type', $type)
-                ->where('userable_id', $id)
-                ->exists();
-
-            if (!$dataUser) {
-                throw new \Exception('Data User tidak ada atau telah dihapus, silahkan refresh halaman ini');
-            } elseif ($id != $dataUser->userable_id && $hasUser) {
-                throw new \Exception('Organisasi / Dosen sudah memiliki akun');
+            // jika dia mengganti user ablenya
+            if (($data->userable_id != $id && $data->userable_type != $type)) {
+                $this->validateUserAlreadyHasAccount($id, $type);
+                $this->validateUserAbleIsActive($id, $type);
             }
-
-            $model = new $type;
-            $userAble = $model->where('id', $id)->lockForUpdate()->first();
-            if ($userAble->status == 0) {
-                throw new \Exception('Tidak Bisa merubah Organisasi / Dosen Dikarenakan Tidak Aktif');
-            }
-
-            $dataField = [
+            $data->fill([
                 'name' => $request->name,
                 'email' => $request->email,
                 'userable_id' => $id,
                 'userable_type' => $type,
                 'password' => Hash::make($request->password),
                 'status' => $request->boolean('status'),
-                'role_id' => $request->role_id,
-            ];
-
-            $Crud = new CrudController(User::class, data: $dataUser, id: decrypt($request->id), dataField: $dataField, description: 'Merubah User', content: 'User');
-            $action = $Crud->updateWithReturnJson();
-
+            ]);
+            $data->roles()->sync($request->selected_role);
+            $this->updateLog($data, 'Merubah User', 'User');
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
@@ -131,25 +113,30 @@ class UserController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = User::with(['roles', 'userable'])->select('name', 'email', 'id', 'role_id', 'userable_type', 'userable_id')
+        $data = User::with(['roles', 'userable'])
+            ->select('name', 'email', 'id', 'userable_type', 'userable_id')
+            ->where('id', '!=', '1')
             ->when($request->search !== null, function ($query) use ($request) {
-                $query->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('npm', 'like', '%' . $request->search . '%')
-                    ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
+                $query->where(function ($query) use ($request) {
+                    $query->where('name', 'like', '%' . $request->search . '%')
+                        ->orWhere('npm', 'like', '%' . $request->search . '%')
+                        ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
+                });
             })
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);
 
-        $dataFormated = $data->getCollection()->transform(function ($item) {
+        $dataFormated = $data->map(function ($item) {
             return [
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'email' => $item->email,
-                'role' => $item->roles->name ?? '-',
                 'user_type' => $item->userable_type == UnitKemahasiswaan::class ? 'Unit Kemahasiswaan' : ($item->userable_type == Dosen::class ? 'Dosen' : 'None'),
                 'user_id' => $item->userable_type == UnitKemahasiswaan::class ?  $item->userable_id . '|Unit' : ($item->userable_type == Dosen::class ? $item->userable_id . '|Dosen' : 'None'),
-                'role_id' => $item->role_id,
                 'status' => $item->userable?->status ?? 1,
+                'selected_role' => $item->roles->map(function ($item) {
+                    return $item->id;
+                })->toArray(),
             ];
         });
 

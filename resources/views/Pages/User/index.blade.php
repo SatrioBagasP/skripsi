@@ -23,7 +23,7 @@
 
             </div>
             @include('Component.datatable', [
-                'head' => ['Username', 'Email', 'User Type', 'Role', 'Status', 'Aksi'],
+                'head' => ['Username', 'Email', 'User Type', 'Status', 'Aksi'],
             ])
         </div>
     </div>
@@ -36,7 +36,10 @@
 @endsection
 
 @push('js')
-    <script>
+    <script type="module">
+        import {
+            dataTable
+        } from '/js/datatable.js';
         (function() {
             // BUNDLE DATATABLE
             let searching = false;
@@ -52,11 +55,10 @@
                             <td> ${item.name} </td>
                             <td> ${item.email} </td>
                             <td> ${item.user_type} </td>
-                            <td> ${item.role} </td>
                             <td class='align-middle text-center text-sm'>
-                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}    
+                                ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}
                             </td>
-                            <td class='align-middle text-center text-sm'> 
+                            <td class='align-middle text-center text-sm'>
                                 ${item.status == 1 ? `<a href="#" class='edit'><i class="fa fa-pencil me-1"></i></a>` : ''}
                             </td>
                         </tr>
@@ -65,62 +67,12 @@
                 });
             }
 
-            function getData(page = 1) {
-                if (searching) {
-                    return;
-                }
-                searching = true;
-                data = [];
-                $('#tableBody').empty(); // Dari data table blade
-                $('#loading-spinner').show();
-                $.ajax({
-                    type: "GET",
-                    url: "{{ route('master.user.getData') }}",
-                    data: {
-                        page: page,
-                        search: paginateControll.search,
-                        itemDisplay: paginateControll.itemDisplay
-                    },
-                    success: function(response) {
-                        response.data.forEach(item => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                                email: item.email,
-                                role: item.role,
-                                user_type: item.user_type,
-                                user_id: item.user_id,
-                                role_id: item.role_id,
-                                status: item.status,
-                            });
-                        });
-                        paginateControll.currentPage = response.currentPage;
-                        paginateControll.totalPage = response.totalPage;
-                        renderPagination(); // function dari datatable
-                        renderTableBody(data)
-                    },
-                    error: function(xhr, status, error) {
-                        flasher.error(xhr.responseJSON.message);
-                    },
-                    complete: function() {
-                        $('#loading-spinner').hide();
-                        searching = false;
-                    }
-                });
-            }
+            const table = dataTable({
+                renderTableBody
+            });
+            table.renderData("{{ route('master.user.getData') }}");
 
-            getData();
-            // END BUNDLE
-
-            let dataSet = {
-                id: null,
-                name: null,
-                email: null,
-                user_id: null,
-                role_id: null,
-                password: null,
-                status: false,
-            }
+            let dataSet = {};
             $(document).ready(function() {
 
                 $('#sidebarform-btn').click(function(e) {
@@ -132,7 +84,11 @@
                 $('input[id], select[id], textarea[id], checkbox[id]').on('input change', function() {
                     const key = $(this).attr('id');
                     const isCheckbox = $(this).attr('type') === 'checkbox';
-                    dataSet[key] = isCheckbox ? $(this).prop('checked') : $(this).val();
+                    if (key == 'role_id') {
+                        dataSet.selected_role = $(this).val();
+                    } else {
+                        dataSet[key] = isCheckbox ? $(this).prop('checked') : $(this).val();
+                    }
                 });
 
                 $(document).on('click', '.edit', function() {
@@ -141,17 +97,14 @@
                     $('#btn-edit').show();
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-
-                    dataSet = {
-                        id: data[index].id,
-                    }
-
+                    let data = table.getDataByIndex(index);
+                    dataSet.id = data.id;
                     $('#sidebar-form').addClass('show');
-                    $('#name').val(data[index].name).trigger('change');
-                    $('#email').val(data[index].email).trigger('change');
-                    $('#user_id').val(data[index].user_id).trigger('change');
-                    $('#role_id').val(data[index].role_id).trigger('change');
-                    $('#status').prop('checked', data[index].status == 1).trigger('change');
+                    $('#name').val(data.name).trigger('change');
+                    $('#email').val(data.email).trigger('change');
+                    $('#user_id').val(data.user_id).trigger('change');
+                    $('#role_id').val(data.selected_role).trigger('change');
+                    $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 
                 $('#btn-tambah').click(function(e) {
@@ -165,15 +118,7 @@
                 });
 
                 function resetDataSet() {
-                    dataSet = {
-                        id: null,
-                        name: null,
-                        email: null,
-                        user_id: null,
-                        role_id: null,
-                        password: null,
-                        status: false,
-                    };
+                    dataSet = {};
                     $('.select2').val('').trigger('change');
                     $('#password').val('').trigger('change');
                     $('#status').prop('checked', dataSet.status);
@@ -197,7 +142,7 @@
                             flasher.success(response.message);
                             button.attr('disabled', false);
                             $('#sidebar-form').removeClass('show');
-                            getData();
+                            table.reload();
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
