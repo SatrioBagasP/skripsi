@@ -6,12 +6,11 @@ use App\Models\Akademik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Helper\CrudController;
-use App\Traits\CommonValidation;
+use App\Traits\DosenValidation;
 
 class AkademikController extends Controller
 {
-    use CommonValidation;
+    use DosenValidation;
 
     public function index(Request $request)
     {
@@ -27,9 +26,11 @@ class AkademikController extends Controller
         ]);
 
         try {
-            $dataField = [];
             DB::beginTransaction();
 
+            if ($request->ketua_id) {
+                $this->validateDosenIsActive($request->ketua_id);
+            }
             $data = Akademik::create([
                 'name' => $request->name,
                 'no_hp' => $request->no_hp,
@@ -57,6 +58,7 @@ class AkademikController extends Controller
         $request->validate([
             'name' => 'required',
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
+            'ketua_id' => 'required',
         ]);
 
         try {
@@ -66,6 +68,10 @@ class AkademikController extends Controller
                 ->lockForUpdate()
                 ->first();
             $this->validateExistingData($data);
+
+            if ($request->ketua_id != $data->ketua_id) {
+                $this->validateDosenIsActive($request->ketua_id);
+            }
 
             $data->fill([
                 'name' => $request->name,
@@ -92,7 +98,12 @@ class AkademikController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = Akademik::select('name', 'no_hp', 'status', 'id')
+        $data = Akademik::with([
+            'ketua' => function ($item) {
+                $item->select('id', 'name', 'status');
+            },
+        ])
+            ->select('name', 'no_hp', 'status', 'id', 'ketua_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('no_hp', 'like', '%' . $request->search . '%');
@@ -105,6 +116,8 @@ class AkademikController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'no_hp' => $item->no_hp,
+                'ketua_id' => $item->ketua_id,
+                'ketua' => ($item->ketua?->name ?? '-') . ($item->ketua && $item->ketua->status == false ? ' (inactive)' : ''),
                 'status' => $item->status,
             ];
         });

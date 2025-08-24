@@ -6,17 +6,18 @@ use App\Models\Jurusan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Helper\CrudController;
-use App\Traits\CommonValidation;
+use App\Traits\DosenValidation;
+use App\Traits\JurusanValidation;
 
 class JurusanController extends Controller
 {
 
-    use CommonValidation;
+    use JurusanValidation;
 
     public function index()
     {
-        return view('Pages.Jurusan.index');
+        $dataDosen = $this->getDosenOption();
+        return view('Pages.Jurusan.index', compact('dataDosen'));
     }
 
     public function store(Request $request)
@@ -29,9 +30,14 @@ class JurusanController extends Controller
         try {
             DB::beginTransaction();
 
+            if ($request->ketua_id) {
+                $this->validateKetuaJurusan($request->ketua_id);
+            }
+
             $data = Jurusan::create([
                 'name' => $request->name,
                 'kode' => $request->kode,
+                'ketua_id' => $request->ketua_id,
                 'status' => $request->boolean('status'),
             ]);
 
@@ -56,6 +62,7 @@ class JurusanController extends Controller
         $request->validate([
             'name' => 'required',
             'kode' => 'required',
+            'ketua_id' => 'required',
         ]);
 
         try {
@@ -66,9 +73,13 @@ class JurusanController extends Controller
                 ->first();
             $this->validateExistingData($data);
 
+            if ($request->ketua_id != $data->ketua_id) {
+                $this->validateKetuaJurusan($request->ketua_id);
+            }
             $data->fill([
                 'name' => $request->name,
                 'kode' => $request->kode,
+                'ketua_id' => $request->ketua_id,
                 'status' => $request->boolean('status'),
             ]);
             $this->updateLog($data, 'Merubah Jurusan', 'Jurusan');
@@ -90,7 +101,12 @@ class JurusanController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = Jurusan::select('name', 'kode', 'status', 'id')
+        $data = Jurusan::with([
+            'ketua' => function ($item) {
+                $item->select('id', 'name', 'status', 'jurusan_id');
+            },
+        ])
+            ->select('name', 'kode', 'status', 'id', 'ketua_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('kode', 'like', '%' . $request->search . '%');
@@ -103,6 +119,8 @@ class JurusanController extends Controller
                 'id' => encrypt($item->id),
                 'name' => $item->name,
                 'kode' => $item->kode,
+                'ketua_id' => $item->ketua_id,
+                'ketua' => ($item->ketua->name ?? '-')  . ($item->ketua && $item->ketua->status == false ? ' (inactive)' : ''),
                 'status' => $item->status,
             ];
         });

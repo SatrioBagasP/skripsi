@@ -25,12 +25,14 @@
             </div>
             @include('Component.datatable', [
                 'title' => 'Data Jurusan',
-                'head' => ['Nama Jurusan', 'Kode Jurusan', 'Status', 'Aksi'],
+                'head' => ['Nama Jurusan', 'Kode Jurusan', 'Ketua', 'Status', 'Aksi'],
             ])
         </div>
     </div>
 
-    @include('Pages.Jurusan.form')
+    @include('Pages.Jurusan.form', [
+        'dataDosen' => $dataDosen,
+    ])
 
 @endsection
 
@@ -49,6 +51,7 @@
                             <td class='align-middle text-center text-sm'>${i}</td>
                             <td> ${item.name} </td>
                             <td> ${item.kode} </td>
+                            <td> ${item.ketua} </td>
                             <td class='align-middle text-center text-sm'>
                                 ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}
                             </td>
@@ -102,6 +105,7 @@
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data.name).trigger('change');
                     $('#kode').val(data.kode).trigger('change');
+                    $('#ketua_id').val(data.ketua_id).trigger('change');
                     $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 

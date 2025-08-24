@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('jurusan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ketua_id')->nullable()->constrained('dosen')->nullOnDelete();
+            $table->unsignedBigInteger('ketua_id')->nullable()->unique();
+            $table->foreign('ketua_id')->references('id')->on('dosen')->nullOnDelete();
             $table->string('name')->unique();
             $table->string('kode', 10)->unique();
             $table->boolean('status');

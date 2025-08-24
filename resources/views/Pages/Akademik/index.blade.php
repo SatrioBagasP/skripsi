@@ -25,7 +25,7 @@
             </div>
             @include('Component.datatable', [
                 'title' => 'Data Akademik',
-                'head' => ['Nama', 'No Hp', 'Status', 'Aksi'],
+                'head' => ['Nama', 'No Hp', 'Ketua', 'Status', 'Aksi'],
             ])
         </div>
     </div>
@@ -51,6 +51,7 @@
                             <td class='align-middle text-center text-sm'>${i}</td>
                             <td> ${item.name} </td>
                             <td> ${item.no_hp} </td>
+                            <td> ${item.ketua} </td>
                             <td class='align-middle text-center text-sm'>
                                 ${item.status === 1  ? '<span class="badge badge-sm bg-gradient-success">Online</span>' : '<span class="badge badge-sm bg-gradient-secondary">Offline</span>'}
                             </td>
@@ -104,6 +105,7 @@
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data.name).trigger('change');
                     $('#no_hp').val(data.no_hp).trigger('change');
+                    $('#ketua_id').val(data.ketua_id).trigger('change');
                     $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 

@@ -15,7 +15,13 @@
         <input type="text" class="form-control" placeholder="kode" name="kode" id="kode">
         <div class="invalid-feedback" id="kodeError"></div>
     </div>
-    <div class="form-check form-switch">
+    <label>Ketua</label>
+    @include('Component.select', [
+        'name' => 'ketua_id',
+        'id' => 'ketua_id',
+        'data' => $dataDosen,
+    ])
+    <div class="form-check form-switch mt-3">
         <input class="form-check-input" type="checkbox" id="status" name="status">
         <label class="form-check-label">Status</label>
     </div>

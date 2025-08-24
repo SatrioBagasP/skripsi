@@ -7,7 +7,7 @@ use App\Models\Jurusan;
 
 trait JurusanValidation
 {
-    use CommonValidation;
+    use DosenValidation;
 
     public function validateJurusanIsActive($id)
     {
@@ -19,6 +19,19 @@ trait JurusanValidation
 
         if ($data->status != 1) {
             throw new Exception('Jurusan tidak aktif!');
+        }
+    }
+
+    public function validateKetuaJurusan($ketuaId)
+    {
+        $this->validateDosenIsActive($ketuaId);
+
+        $data = Jurusan::where('ketua_id', $ketuaId)
+            ->lockForUpdate()
+            ->first();
+
+        if ($data) {
+            throw new Exception('Dosen sudah telah menjadi ketua jurusan lain');
         }
     }
 }

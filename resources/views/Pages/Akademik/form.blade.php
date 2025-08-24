@@ -15,7 +15,7 @@
         <input type="text" class="form-control" placeholder="Nomor Hp layanan" name="no_hp" id="no_hp">
         <div class="invalid-feedback" id="no_hpError"></div>
     </div>
-    <label>Ketua <small>(Bisa Dikosongkan)</small></label>
+    <label>Ketua</label>
     @include('Component.select', [
         'name' => 'ketua_id',
         'id' => 'ketua_id',
