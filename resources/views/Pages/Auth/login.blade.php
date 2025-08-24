@@ -107,7 +107,7 @@
                                 @endif
                                     <form method="POST" id='form-login' role="form" action="{{ route('postlogin') }}">
                                         @csrf
-                                        <label>Username</label>
+                                        <label>NIP/Username/Email</label>
                                         <div class="mb-3">
                                             <input type="text" class="form-control"
                                                 placeholder="NIP/Username/Email" aria-label="Username"
@@ -214,7 +214,7 @@
     <script src="{{ asset('/js/plugins/smooth-scrollbar.min.js') }}"></script>
     <script>
         $(document).ready(function () {
-            $('#btn-login').click(function (e) { 
+            $('#btn-login').click(function (e) {
                 e.preventDefault();
                 $('#btn-login').attr('disabled', true);
                 $('#form-login').submit();
