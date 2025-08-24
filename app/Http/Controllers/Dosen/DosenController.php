@@ -16,8 +16,10 @@ class DosenController extends Controller
 
     public function index()
     {
+        $jabatanOption = $this->getJabatanOption();
         $optionJurusan = $this->getJurusanOption();
-        return view('Pages.Dosen.index', compact('optionJurusan'));
+        $akademikOption = $this->getAkademikOption();
+        return view('Pages.Dosen.index', compact('optionJurusan', 'jabatanOption', 'akademikOption'));
     }
 
     public function store(Request $request)
@@ -26,6 +28,7 @@ class DosenController extends Controller
             'name' => 'required',
             'nip' => 'required',
             'jurusan_id' => 'required',
+            'jabatan_id' => 'required',
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'alamat' => 'required',
         ]);
@@ -38,10 +41,12 @@ class DosenController extends Controller
                 'name' => $request->name,
                 'nip' => $request->nip,
                 'jurusan_id' => $request->jurusan_id,
+                'jabatan_id' => $request->jabatan_id,
                 'no_hp' => $request->no_hp,
                 'alamat' => $request->alamat,
                 'status' => $request->boolean('status'),
             ]);
+            $data->akademik()->attach($request->akademik_id);
             $this->storeLog($data, 'Menambah Dosen', 'Dosen');
 
             DB::commit();
@@ -64,6 +69,7 @@ class DosenController extends Controller
             'name' => 'required',
             'nip' => 'required',
             'jurusan_id' => 'required',
+            'jabatan_id' => 'required',
             'no_hp' => 'required',
             'alamat' => 'required',
         ]);
@@ -84,10 +90,12 @@ class DosenController extends Controller
                 'name' => $request->name,
                 'nip' => $request->nip,
                 'jurusan_id' => $request->jurusan_id,
+                'jabatan_id' => $request->jabatan_id,
                 'no_hp' => $request->no_hp,
                 'alamat' => $request->alamat,
                 'status' => $request->boolean('status'),
             ]);
+            $data->akademik()->sync($request->akademik_id);
             $this->updateLog($data, 'Merubah Dosen', 'Dosen');
 
             DB::commit();
@@ -107,7 +115,7 @@ class DosenController extends Controller
     public function getData(Request $request)
     {
         $data = [];
-        $data = Dosen::with(['jurusan'])->select('name', 'nip', 'status', 'id', 'jurusan_id', 'no_hp', 'alamat')
+        $data = Dosen::with(['jurusan'])->select('name', 'nip', 'status', 'id', 'jurusan_id', 'no_hp', 'alamat', 'jabatan_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('nip', 'like', '%' . $request->search . '%')
@@ -123,6 +131,10 @@ class DosenController extends Controller
                 'nip' => $item->nip,
                 'jurusan' => $item->jurusan->name ?? '-',
                 'jurusan_id' => $item->jurusan_id,
+                'jabatan_id' => $item->jabatan_id,
+                'akademik_id' => $item->akademik->map(function ($item) {
+                    return $item->id;
+                }),
                 'status' => $item->status,
                 'no_hp' => $item->no_hp,
                 'alamat' => $item->alamat,

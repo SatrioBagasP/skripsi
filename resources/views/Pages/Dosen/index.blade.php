@@ -30,6 +30,8 @@
     </div>
     @include('Pages.Dosen.form', [
         'optionJurusan' => $optionJurusan,
+        'jabatanOption' => $jabatanOption,
+        'akademikOption' => $akademikOption,
     ])
 
 @endsection
@@ -90,13 +92,15 @@
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
                     dataSet.id = data.id;
-
+                    console.log(data);
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data.name).trigger('change');
                     $('#no_hp').val(data.no_hp).trigger('change');
                     $('#nip').val(data.nip).trigger('change');
                     $('#alamat').val(data.alamat).trigger('change');
                     $('#jurusan_id').val(data.jurusan_id).trigger('change');
+                    $('#jabatan_id').val(data.jabatan_id).trigger('change');
+                    $('#akademik_id').val(data.akademik_id).trigger('change');
                     $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 

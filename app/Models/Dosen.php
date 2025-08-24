@@ -39,6 +39,6 @@ class Dosen extends Model
 
     public function akademik()
     {
-        return $this->belongsToMany(Akademik::class, 'dosen_has_akademik', 'akademik_id', 'dosen_id');
+        return $this->belongsToMany(Akademik::class, 'dosen_has_akademik', 'dosen_id', 'akademik_id')->where('akademik.status', true);
     }
 }

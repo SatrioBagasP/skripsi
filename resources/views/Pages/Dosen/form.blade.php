@@ -26,12 +26,29 @@
             <input type="text" class="form-control" placeholder="Alamat" name="alamat" id="alamat">
             <div class="invalid-feedback" id="alamatError"></div>
         </div>
+        <label>Jabatan</label>
+        <div class="mb-3">
+            @include('Component.select', [
+                'name' => 'jabatan_id',
+                'id' => 'jabatan_id',
+                'data' => $jabatanOption,
+            ])
+        </div>
         <label>Jurusan</label>
         <div class="mb-3">
             @include('Component.select', [
                 'name' => 'jurusan_id',
                 'id' => 'jurusan_id',
                 'data' => $optionJurusan,
+            ])
+        </div>
+        <label>Akademik</label>
+        <div class="mb-3">
+            @include('Component.select', [
+                'multiple' => true,
+                'name' => 'akademik_id',
+                'id' => 'akademik_id',
+                'data' => $akademikOption,
             ])
         </div>
         <div class="form-check form-switch">

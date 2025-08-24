@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Akademik;
 use App\Models\User;
 use App\Models\Dosen;
+use App\Models\Jabatan;
 use App\Models\Roles;
 use App\Models\Jurusan;
 use App\Models\Mahasiswa;
@@ -22,6 +24,34 @@ abstract class Controller
             ->withProperties($properties)
             ->useLog($content)
             ->log($log);
+    }
+
+    public function getJabatanOption()
+    {
+        $data = [];
+        $data = Jabatan::get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ];
+            });
+
+        return $data;
+    }
+
+    public function getAkademikOption()
+    {
+        $data = [];
+        $data = Akademik::get()
+            ->map(function ($item) {
+                return [
+                    'value' => $item->id,
+                    'label' => $item->name,
+                ];
+            });
+
+        return $data;
     }
 
     function getJurusanOption()
