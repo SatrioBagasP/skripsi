@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use Exception;
 use App\Models\Jurusan;
+use App\Models\UnitKemahasiswaan;
 
 trait UnitKemahasiswaanValidation
 {
@@ -11,12 +12,27 @@ trait UnitKemahasiswaanValidation
 
     public function validateUnitKemahasiswaanHasPendingProposal($data)
     {
-        if ($data->user && $data->user->proposal->isNotEmpty()) {
-            $data->user->proposal->each(function ($item) {
+        if ($data->proposal->isNotEmpty()) {
+            $data->proposal->each(function ($item) {
                 if (!in_array($item->status, ['Draft', 'Rejected', 'Accepted'])) {
                     throw new \Exception('Tidak bisa merubah unit kemahasiswaan, dikarenakan ada proposal pada unit ini masih tahap pengecekan oleh verifikator');
                 }
             });
         }
+    }
+
+    public function validateUnitKemahasiswaanIsActive($id)
+    {
+        $data = UnitKemahasiswaan::where('id', $id)
+            ->lockForUpdate()
+            ->first();
+
+        $this->validateExistingData($data);
+
+        if ($data->status != 1) {
+            throw new Exception('Unit Kemahasiswaan tidak aktif!');
+        }
+
+        return $data;
     }
 }

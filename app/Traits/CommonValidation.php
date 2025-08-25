@@ -12,4 +12,8 @@ trait CommonValidation
         }
     }
 
+    public function validateRangeDate($request){
+
+    }
+
 }

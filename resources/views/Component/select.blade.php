@@ -13,9 +13,14 @@
     ];
     $multiple = $multiple ?? false;
     $placeholder = $placeholder ?? '--Pilih Data--';
+    $disabled = $disabled ?? false;
 @endphp
 <select class="select2 form-control" name="{{ $name }}" id="{{ $id }}"
+    @if ($disabled) disabled @endif
     @if ($multiple) multiple="{{ $multiple }} @endif">
+    @if ($placeholder != '--Pilih Data--')
+        <option value="">{{ $placeholder }}</option>
+    @endif
     @foreach ($data as $item)
         <option value="{{ $item['value'] }}" {{ !empty($item['selected']) ? 'selected' : '' }}>{{ $item['label'] }}
         </option>

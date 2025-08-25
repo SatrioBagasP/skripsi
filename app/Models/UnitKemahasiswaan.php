@@ -15,11 +15,18 @@ class UnitKemahasiswaan extends Model
         'jurusan_id',
     ];
 
-    public function user(){
-        return $this->morphOne(User::class,'userable');
+    public function proposal()
+    {
+        return $this->hasMany(Proposal::class, 'unit_id', 'id');
     }
 
-    public function jurusan(){
-        return $this->belongsTo(Jurusan::class,'jurusan_id','id');
+    public function user()
+    {
+        return $this->morphOne(User::class, 'userable');
+    }
+
+    public function jurusan()
+    {
+        return $this->belongsTo(Jurusan::class, 'jurusan_id', 'id');
     }
 }

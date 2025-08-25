@@ -44,8 +44,9 @@
                 <label>Organisasi</label>
                 <div class="mb-2">
                     @include('Component.select', [
-                        'name' => 'user_id',
-                        'id' => 'user_id',
+                        'name' => 'unit_id',
+                        'id' => 'unit_id',
+                        'placeholder' => '-- Pilih Organisasi --',
                         'data' => $organisasiOption,
                     ])
                 </div>
@@ -54,7 +55,8 @@
                     @include('Component.select', [
                         'name' => 'ketua_id',
                         'id' => 'ketua_id',
-                        'data' => $ketuaOption,
+                        'disabled' => true,
+                        'data' => [],
                     ])
                 </div>
                 <label>Dosen Penanggung Jawab</label>
@@ -62,7 +64,8 @@
                     @include('Component.select', [
                         'name' => 'dosen_id',
                         'id' => 'dosen_id',
-                        'data' => $dosenOption,
+                        'disabled' => true,
+                        'data' => [],
                     ])
                 </div>
                 <label>Mahasiswa</label>
@@ -70,7 +73,8 @@
                     @include('Component.select', [
                         'name' => 'mahasiswa_id',
                         'id' => 'mahasiswa_id',
-                        'data' => $mahasiswaOption,
+                        'disabled' => true,
+                        'data' => [],
                         'multiple' => true,
                     ])
                 </div>
@@ -121,9 +125,14 @@
 
 @push('js')
     <script>
+        $('.select2').select2({
+            placeholder: '-- Pilih Data --'
+        });
         (function() {
             let edit = @json($edit ?? false);
-            let dataSet = {};
+            let dataSet = {
+                selected_mahasiswa : [],
+            };
             if (edit) {
                 dataSet = @json($data ?? null);
 
@@ -141,22 +150,7 @@
                     $('#not-harian').show();
                 }
 
-            } else {
-                dataSet = {
-                    id: null,
-                    name: null,
-                    dosen_id: null,
-                    desc: null,
-                    file: null,
-                    user_id: null,
-                    mahasiswa_id: [],
-                    is_harian: false,
-                    start_date: null,
-                    end_date: null,
-                    range_date: null,
-                }
             }
-
             $(document).ready(function() {
                 $('.flatpickr-range').flatpickr({
                     mode: "range",
@@ -182,39 +176,85 @@
                         dataSet[key] = $(this).val();
                     }
                 });
+                $('#unit_id').change(function(e) {
+                    e.preventDefault();
+                    $('#ketua_id').attr('disabled', true);
+                    $('#dosen_id').attr('disabled', true);
+                    $('#mahasiswa_id').attr('disabled', true);
+                    if ($(this).val() === '') {
+                        return;
+                    }
+                    $('#ketua_id').trigger('change');
+                    $('#mahasisa_id').trigger('change');
+                    appendKetuaPelaksana($(this).val());
+                });
 
-                // $('#ketua_id').change(function(e) {
-                //     e.preventDefault();
-                //     dataSet.dosen_id = null;
-                //     let ketuaId = $(this).val();
-                //     if (!hasJurusan) {
-                //         $.ajax({
-                //             type: "GET",
-                //             url: "{{ route('proposal.getDosen') }}",
-                //             data: {
-                //                 ketuaId: ketuaId,
-                //             },
-                //             success: function(response) {
-                //                 var options = '';
-                //                 if (response.data.length > 0) {
-                //                     options +=
-                //                         '<option value="" disabled selected>---Pilih Dosen Penanggung Jawab---</option>';
-                //                     $.each(response.data, function(index, value) {
-                //                         options +=
-                //                             `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
-                //                     });
-                //                     console.log(options);
-                //                 } else {
-                //                     options +=
-                //                         '<option value="" disabled selected>Tidak Ada Data Dosen Hubungi Admin Aplikasi!</option>';
-                //                 }
+                $('#unit_id').trigger('change');
 
-                //                 $('#dosen_id').html(options);
+                function appendKetuaPelaksana(organisasiId) {
+                    $('#ketua_id').empty();
+                    $.ajax({
+                        type: "GET",
+                        url: "{{ route('proposal.getOption') }}",
+                        data: {
+                            id: organisasiId,
+                        },
+                        success: function(response) {
+                            var ketuaOptions = '';
+                            var dosenOptions = '';
+                            var mahasiswaOptions = '';
+                            if (response.data_mahasiswa.length > 0) {
+                                ketuaOptions +=
+                                    '<option value="" selected disabled>--Pilih Data--</option>';
+                                $.each(response.data_mahasiswa, function(index, value) {
+                                    ketuaOptions +=
+                                        `<option value="${value.value}" ${dataSet.ketua_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                                });
+                            } else {
+                                ketuaOptions +=
+                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                            }
 
-                //             }
-                //         });
-                //     }
-                // });
+                            if (response.data_dosen.length > 0) {
+                                dosenOptions +=
+                                    '<option value="" selected disabled>--Pilih Data--</option>';
+                                $.each(response.data_dosen, function(index, value) {
+                                    dosenOptions +=
+                                        `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                                });
+                            } else {
+                                dosenOptions +=
+                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                            }
+
+                            if (response.data_mahasiswa.length > 0) {
+                                mahasiswaOptions +=
+                                    '<option value="" disabled>--Pilih Data--</option>';
+                                $.each(response.data_mahasiswa, function(index, value) {
+                                    let isSelected = dataSet.selected_mahasiswa.some(v =>
+                                        v == value.value)
+                                    mahasiswaOptions +=
+                                        `<option value="${value.value}" ${isSelected ? 'selected' : ''}>${value.label}</option>`;
+                                });
+                            } else {
+                                mahasiswaOptions +=
+                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                            }
+
+                            $('#ketua_id').removeAttr('disabled');
+                            $('#mahasiswa_id').removeAttr('disabled');
+                            $('#dosen_id').removeAttr('disabled');
+                            $('#ketua_id').html(ketuaOptions);
+                            $('#dosen_id').html(dosenOptions);
+                            $('#mahasiswa_id').html(mahasiswaOptions);
+
+                        },
+                        error: function(xhr, status, error) {
+                            var err = xhr.responseJSON.errors;
+                            flasher.error(xhr.responseJSON.message);
+                        }
+                    });
+                }
 
                 if (edit) {
                     $('.select2').trigger('change');

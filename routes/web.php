@@ -80,9 +80,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
     });
 
-    Route::middleware(['can:unit-kemahasiswaan'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
+    Route::middleware(['canAny:admin,unit-kemahasiswaan'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/dosen-option', 'getDosen')->name('getDosen');
+        Route::get('/all-option', 'getOption')->name('getOption');
         Route::get('/create', 'create')->name('create');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/store', 'store')->name('store');
@@ -92,7 +92,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/get-data', 'getData')->name('getData');
     });
 
-    Route::middleware(['can:approval'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
+    Route::middleware(['can:verifikator'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::get('/edit/{id}', 'edit')->name('edit');
         Route::post('/approval-dosen', 'approvalDosen')->name('approvalDosen');

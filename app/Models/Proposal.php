@@ -8,8 +8,7 @@ class Proposal extends Model
 {
     protected $table = 'proposal';
     protected $fillable = [
-        'user_id',
-        'mahasiswa_id',
+        'unit_id',
         'dosen_id',
         'no_proposal',
         'name',
@@ -22,23 +21,28 @@ class Proposal extends Model
         'alasan_tolak',
     ];
 
-    public function user(){
-        return $this->belongsTo(User::class,'user_id','id');
+    public function pengusul()
+    {
+        return $this->belongsTo(UnitKemahasiswaan::class, 'unit_id', 'id');
     }
 
-    public function dosen(){
-        return $this->belongsTo(Dosen::class,'dosen_id','id');
+    public function dosen()
+    {
+        return $this->belongsTo(Dosen::class, 'dosen_id', 'id');
     }
 
-    public function ruangan(){
-        return $this->belongsToMany(Ruangan::class,'proposal_has_ruangan','proposal_id','ruangan_id');
+    public function ruangan()
+    {
+        return $this->belongsToMany(Ruangan::class, 'proposal_has_ruangan', 'proposal_id', 'ruangan_id');
     }
 
-    public function ketua(){
-      return $this->belongsTo(Mahasiswa::class,'mahasiswa_id','id');
+    public function ketua()
+    {
+        return $this->belongsTo(Mahasiswa::class, 'mahasiswa_id', 'id');
     }
 
-    public function mahasiswa(){
-        return $this->belongsToMany(Mahasiswa::class,'proposal_has_mahasiswa','proposal_id','mahasiswa_id')->orderBy('proposal_has_mahasiswa.mahasiswa_id', 'desc');
+    public function mahasiswa()
+    {
+        return $this->belongsToMany(Mahasiswa::class, 'proposal_has_mahasiswa', 'proposal_id', 'mahasiswa_id')->orderBy('proposal_has_mahasiswa.mahasiswa_id', 'desc');
     }
 }

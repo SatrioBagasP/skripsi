@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Proposal;
 
 use PDO;
 use Dom\Attr;
+use Exception;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Dosen;
 use App\Models\Proposal;
 use Mockery\Matcher\Not;
+use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use App\Traits\CommonValidation;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -21,11 +24,15 @@ use Illuminate\Support\Facades\Storage;
 use App\Traits\ProposalRequestValidator;
 use App\Http\Controllers\Helper\CrudController;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
-use App\Models\Mahasiswa;
+use App\Traits\DosenValidation;
+use App\Traits\MahasiswaValidation;
+use App\Traits\ProposalValidation;
+use App\Traits\UnitKemahasiswaanValidation;
 
 class ProposalController extends Controller
 {
-    use ProposalRequestValidator;
+    // use ProposalRequestValidator;
+    use MahasiswaValidation, DosenValidation, UnitKemahasiswaanValidation, ProposalValidation;
 
     public function index()
     {
@@ -41,31 +48,53 @@ class ProposalController extends Controller
         return view('Pages.Proposal.index', compact('head'));
     }
 
+    public function getOption(Request $request)
+    {
+        try {
+            $data = UnitKemahasiswaan::where('id', $request->id)
+                ->first();
+            $this->validateExistingData($data);
+            $mahasiswaOption = $this->getMahasiswaOption($data->jurusan_id);
+            $dosenOption = $this->getDosenOption($data->jurusan_id);
+            return response()->json([
+                'status' => 200,
+                'data_mahasiswa' =>  $mahasiswaOption,
+                'data_dosen' =>  $dosenOption,
+            ], 200);
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => 400,
+                'message' =>  $this->getErrorMessage($e),
+            ], 400);
+        }
+    }
+
     public function create()
     {
         $admin = Gate::allows('admin');
         $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
         $organisasiOption = $this->getOrganisasiOption();
         $dosenOption = $this->getDosenOption($jurusan);
-        $ketuaOption = $this->getMahasiswaOption($jurusan);
         $mahasiswaOption = $this->getMahasiswaOption($jurusan);
 
-        if (!$admin) {
-            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
-                if ($item['value'] == Auth::user()->userable_id) {
-                    $item['selected'] = true;
-                }
-                return $item;
-            });
+        if ($jurusan) {
+            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)
+                ->map(function ($item) {
+                    if ($item['value'] == Auth::user()->userable_id) {
+                        $item['selected'] = true;
+                    }
+                    return $item;
+                });
         }
-
-        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption'));
+        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'dosenOption'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required',
+            'unit_id' => 'required',
             'ketua_id' => 'required',
             'dosen_id' => 'required',
             'desc' => 'required',
@@ -73,9 +102,10 @@ class ProposalController extends Controller
             'end_date' => 'required_if:is_harian,false',
             'mahasiswa_id' => 'required',
             'range_date' => 'required_if:is_harian,true',
-            'file' => ['required', File::types(['pdf'])->max(2 * 1024)],
+            'file' => ['required', File::types(['png'])->max(2 * 1024)],
         ], [
             'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
+            'unit_id.required' => 'Unit Kemahasiswaan  wajib dipilih',
             'ketua_id.required' => 'Ketua Pelaksana Wajib Diisi',
             'name.required' => 'Judul proposal wajib diisi',
             'desc.required' => 'Deskripsi wajib diisi',
@@ -87,41 +117,34 @@ class ProposalController extends Controller
             'file.max' => 'Ukuran file maksimal 2MB.',
             'file.mimes' => 'File harus berupa PDF.',
         ]);
-        $proposal = null;
         $filePath = '';
         try {
-            $admin = Gate::allows('admin');
-            $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
-            $kodeJurusan = $this->validateJurusan($unitKemahasiswaanEligible, $request);
+            DB::beginTransaction();
+
+            $unitKemahasiswaan = $this->validateUnitKemahasiswaanIsActive($request->unit_id);
+            $kodeJurusan = $unitKemahasiswaan->jurusan->kode_jurusan ?? '-';
             $romawi = $this->getRomawi(Carbon::now()->format('m'));
             $tahun = Carbon::now()->format('Y');
+            $nomorProposal = $this->validateNomorProposal($kodeJurusan, $romawi, $tahun);
 
-            // buat temp proposal
-            $proposal = $this->validateProposal($kodeJurusan, $romawi, $tahun);
-
-            DB::beginTransaction();
-            $dosenEligible = $this->validateDosen($request->dosen_id);
-            $ketuaEligible = $this->validateKetua($request->ketua_id);
+            $this->validateMahasiswaIsActive($request->ketua_id);
+            $this->validateDosenIsActive($request->dosen_id);
             [$startDate, $endDate] = $this->validateDate($request);
-
             $filePath = $this->storageStore($request->file('file'), 'proposal');
 
-            $dataField = [
+            $data = Proposal::create([
                 'name' => $request->name,
                 'mahasiswa_id' => $request->ketua_id,
+                'no_proposal' => $nomorProposal,
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
-                'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
+                'unit_id' => $request->unit_id,
                 'file' => $filePath,
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-            ];
-
-            $Crud = new CrudController(Proposal::class, data: $proposal, dataField: $dataField, description: 'Menambah Proposal', content: 'Proposal');
-            $data = $Crud->updateWithReturnData();
-
+            ]);
             $mahasiswaId = $request->mahasiswa_id ?? [];
             $ketuaId = $request->ketua_id;
 
@@ -129,16 +152,8 @@ class ProposalController extends Controller
                 array_unshift($mahasiswaId, $ketuaId);
             }
 
-            // insert mahasiswanya pakai table aja biar tidak mengulang
-            $rows = collect($mahasiswaId)->map(function ($id) use ($data) {
-                return [
-                    'proposal_id'  => $data->id,
-                    'mahasiswa_id' => $id,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ];
-            })->toArray();
-            DB::table('proposal_has_mahasiswa')->insert($rows);
+            $data->mahasiswa()->attach($mahasiswaId);
+            $this->storeLog($data, 'Menambah Proposal', 'Proposal');
 
             DB::commit();
             return response()->json([
@@ -147,14 +162,10 @@ class ProposalController extends Controller
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
-            if ($proposal) {
-                $proposal->delete();
-            }
             $this->storageDelete($filePath);
-            $message = $this->getErrorMessage($e);
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -341,20 +352,25 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = $this->validateProposalEligible($request);
-
-            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, description: 'Menghapus Proposal', content: 'Proposal');
-            $action = $Crud->deleteWithReturnJson();
+            $data = Proposal::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+            $this->validateExistingData($data);
+            $this->validateProposalIsEditable($data);
+            $this->validateProposalOwnership($data);
+            $this->deleteLog($data, 'Menghapus Propsal', 'Proposal');
+            $data->delete();
 
             DB::commit();
-            return $action;
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getDeleteSuccessMessage(),
+            ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
-            $message = $this->getErrorMessage($e);
-
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }
@@ -390,36 +406,11 @@ class ProposalController extends Controller
         }
     }
 
-    public function getDosen(Request $request)
-    {
-        try {
-            $mahasiswa = Mahasiswa::select('jurusan_id')
-                ->where('id', $request->ketuaId)
-                ->first();
-
-            if (!$mahasiswa) {
-                throw new \Exception('Data mahasiswa tidak ditemukan, silahkan refresh halaman ini');
-            }
-
-            $data = $this->getDosenOption($mahasiswa->jurusan_id);
-            return response()->json([
-                'status' => 200,
-                'data' => $data,
-            ], 200);
-        } catch (\Throwable $e) {
-            $message = $this->getErrorMessage($e);
-            return response()->json([
-                'status' => 400,
-                'message' => $message,
-            ], 400);
-        }
-    }
-
     public function getData(Request $request)
     {
         $data = [];
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['user.userable.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'user_id', 'dosen_id', 'mahasiswa_id')
+        $data = Proposal::with(['pengusul.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'unit_id', 'dosen_id', 'mahasiswa_id')
             ->when($admin == false, function ($query) {
                 $query->where('user_id', Auth::user()->id);
             })
@@ -427,14 +418,14 @@ class ProposalController extends Controller
                 $query->where(function ($item) use ($request) {
                     $item->where('name', 'like', '%' . $request->search . '%')
                         ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
-                        ->orWhereRelation('user', 'name', 'like', '%' . $request->search . '%')
-                        ->orWhereRelation('user.userable.jurusan', 'name', 'like', '%' . $request->search . '%');
+                        ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
+                        ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
                 });
             })
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);
 
-        $dataFormated = $data->getCollection()->transform(function ($item) use ($admin) {
+        $dataFormated = $data->map(function ($item) use ($admin) {
             return [
                 'id' => encrypt($item->id),
                 'status' => $item->status,
@@ -442,13 +433,13 @@ class ProposalController extends Controller
                 'ketua' => $item->ketua->name,
                 'npm_ketua' => $item->ketua->npm,
                 'no_proposal' => $item->no_proposal,
-                'organisasi' => $admin == true ? $item->user->userable->name : '',
-                'jurusan' => $admin == true ? ($item->user->userable->jurusan  ?  $item->user->userable->jurusan->name : $item->ketua->jurusan->name) : '',
+                'organisasi' => $admin == true ? $item->pengusul->name : '',
+                'jurusan' => $admin == true ? ($item->pengusul->jurusan  ?  $item->pengusul->jurusan->name : $item->ketua->jurusan->name) : '',
                 'admin' => $admin,
                 'dosen' => $item->dosen->name,
-                'edit' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Rejected']),
-                'pengajuan' => in_array($item->status, ['draft', 'Draft', 'tolak', 'Rejected']),
-                'delete' => in_array($item->status, ['Draft', 'draft', 'tolak', 'Rejected']),
+                'edit' => in_array($item->status, ['Draft', 'Rejected']),
+                'pengajuan' => in_array($item->status, ['Draft', 'Rejected']),
+                'delete' => in_array($item->status, ['Draft', 'Rejected']),
             ];
         });
 
