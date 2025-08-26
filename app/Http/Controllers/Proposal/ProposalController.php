@@ -120,7 +120,7 @@ class ProposalController extends Controller
             DB::beginTransaction();
 
             $unitKemahasiswaan = $this->validateUnitKemahasiswaanIsActive($request->unit_id);
-            $kodeJurusan = $unitKemahasiswaan->jurusan->kode_jurusan ?? '-';
+            $kodeJurusan = $unitKemahasiswaan->is_non_jurusan == false ? $unitKemahasiswaan->jurusan->kode : '-';
             $romawi = $this->getRomawi(Carbon::now()->format('m'));
             $tahun = Carbon::now()->format('Y');
             $nomorProposal = $this->validateNomorProposal($kodeJurusan, $romawi, $tahun);
@@ -155,7 +155,7 @@ class ProposalController extends Controller
             DB::commit();
             return response()->json([
                 'status' => 200,
-                'message' => 'Data Berhasil Ditambahkan',
+                'message' => $this->getStoreSuccessMessage(),
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -269,7 +269,7 @@ class ProposalController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'ketua_id' => 'required',
+            'ketua_ids' => 'required',
             'dosen_id' => 'required',
             'desc' => 'required',
             'start_date' => 'required_if:is_harian,false',
@@ -279,7 +279,7 @@ class ProposalController extends Controller
             'file' => ['sometimes', File::types(['pdf'])->max(2 * 1024)],
         ], [
             'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
-            'ketua_id.required' => 'Judul proposal wajib diisi',
+            'ketua_ids.required' => 'Ketua Pelaksana Wajib Diisi',
             'name.required' => 'Judul proposal wajib diisi',
             'desc.required' => 'Deskripsi wajib diisi',
             'start_date.required_if' => 'Jadwal mulai wajib diisi',
@@ -293,58 +293,43 @@ class ProposalController extends Controller
             DB::beginTransaction();
 
             $admin = Gate::allows('admin');
-            $filePath = '';
-            $data = $this->validateProposalEligible($request);
+            $data = Proposal::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
 
-            $unitKemahasiswaanEligible = $this->validateUnitKemahasiswaan($request, $admin);
-            $dosenEligible = $this->validateDosen($request->dosen_id);
-            $ketuaEligible = $this->validateKetua($request->ketua_id);
+            $this->validateProposalIsEditable($data);
+            $this->validateProposalIsEditable($data);
+            $this->validateUnitKemahasiswaanIsActive($request->unit_id);
+            $this->validateMahasiswaIsActive($request->ketua_ids);
+            $this->validateDosenIsActive($request->dosen_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
-            $dataField = [
+            $filePath = '';
+            $oldPath = $data->file;
+            if ($request->file('file')) {
+                $filePath = $this->storageStore($request->file('file'), 'proposal');
+            }
+
+            $data->fill([
                 'name' => $request->name,
-                'ketua_id' => $request->ketua_id,
+                'mahasiswa_id' => $request->ketua_ids,
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
-                'user_id' => $admin == true ? $request->user_id : Auth::user()->id,
+                'unit_id' => $request->unit_id,
+                'file' => $request->file('file') ? $filePath : $oldPath,
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
                 'start_date' => $startDate,
                 'end_date' => $endDate,
-            ];
+            ]);
 
-            $oldPath = $data->file;
-            if ($request->file('file')) {
-                $filePath = $this->storageStore($request->file('file'), 'proposal');
-                $dataField['file'] = $filePath;
+            $mahasiswaId = $request->mahasiswa_id ?? [];
+            $ketuaId = $request->ketua_ids;
+            if (!in_array($ketuaId, $mahasiswaId)) {
+                array_unshift($mahasiswaId, $ketuaId);
             }
-
-            $mahasiswaDefault = $data->mahasiswa->pluck('id');
-            $mahasiswaInsert = array_diff($request->mahasiswa_id, $mahasiswaDefault->toArray()); // ini yang insert
-            $mahasiswaDeleted = array_diff($mahasiswaDefault->toArray(), $request->mahasiswa_id); // ini yang didelete
-
-            ProposalHasMahasiswa::where('proposal_id', $data->id)
-                ->whereIn('mahasiswa_id', $mahasiswaDeleted)
-                ->delete();
-
-            $ketuaId = $request->ketua_id;
-            if (!in_array($ketuaId, $mahasiswaInsert) && !in_array($ketuaId, $mahasiswaDefault->toArray())) {
-                array_unshift($mahasiswaInsert, $ketuaId);
-            }
-
-            // insert mahasiswanya pakai table aja agar tidak mengulang
-            $rows = collect($mahasiswaInsert)->map(function ($id) use ($data) {
-                return [
-                    'proposal_id'  => $data->id,
-                    'mahasiswa_id' => $id,
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
-                ];
-            })->toArray();
-            DB::table('proposal_has_mahasiswa')->insert($rows);
-
-            $Crud = new CrudController(Proposal::class, data: $data, id: $data->id, dataField: $dataField, description: 'Merubah Proposal', content: 'Proposal');
-            $data = $Crud->updateWithReturnData();
+            $data->mahasiswa()->sync($mahasiswaId);
+            $this->updateLog($data, 'Merubah Proposal', 'Proposal');
 
             if ($request->file('file')) {
                 $this->storageDelete($oldPath);
@@ -353,16 +338,15 @@ class ProposalController extends Controller
             DB::commit();
             return response()->json([
                 'status' => 200,
-                'message' => 'Data Berhasil Ditambahkan',
+                'message' => $this->getUpdateSuccessMessage(),
             ], 200);
         } catch (\Throwable $e) {
             DB::rollBack();
             $this->storageDelete($filePath);
-            $message = $this->getErrorMessage($e);
 
             return response()->json([
                 'status' => 400,
-                'message' => $message,
+                'message' => $this->getErrorMessage($e),
             ], 400);
         }
     }

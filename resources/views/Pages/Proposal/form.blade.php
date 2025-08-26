@@ -292,7 +292,7 @@
                             formData.append('mahasiswa_id[]', id);
                         });
                     }
-                    // button.attr('disabled', true);
+                    button.attr('disabled', true);
                     $.ajax({
                         type: "POST",
                         url: edit ? '{{ route('proposal.update') }}' :
@@ -305,7 +305,7 @@
                                 .message);
                             localStorage.setItem('flash_type',
                                 'success');
-                            // window.location.href = '{{ route('proposal.index') }}';
+                            window.location.href = '{{ route('proposal.index') }}';
 
                         },
                         error: function(xhr, status, error) {
