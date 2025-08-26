@@ -189,9 +189,7 @@
                     appendKetuaPelaksana($(this).val());
                 });
 
-                if (edit) {
-                    $('#unit_id').trigger('change');
-                }
+                $('#unit_id').trigger('change');
 
 
                 function appendKetuaPelaksana(organisasiId) {
