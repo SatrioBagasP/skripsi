@@ -222,47 +222,6 @@ class ProposalController extends Controller
         } catch (Throwable $e) {
             return abort(500, $this->getErrorMessage($e));
         }
-
-        $admin = Gate::allows('admin');
-        $jurusan = !$admin ? Auth::user()->userable->jurusan_id : null;
-        $organisasiOption = $this->getOrganisasiOption();
-        $dosenOption = $this->getDosenOption($jurusan);
-        $mahasiswaOption = $this->getMahasiswaOption($jurusan);
-        $ketuaOption = $this->getMahasiswaOption($jurusan);
-        $listMahasiswa = ProposalHasMahasiswa::where('proposal_id', $data->id)->pluck('mahasiswa_id')->toArray();
-        $hasJurusan = $jurusan == null ? false : true;
-
-        if (!$admin) {
-            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
-                if ($item['value'] == Auth::user()->userable_id) {
-                    $item['selected'] = true;
-                }
-                return $item;
-            });
-        } else {
-            $organisasiOption = $organisasiOption->map(function ($item) use ($data) {
-                if ($item['value'] == $data->user_id) {
-                    $item['selected'] = true;
-                }
-                return $item;
-            });
-        }
-
-
-        // ini maping data ulang untuk dikirim ke bladenya
-        $data = [
-            'id' => encrypt($data->id),
-            'name' => $data->name,
-            'desc' => $data->desc,
-            'file_url' => Storage::temporaryUrl($data->file, now()->addMinutes(5)),
-            'is_harian' => $data->is_harian,
-            'start_date' => Carbon::parse($data->start_date)->format('Y-m-d H:i'),
-            'end_date' => Carbon::parse($data->end_date)->format('Y-m-d H:i'),
-            'range_date' => $range,
-            'dosen_id' => $data->dosen_id,
-        ];
-
-        return view('Pages.Proposal.form', compact('organisasiOption', 'mahasiswaOption', 'ketuaOption', 'dosenOption', 'data', 'edit', 'hasJurusan'));
     }
 
     public function update(Request $request)
@@ -289,10 +248,10 @@ class ProposalController extends Controller
             'file.max' => 'Ukuran file maksimal 2MB.',
             'file.mimes' => 'File harus berupa PDF.',
         ]);
+        $filePath = '';
         try {
             DB::beginTransaction();
 
-            $admin = Gate::allows('admin');
             $data = Proposal::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
@@ -304,7 +263,6 @@ class ProposalController extends Controller
             $this->validateDosenIsActive($request->dosen_id);
             [$startDate, $endDate] = $this->validateDate($request);
 
-            $filePath = '';
             $oldPath = $data->file;
             if ($request->file('file')) {
                 $filePath = $this->storageStore($request->file('file'), 'proposal');
