@@ -5,6 +5,7 @@ namespace App\Traits;
 use Exception;
 use Carbon\Carbon;
 use App\Models\Proposal;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -73,7 +74,7 @@ trait ProposalValidation
 
     public function validateProposalOwnership($data)
     {
-        if ($data->unit_id == Auth::user()->id || Gate::allows('admin')) {
+        if ((Auth::user()->userable_type == UnitKemahasiswaan::class && $data->unit_id == Auth::user()->userable_id) || Gate::allows('admin')) {
             return;
         } else {
             throw new \Exception('Anda tidak memiliki akses ke proposal ini');

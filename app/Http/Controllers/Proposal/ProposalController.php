@@ -383,15 +383,28 @@ class ProposalController extends Controller
     {
         try {
             DB::beginTransaction();
-
-            $data = $this->validateProposalEligible($request);
-            $dosen = $this->validateDosen($data->dosen_id);
+            $admin = Gate::allows('admin');
+            $data = Proposal::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+            $this->validateExistingData($data);
+            $this->validateProposalIsEditable($data);
+            $dosen = $this->validateDosenIsActive($data->dosen_id);
+            $this->validateProposalOwnership($data);
             $noHp = $dosen ? $dosen->no_hp : 0;
+
             $notifikasi = new NotifikasiController();
-            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Proposal', nama: $dosen->name, judulKegiatan: $data->name, unitKemahasiswaan: $data->user->userable->name, route: route('approval-proposal.edit', encrypt($data->id))) : '-';
+            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Proposal', nama: $dosen->name, judulKegiatan: $data->name, unitKemahasiswaan: $data->pengusul->name, route: route('approval-proposal.edit', encrypt($data->id))) : '-';
+
             $response = $notifikasi->sendMessage($noHp, $message, 'Dosen Penanggung Jawab', 'Pengajuan');
 
-            $data->status = 'Pending Dosen';
+            $data->fill([
+                'status' => 'Pending Dosen',
+            ]);
+
+            $desc =  $admin ?  'Admin telah mengajukan proposal anda' : 'Berhasil mengajukan proposal';
+
+            $this->updateLog($data, $desc, 'Proposal');
             $data->save();
 
             DB::commit();
