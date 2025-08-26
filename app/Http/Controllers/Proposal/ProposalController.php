@@ -76,7 +76,7 @@ class ProposalController extends Controller
     {
         $organisasiOption = $this->getOrganisasiOption();
 
-        if (Auth::user()->userable == UnitKemahasiswaan::class) {
+        if (Auth::user()->userable_type == UnitKemahasiswaan::class) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)
                 ->map(function ($item) {
                     if ($item['value'] == Auth::user()->userable_id) {
@@ -179,7 +179,7 @@ class ProposalController extends Controller
             $organisasiOption = $this->getOrganisasiOption();
             $edit = true;
 
-            if (Auth::user()->userable == UnitKemahasiswaan::class) {
+            if (Auth::user()->userable_type == UnitKemahasiswaan::class) {
                 $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
                     if ($item['value'] == Auth::user()->userable_id) {
                         $item['selected'] = true;
@@ -415,8 +415,8 @@ class ProposalController extends Controller
         $data = [];
         $admin = Gate::allows('admin');
         $data = Proposal::with(['pengusul.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'unit_id', 'dosen_id', 'mahasiswa_id')
-            ->when($admin == false, function ($query) {
-                $query->where('user_id', Auth::user()->id);
+            ->when(Auth::user()->userable_type == UnitKemahasiswaan::class, function ($query) {
+                $query->where('unit_id', Auth::user()->userable_id);
             })
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where(function ($item) use ($request) {
