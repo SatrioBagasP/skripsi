@@ -53,8 +53,8 @@
                 <label>Ketua Pelaksana</label>
                 <div class="mb-2">
                     @include('Component.select', [
-                        'name' => 'ketua_id',
-                        'id' => 'ketua_id',
+                        'name' => 'ketua_ids',
+                        'id' => 'ketua_ids',
                         'disabled' => true,
                         'data' => [],
                     ])
@@ -104,7 +104,7 @@
                 <div id="yes-harian" style="display: none;">
                     <label>Start - End Date</label>
                     <input class="form-control flatpickr-range" type="text" id="range_date" name="range_date">
-                    <div class="invalid-feedback" id="range_dataError"></div>
+                    <div class="invalid-feedback" id="range_dateError"></div>
                 </div>
             </div>
         </div>
@@ -129,13 +129,13 @@
             placeholder: '-- Pilih Data --'
         });
         (function() {
+            let firstRender = true;
             let edit = @json($edit ?? false);
             let dataSet = {
-                selected_mahasiswa : [],
+                selected_mahasiswa: [],
             };
             if (edit) {
                 dataSet = @json($data ?? null);
-
                 Object.entries(dataSet).forEach(function([key, value]) {
                     if (key != 'file_url') {
                         $(`#${key}`).val(value);
@@ -149,6 +149,8 @@
                     $('#yes-harian').hide();
                     $('#not-harian').show();
                 }
+
+
 
             }
             $(document).ready(function() {
@@ -184,15 +186,18 @@
                     if ($(this).val() === '') {
                         return;
                     }
-                    $('#ketua_id').trigger('change');
-                    $('#mahasisa_id').trigger('change');
                     appendKetuaPelaksana($(this).val());
                 });
 
-                $('#unit_id').trigger('change');
+                if (edit) {
+                    $('#unit_id').trigger('change');
+                }
+
 
                 function appendKetuaPelaksana(organisasiId) {
-                    $('#ketua_id').empty();
+                    $('#ketua_ids').empty();
+                    $('#mahasiswa_id').empty();
+                    $('#dosen_id').empty();
                     $.ajax({
                         type: "GET",
                         url: "{{ route('proposal.getOption') }}",
@@ -208,7 +213,7 @@
                                     '<option value="" selected disabled>--Pilih Data--</option>';
                                 $.each(response.data_mahasiswa, function(index, value) {
                                     ketuaOptions +=
-                                        `<option value="${value.value}" ${dataSet.ketua_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                                        `<option value="${value.value}"}>${value.label}</option>`;
                                 });
                             } else {
                                 ketuaOptions +=
@@ -220,7 +225,7 @@
                                     '<option value="" selected disabled>--Pilih Data--</option>';
                                 $.each(response.data_dosen, function(index, value) {
                                     dosenOptions +=
-                                        `<option value="${value.value}" ${dataSet.dosen_id == value.value ? 'selected' : ''}>${value.label}</option>`;
+                                        `<option value="${value.value}">${value.label}</option>`;
                                 });
                             } else {
                                 dosenOptions +=
@@ -234,19 +239,22 @@
                                     let isSelected = dataSet.selected_mahasiswa.some(v =>
                                         v == value.value)
                                     mahasiswaOptions +=
-                                        `<option value="${value.value}" ${isSelected ? 'selected' : ''}>${value.label}</option>`;
+                                        `<option value="${value.value}">${value.label}</option>`;
                                 });
                             } else {
                                 mahasiswaOptions +=
                                     '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
                             }
 
-                            $('#ketua_id').removeAttr('disabled');
+                            $('#ketua_ids').removeAttr('disabled');
                             $('#mahasiswa_id').removeAttr('disabled');
                             $('#dosen_id').removeAttr('disabled');
-                            $('#ketua_id').html(ketuaOptions);
+                            $('#ketua_ids').html(ketuaOptions);
                             $('#dosen_id').html(dosenOptions);
                             $('#mahasiswa_id').html(mahasiswaOptions);
+                            $('#ketua_ids').val(dataSet.ketua_ids).trigger('change');
+                            $('#dosen_id').val(dataSet.dosen_id).trigger('change');
+                            $('#mahasiswa_id').val(dataSet.selected_mahasiswa).trigger('change');
 
                         },
                         error: function(xhr, status, error) {
@@ -255,11 +263,6 @@
                         }
                     });
                 }
-
-                if (edit) {
-                    $('.select2').trigger('change');
-                }
-
 
                 $('#is_harian').change(function(e) {
                     e.preventDefault();
@@ -302,7 +305,7 @@
                                 .message);
                             localStorage.setItem('flash_type',
                                 'success');
-                            window.location.href = '{{ route('proposal.index') }}';
+                            // window.location.href = '{{ route('proposal.index') }}';
 
                         },
                         error: function(xhr, status, error) {

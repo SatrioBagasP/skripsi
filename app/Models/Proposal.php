@@ -9,6 +9,7 @@ class Proposal extends Model
     protected $table = 'proposal';
     protected $fillable = [
         'unit_id',
+        'mahasiswa_id',
         'dosen_id',
         'no_proposal',
         'name',
