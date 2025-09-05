@@ -8,7 +8,7 @@
 
     {{-- TABLE --}}
     <div class="card">
-        <div class="table-responsive px-4 py-2">
+        <div class="px-4 py-2">
             <div class='d-flex justify-content-between align-items-center'>
                 <div>
                     <h6>Data Jurusan</h6>
