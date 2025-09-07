@@ -7,9 +7,44 @@
 
 @section('title', config('app.name') . ' | Mahasiswa')
 
+@push('css')
+    <style>
+        .alasan-box {
+            border: 1px solid #e3342f;
+            /* warna merah */
+            background-color: #fdecea;
+            /* merah muda lembut */
+            color: #611a15;
+            /* teks merah tua */
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alasan-box h4 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #b91c1c;
+        }
+
+        .alasan-box p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+@endpush
+
 @section('content')
 
     <div class="card px-4 py-2">
+        @if (isset($data['alasan_tolak']) && $data['alasan_tolak'])
+            <div class="alasan-box">
+                <h4>Proposal Ditolak</h4>
+                <p>{{ $data['alasan_tolak'] }}</p>
+            </div>
+        @endif
         <div class="row">
             <div class="col-md-6">
                 <label>Nama</label>
@@ -28,7 +63,12 @@
                 @endif
                 <div class="mb-2">
                     <input type="file" class="form-control" name="file" id="file" accept="application/pdf">
-                    <small>pdf 2mb</small>
+                    <span class="rules">
+                        <small>
+                            Hanya menerima file PDF <br>
+                            Maksimal ukuran: <strong>2 MB</strong>
+                        </small>
+                    </span>
                     <div class="invalid-feedback" id="fileError"></div>
                 </div>
 

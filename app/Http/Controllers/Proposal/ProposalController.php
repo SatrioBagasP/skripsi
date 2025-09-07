@@ -212,6 +212,7 @@ class ProposalController extends Controller
                 'unit_id' => $data->unit_id,
                 'dosen_id' => $data->dosen_id,
                 'ketua_ids' => $data->mahasiswa_id,
+                'alasan_tolak' => $data->alasan_tolak,
                 'selected_mahasiswa' => $data->mahasiswa->filter(function ($q) use ($data) {
                     return $q->id != $data->mahasiswa_id;
                 })
@@ -273,6 +274,7 @@ class ProposalController extends Controller
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
                 'unit_id' => $request->unit_id,
+                'alasan_tolak' => null,
                 'file' => $request->file('file') ? $filePath : $oldPath,
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
