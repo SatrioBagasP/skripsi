@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
         Akademik::updateOrCreate([
             'id' => 1,
             'name' => 'Layanan Mahasiswa',
+        ], [
             'no_hp' => '081336180467',
             'status' => true,
         ]);
@@ -60,6 +61,7 @@ class DatabaseSeeder extends Seeder
         Akademik::updateOrCreate([
             'id' => 2,
             'name' => 'Minat dan Bakat',
+        ], [
             'no_hp' => '081336180467',
             'status' => true,
         ]);
@@ -67,6 +69,7 @@ class DatabaseSeeder extends Seeder
         Jurusan::updateOrCreate([
             'id' => 1,
             'name' => 'Sistem Informasi',
+        ], [
             'kode' => 13,
             'status' => true,
         ]);
@@ -74,6 +77,7 @@ class DatabaseSeeder extends Seeder
         Jurusan::updateOrCreate([
             'id' => 2,
             'name' => 'Teknik Informatika',
+        ], [
             'kode' => 12,
             'status' => true,
         ]);
@@ -81,6 +85,7 @@ class DatabaseSeeder extends Seeder
         Jurusan::updateOrCreate([
             'id' => 3,
             'name' => 'Teknik Sipil',
+        ], [
             'kode' => 6,
             'status' => true,
         ]);
@@ -106,7 +111,7 @@ class DatabaseSeeder extends Seeder
         foreach (range(1, 10) as $i) {
             Dosen::create([
                 'name' => $faker->name,
-                'nip' => $faker->unique()->numerify('19##########'),
+                'nip' => $faker->unique()->numerify('14##########'),
                 'jurusan_id' => $faker->numberBetween(1, 3),
                 'jabatan_id' => 1,
                 'no_hp' => '081336180467',
@@ -118,7 +123,7 @@ class DatabaseSeeder extends Seeder
         foreach (range(1, 10) as $i) {
             Mahasiswa::create([
                 'name' => $faker->name,
-                'npm' => $faker->unique()->numerify('19##########'),
+                'npm' => $faker->unique()->numerify('#.####.#.#####'),
                 'jurusan_id' => $faker->numberBetween(1, 3),
                 'no_hp' => '081336180467',
                 'status' => true,
