@@ -43,7 +43,7 @@
                     const statusClass = {
                         'Draft': 'bg-secondary',
                         'Rejected': 'bg-danger',
-                        'Approved': 'bg-success'
+                        'Accepted': 'bg-success'
                     } [item.status] || 'bg-warning';
                     $('#tableBody').append(`
                         <tr class="data-item" data-index="${index}">

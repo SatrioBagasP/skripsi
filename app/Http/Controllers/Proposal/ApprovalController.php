@@ -100,6 +100,7 @@ class ApprovalController extends Controller
         try {
             $proposal->fill([
                 'status' => $status,
+                'alasan_tolak' => $reason,
             ]);
             $this->updateLog($proposal, $desc, 'Proposal');
 
