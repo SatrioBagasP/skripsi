@@ -11,6 +11,7 @@ use App\Http\Controllers\Jabatan\JabatanController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
 use App\Http\Controllers\Proposal\ApprovalController;
 use App\Http\Controllers\Proposal\ProposalController;
+use App\Http\Controllers\Proposal\TrackingProposalController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 
 // Route::get('',[TestingTwilloController::class,'index']);
@@ -101,5 +102,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/approval-layanan-mahasiswa', 'approvalLayananMahasiswa')->name('approvalLayananMahasiswa');
         Route::post('/approval-wakil-rektor', 'approvalWakilRektor')->name('approvalWakilRektor');
         Route::get('/get-data', 'getData')->name('getData');
+    });
+    Route::prefix('/tracking')->name('tracking.')->controller(TrackingProposalController::class)->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/tracking/search',  'search')->name('search');
     });
 });
