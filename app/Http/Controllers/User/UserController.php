@@ -94,6 +94,9 @@ class UserController extends Controller
                 'password' => Hash::make($request->password),
                 'status' => $request->boolean('status'),
             ]);
+            if (!empty($request->password)) {
+                $data->password = Hash::make($request->password);
+            }
             $data->roles()->sync($request->selected_role);
             $this->updateLog($data, 'Merubah User', 'User');
             DB::commit();
