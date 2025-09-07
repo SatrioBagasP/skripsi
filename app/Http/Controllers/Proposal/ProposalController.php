@@ -55,7 +55,7 @@ class ProposalController extends Controller
         try {
             $data = UnitKemahasiswaan::where('id', $request->id)
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
             $mahasiswaOption = $this->getMahasiswaOption($data->jurusan_id);
             $dosenOption = $this->getDosenOption($data->jurusan_id);
             return response()->json([
@@ -100,7 +100,7 @@ class ProposalController extends Controller
             'end_date' => ['date', Rule::requiredIf(fn() => !$request->boolean('is_harian'))],
             'mahasiswa_id' => 'required',
             'range_date' => 'required_if:is_harian,true',
-            'file' => ['required', File::types(['png'])->max(2 * 1024)],
+            'file' => ['required', File::types(['pdf'])->max(2 * 1024)],
         ], [
             'dosen_id.required' => 'Dosen penanggung jawab wajib dipilih',
             'unit_id.required' => 'Unit Kemahasiswaan  wajib dipilih',
@@ -174,7 +174,7 @@ class ProposalController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
             $this->validateProposalIsEditable($data);
             $organisasiOption = $this->getOrganisasiOption();
             $edit = true;
@@ -257,7 +257,6 @@ class ProposalController extends Controller
                 ->first();
 
             $this->validateProposalIsEditable($data);
-            $this->validateProposalIsEditable($data);
             $this->validateUnitKemahasiswaanIsActive($request->unit_id);
             $this->validateMahasiswaIsActive($request->ketua_ids);
             $this->validateDosenIsActive($request->dosen_id);
@@ -317,7 +316,7 @@ class ProposalController extends Controller
             $data = Proposal::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
             $this->validateProposalIsEditable($data);
             $this->validateProposalOwnership($data);
             $this->deleteLog($data, 'Menghapus Propsal', 'Proposal');
@@ -345,7 +344,7 @@ class ProposalController extends Controller
             $data = Proposal::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
             $this->validateProposalIsEditable($data);
             $dosen = $this->validateDosenIsActive($data->dosen_id);
             $this->validateProposalOwnership($data);

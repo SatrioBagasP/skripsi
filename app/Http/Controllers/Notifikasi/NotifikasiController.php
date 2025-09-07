@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 
 class NotifikasiController extends Controller
 {
-    public function sendMessage($noHp, $message, $target, $messageFor)
+    public function sendMessage($noHp, $message, $nextVerifikator, $messageFor)
     {
         $curl = curl_init();
 
@@ -47,11 +47,11 @@ class NotifikasiController extends Controller
             $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
         }
         if ($messageFor == 'Pengajuan') {
-            return 'Pengajuan Berhasil Diajukan ke Verifikator ' . $target . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
+            return 'Pengajuan Disetujui dan Berhasil Diajukan ke Verifikator ' . $nextVerifikator . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
         } elseif ($messageFor == 'Ditolak') {
-            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
+            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
         } elseif ($messageFor == 'Diterima') {
-            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $target . ' secara langsung atau minta admin mengecek akun ' . $target : '');
+            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
         }
     }
 

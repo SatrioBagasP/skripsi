@@ -67,7 +67,7 @@ class AkademikController extends Controller
             $data = Akademik::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
 
             if ($request->ketua_id != $data->ketua_id) {
                 $this->validateDosenIsActive($request->ketua_id);

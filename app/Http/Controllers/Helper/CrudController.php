@@ -68,7 +68,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
         } else {
             $data = $this->data;
         }
@@ -97,7 +97,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
         } else {
             $data = $this->data;
         }
@@ -128,7 +128,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
         } else {
             $data = $this->data;
         }
@@ -147,7 +147,7 @@ class CrudController extends Controller
     {
         if ($this->data == null) {
             $data = $this->model->where('id', $this->id)->lockForUpdate()->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
         } else {
             $data = $this->data;
         }

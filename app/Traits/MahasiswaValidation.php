@@ -15,7 +15,7 @@ trait MahasiswaValidation
             ->lockForUpdate()
             ->first();
 
-        $this->validateExistingData($data);
+        $this->validateExistingDataReturnException($data);
 
         if ($data->status != 1) {
             throw new Exception('Mahasiswa tidak aktif!');

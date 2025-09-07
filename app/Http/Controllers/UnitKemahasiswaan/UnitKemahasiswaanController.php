@@ -69,11 +69,10 @@ class UnitKemahasiswaanController extends Controller
         ]);
 
         try {
-
             $imagePath = null;
             DB::beginTransaction();
             $data = UnitKemahasiswaan::with([
-                'user.proposal' => function ($item) {
+                'proposal' => function ($item) {
                     $item->lockForUpdate();
                 }
             ])
@@ -83,7 +82,7 @@ class UnitKemahasiswaanController extends Controller
 
             $imageOld = $data->image;
 
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
             // jika dia merubah jurusan atau merubah non jursan maka cek pendingnya
             if ($data->is_non_jurusan != $request->boolean('is_non_jurusan') || $data->jurusan_id != $request->jurusan_id || $data->status != $request->status) {
                 $this->validateUnitKemahasiswaanHasPendingProposal($data);

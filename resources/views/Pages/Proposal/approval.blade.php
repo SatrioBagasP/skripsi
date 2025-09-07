@@ -22,12 +22,11 @@
 @endsection
 
 @push('js')
-    <script>
+    <script type="module">
+        import {
+            dataTable
+        } from '/js/datatable.js';
         (function() {
-            // BUNDLE DATATABLE
-            let searching = false;
-            let data = [];
-            @stack('paginate_js')
 
             function renderTableBody(data) {
                 let i = 1;
@@ -50,66 +49,31 @@
                     i++;
                 });
             }
-
-            function getData(page = 1) {
-                if (searching) {
-                    return;
-                }
-                searching = true;
-                data = [];
-                $('#tableBody').empty(); // Dari data table blade
-                $('#loading-spinner').show();
-                $.ajax({
-                    type: "GET",
-                    url: "{{ route('approval-proposal.getData') }}",
-                    data: {
-                        page: page,
-                        search: paginateControll.search,
-                        itemDisplay: paginateControll.itemDisplay
-                    },
-                    success: function(response) {
-                        response.data.forEach(item => {
-                            data.push({
-                                id: item.id,
-                                name: item.name,
-                                ketua: item.ketua,
-                                npm_ketua: item.npm_ketua,
-                                no_proposal: item.no_proposal,
-                                organisasi: item.organisasi,
-                                dosen: item.dosen,
-                                jurusan: item.jurusan,
-                                status: item.status,
-                                detail: item.detail,
-                                admin: item.admin,
-                            });
-                        });
-                        paginateControll.currentPage = response.currentPage;
-                        paginateControll.totalPage = response.totalPage;
-                        renderPagination(); // function dari datatable
-                        renderTableBody(data)
-                    },
-                    error: function(xhr, status, error) {
-                        flasher.error(xhr.responseJSON.message);
-                    },
-                    complete: function() {
-                        $('#loading-spinner').hide();
-                        searching = false;
-                    }
-                });
-            }
-
-            getData();
-            // END BUNDLE
+            const table = dataTable({
+                renderTableBody
+            });
+            table.renderData("{{ route('approval-proposal.getData') }}");
 
             $(document).ready(function() {
                 const validasiUrl = @json(route('approval-proposal.edit', ['id' => ':id']));
+
+                const message = localStorage.getItem('flash_message');
+                const type = localStorage.getItem('flash_type');
+
+                if (message && type && typeof flasher !== 'undefined') {
+                    flasher[type](message);
+                    localStorage.removeItem('flash_message');
+                    localStorage.removeItem('flash_type');
+                }
 
                 $(document).on('click', '.detail', function() {
                     $(this).attr('disabled', true);
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-                    if (data[index].detail == true) {
-                        let editUrl = validasiUrl.replace(':id', data[index].id);
+                    let data = table.getDataByIndex(index);
+
+                    if (data.detail == true) {
+                        let editUrl = validasiUrl.replace(':id', data.id);
                         window.location.href = editUrl;
                     }
                 });

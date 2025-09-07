@@ -71,7 +71,7 @@ class JurusanController extends Controller
             $data = Jurusan::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
 
             if ($request->ketua_id != $data->ketua_id) {
                 $this->validateKetuaJurusan($request->ketua_id);

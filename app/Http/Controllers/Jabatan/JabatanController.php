@@ -57,7 +57,7 @@ class JabatanController extends Controller
             $data = Jabatan::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
 
             $data->fill([
                 'name' => $request->name,

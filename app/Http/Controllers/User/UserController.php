@@ -79,7 +79,7 @@ class UserController extends Controller
             $data = User::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
 
             // jika dia mengganti user ablenya
             if (($data->userable_id != $id && $data->userable_type != $type)) {

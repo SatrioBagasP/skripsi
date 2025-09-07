@@ -15,7 +15,7 @@ trait JurusanValidation
             ->lockForUpdate()
             ->first();
 
-        $this->validateExistingData($data);
+        $this->validateExistingDataReturnException($data);
 
         if ($data->status != 1) {
             throw new Exception('Jurusan tidak aktif!');

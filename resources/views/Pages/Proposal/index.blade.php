@@ -1,8 +1,8 @@
 @extends('Layout.layout')
 
-@section('pages', 'Mahasiswa')
+@section('pages', 'Pengajuan Proposal')
 
-@section('title', config('app.name') . ' | Mahasiswa')
+@section('title', config('app.name') . ' | Pengajuan Proposal')
 
 @section('content')
 

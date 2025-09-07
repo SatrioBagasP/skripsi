@@ -76,7 +76,7 @@ class MahasiswaController extends Controller
             $data = Mahasiswa::where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
-            $this->validateExistingData($data);
+            $this->validateExistingDataReturnException($data);
 
             if ($data->jurusan_id != $request->jurusan_id) {
                 $this->validateJurusanIsActive($request->jurusan_id);

@@ -117,16 +117,6 @@
             const approvalUrl = @json($data['approvalUrl']);
             $(document).ready(function() {
 
-                const message = localStorage.getItem('flash_message');
-                const type = localStorage.getItem('flash_type');
-
-                if (message && type && typeof flasher !== 'undefined') {
-                    flasher[type](message);
-                    localStorage.removeItem('flash_message');
-                    localStorage.removeItem('flash_type');
-                }
-
-
                 $('#btn-setujui').click(function(e) {
                     e.preventDefault();
                     Swal.fire({
@@ -141,17 +131,18 @@
                             $.ajax({
                                 type: "POST",
                                 url: approvalUrl,
-                                data: {
+                                contentType: "application/json",
+                                data: JSON.stringify({
                                     id: id,
                                     approve: true,
-                                },
+                                }),
                                 success: function(response) {
                                     localStorage.setItem('flash_message', response
                                         .message);
                                     localStorage.setItem('flash_type',
                                         'success');
-
-                                    location.reload();
+                                    window.location.href =
+                                        '{{ route('approval-proposal.index') }}';
                                 },
                                 error: function(xhr, status, error) {
                                     flasher.error(xhr.responseJSON.message)
@@ -180,18 +171,20 @@
                             $.ajax({
                                 type: "POST",
                                 url: approvalUrl,
-                                data: {
+                                contentType: "application/json",
+                                data: JSON.stringify({
                                     id: id,
-                                    reason: result.value,
                                     approve: false,
-                                },
+                                    reason: result.value,
+                                }),
                                 success: function(response) {
                                     localStorage.setItem('flash_message', response
                                         .message);
                                     localStorage.setItem('flash_type',
                                         'success');
 
-                                    location.reload();
+                                    window.location.href =
+                                        '{{ route('approval-proposal.index') }}';
                                 },
                                 error: function(xhr, status, error) {
                                     flasher.error(xhr.responseJSON.message)

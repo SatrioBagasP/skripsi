@@ -157,42 +157,53 @@ abstract class Controller
 
     function getKaprodi($jurusanId)
     {
-        $kaprodi = User::where('role_id', 4) // role user untuk kaprodi
-            ->whereHas('userable', function ($query) use ($jurusanId) {
-                $query->where('jurusan_id', $jurusanId)->where('status', true);
+        $kaprodi = Jurusan::select('ketua_id')
+            ->whereHas('ketua', function ($q) {
+                $q->where('status', true);
             })
+            ->where('id', $jurusanId)
             ->first();
 
-        return $kaprodi->userable ?? null;
+        return $kaprodi->ketua ?? null;
     }
 
     function getLayananMahasiswa()
     {
-        $layananMahasiswa = User::where('role_id', 6) // role user untuk layanan mahasiswa
-            ->whereHas('userable', function ($query) {
-                $query->where('status', true);
-            })
-            ->get();
+        $layananMahasiswa = Akademik::where('id', 1) // id layanan
+            ->where('status', true)
+            ->first();
+
         return $layananMahasiswa;
     }
 
     function getKepalaBagianMinatBakat()
     {
-        $kepalaBagianMinatBakat = User::where('role_id', 5) // role user untuk layanan mahasiswa
-            ->whereHas('userable', function ($query) {
-                $query->where('status', true);
+        $kepalaBagianMinatBakat = Akademik::where('id', 2) // id minat bakat
+            ->select('ketua_id')
+            ->where('status', true)
+            ->whereHas('ketua', function ($q) {
+                $q->where('status', true);
             })
-            ->get();
-        return $kepalaBagianMinatBakat;
+            ->first();
+
+        return $kepalaBagianMinatBakat->ketua;
+    }
+
+    function getMinatBakat()
+    {
+        $minatBakat = Akademik::where('id', 2) // id minat bakat
+            ->where('status', true)
+            ->first();
+
+        return $minatBakat;
     }
 
     function getWakilRektor1()
     {
-        $wakilRektor = User::where('role_id', 7) // role user untuk layanan mahasiswa
-            ->whereHas('userable', function ($query) {
-                $query->where('status', true);
-            })
-            ->get();
+        $wakilRektor = Dosen::where('jabatan_id', 3) // id jabatan wakil rektor 1
+            ->where('status', true)
+            ->first();
+
         return $wakilRektor;
     }
 
@@ -222,7 +233,7 @@ abstract class Controller
 
     function storageDelete($path)
     {
-        if (Storage::exists($path)) {
+        if ($path && Storage::exists($path)) {
             Storage::delete($path);
         }
     }
