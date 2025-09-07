@@ -21,14 +21,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Gate::define('admin', function () {
-            return in_array(1, session('user_roles', []));
+        // Gate::define('admin', function () {
+        //     return in_array(1, session('user_roles', []));
+        // });
+        // Gate::define('unit-kemahasiswaan', function () {
+        //     return in_array(2, session('user_roles', []));
+        // });
+        // Gate::define('verifikator', function () {
+        //     return in_array(3, session('user_roles', []));
+        // });
+        Gate::define('admin', function ($user) {
+            return $user->roles->pluck('id')->contains(1);
         });
-        Gate::define('unit-kemahasiswaan', function () {
-            return in_array(2, session('user_roles', []));
+
+        Gate::define('unit-kemahasiswaan', function ($user) {
+            return $user->roles->pluck('id')->contains(2);
         });
-        Gate::define('verifikator', function () {
-            return in_array(3, session('user_roles', []));
+
+        Gate::define('verifikator', function ($user) {
+            return $user->roles->pluck('id')->contains(3);
         });
     }
 }
