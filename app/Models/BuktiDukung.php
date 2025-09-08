@@ -10,7 +10,6 @@ class BuktiDukung extends Model
     protected $fillable = [
         'laporan_kegiatan_id',
         'file',
-        'type',
     ];
 
     public function laporanKegiatan(){

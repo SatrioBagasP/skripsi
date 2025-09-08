@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('laporan_kegiatan_id')->constrained('laporan_kegiatan')->onDelete('cascade');
             $table->string('file');
-            $table->string('type');
             $table->timestamps();
         });
     }
