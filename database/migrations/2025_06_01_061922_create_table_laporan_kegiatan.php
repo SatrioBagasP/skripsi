@@ -13,16 +13,11 @@ return new class extends Migration
     {
         Schema::create('laporan_kegiatan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('propsal_id')->constrained('proposal')->onDelete('cascade');
+            $table->foreignId('proposal_id')->constrained('proposal')->onDelete('cascade');
             $table->string('file');
             $table->dateTime('available_at');
             $table->string('status');
             $table->text('alasan_tolak')->nullable();
-            $table->boolean('is_acc_dosen')->nullable();
-            $table->boolean('is_acc_kaprodi')->nullable();
-            $table->boolean('is_acc_minat_bakat')->nullable();
-            $table->boolean('is_acc_layanan')->nullable();
-            $table->boolean('is_acc_wakil_rektor')->nullable();
             $table->timestamps();
         });
     }

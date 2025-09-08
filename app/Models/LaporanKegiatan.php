@@ -13,11 +13,6 @@ class LaporanKegiatan extends Model
         'available_at',
         'status',
         'alasan_tolak',
-        'is_acc_dosen',
-        'is_acc_kaprodi',
-        'is_acc_minat_bakat',
-        'is_acc_layanan',
-        'is_acc_wakil_rektor',
     ];
 
     public function buktiDukung(){
