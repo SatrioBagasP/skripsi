@@ -84,7 +84,7 @@ class ApprovalController extends Controller
             if ($messageFor == 'Pengajuan') {
                 $message = $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Proposal', nama: $reciever->name ?? '-', judulKegiatan: $proposal->name, unitKemahasiswaan: $proposal->pengusul->name, route: route('approval-proposal.edit', encrypt($proposal->id)));
             } elseif ($messageFor == 'Diterima') {
-                $message = $notifikasi->generateMessageForAccepted(jenisPengajuan: 'Proposal', judulKegiatan: $proposal->name, unitKemahasiswaan: $proposal->pengusul->name);
+                $message = $notifikasi->generateMessageForAccepted(jenisPengajuan: 'Proposal', judulKegiatan: $proposal->name, ketua: $reciever->name);
             }
             $message = $reciever ? $message : '-';
             $noHp = $reciever->no_hp ?? 0;
@@ -298,7 +298,7 @@ class ApprovalController extends Controller
         try {
             DB::beginTransaction();
             $data = Proposal::with([
-                'mahasiswa',
+                'ketua:id,name,no_hp',
                 'pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
@@ -337,13 +337,14 @@ class ApprovalController extends Controller
 
     public function createLaporanKegiatan($proposal)
     {
-        try{
-            LaporanKegiatan::create([
+        try {
+            LaporanKegiatan::updateOrCreate([
                 'proposal_id' => $proposal->id,
+            ], [
                 'status' => 'Draft',
                 'available_at' => $proposal->end_date,
             ]);
-        }catch(Throwable $e){
+        } catch (Throwable $e) {
             throw new Exception($this->getErrorMessage($e));
         }
     }

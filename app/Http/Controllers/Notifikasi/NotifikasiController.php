@@ -74,9 +74,9 @@ class NotifikasiController extends Controller
         return $pesan;
     }
 
-    public function generateMessageForAccepted($jenisPengajuan = 'dummy', $judulKegiatan = 'dummy', $unitKemahasiswaan = 'dummy')
+    public function generateMessageForAccepted($jenisPengajuan = 'dummy', $judulKegiatan = 'dummy', $ketua = 'dummy')
     {
-        $pesan = "Yth. " . $unitKemahasiswaan . ",\n\nPengajuan " . $jenisPengajuan . " dengan judul kegiatan " . $judulKegiatan . " yang Anda ajukan melalui sistem informasi kegiatan kemahasiswaan telah disetujui sepenuhnya (ACC Final)\n\nTerima kasih atas perhatian dan kerjasamanya\n\nHormat kami,\nTim Sistem Informasi Kegiatan Kemahasiswaan";
+        $pesan = "Yth. " . $ketua . ",\n\nPengajuan " . $jenisPengajuan . " dengan judul kegiatan " . $judulKegiatan . " yang Anda ajukan melalui sistem informasi kegiatan kemahasiswaan telah disetujui sepenuhnya (ACC Final)\n\nTerima kasih atas perhatian dan kerjasamanya\n\nHormat kami,\nTim Sistem Informasi Kegiatan Kemahasiswaan";
 
         return $pesan;
     }
