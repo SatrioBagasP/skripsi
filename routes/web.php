@@ -8,11 +8,13 @@ use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Jabatan\JabatanController;
+use App\Http\Controllers\LaporanKegiatan\LaporanKegiatanController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
 use App\Http\Controllers\Proposal\ApprovalController;
 use App\Http\Controllers\Proposal\ProposalController;
 use App\Http\Controllers\Proposal\TrackingProposalController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
+use App\Models\LaporanKegiatan;
 
 // Route::get('',[TestingTwilloController::class,'index']);
 
@@ -81,17 +83,32 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', 'index')->name('index');
     });
 
-    Route::middleware(['canAny:admin,unit-kemahasiswaan'])->prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/all-option', 'getOption')->name('getOption');
-        Route::get('/create', 'create')->name('create');
-        Route::get('/edit/{id}', 'edit')->name('edit');
-        Route::post('/store', 'store')->name('store');
-        Route::post('/update', 'update')->name('update');
-        Route::post('/delete', 'delete')->name('delete');
-        Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
-        Route::get('/get-data', 'getData')->name('getData');
+    Route::middleware(['canAny:admin,unit-kemahasiswaan'])->group(function () {
+        Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/all-option', 'getOption')->name('getOption');
+            Route::get('/create', 'create')->name('create');
+            Route::get('/edit/{id}', 'edit')->name('edit');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::post('/delete', 'delete')->name('delete');
+            Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
+
+        Route::prefix('/laporan-kegiatan')->name('laporan-kegiatan.')->controller(LaporanKegiatanController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/all-option', 'getOption')->name('getOption');
+            Route::get('/edit/{id}', 'edit')->name('edit');
+            Route::post('/update', 'update')->name('update');
+            Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
     });
+
+
+
+
 
     Route::middleware(['canAny:admin,verifikator'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
         Route::get('/', 'index')->name('index');

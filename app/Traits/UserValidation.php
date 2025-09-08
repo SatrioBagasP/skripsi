@@ -34,6 +34,15 @@ trait UserValidation
         }
     }
 
+    public function validateUserIsUnitKemahasiswaan($user)
+    {
+        if ($user->userable_type === 'App\\Models\\UnitKemahasiswaan') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public function validateUserIsDosen($user)
     {
         if ($user->userable_type === 'App\\Models\\Dosen') {

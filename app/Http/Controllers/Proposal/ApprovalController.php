@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Helper\CrudController;
 use App\Traits\ApprovalProposalRequestValidator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
+use App\Models\LaporanKegiatan;
 use App\Traits\ApprovalProposalValidation;
 use App\Traits\UserValidation;
 use Exception;
@@ -310,10 +311,10 @@ class ApprovalController extends Controller
             $this->validateProposalIsApproveable($data);
             $this->validateApprovalWakilRektor($data);
 
-            $notifikasi = new NotifikasiController();
             if ($request->boolean('approve')) {
                 $reciever = $data->ketua;
                 $response =  $this->accProposal($data, 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!', $reciever, 'Ketua Pelaksana', 'Diterima');
+                $this->createLaporanKegiatan($data);
             } else {
                 $response =  $this->rejectProposal($data, 'Rejected', $request->reason, 'Wakil Rektor 1 Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
             }
@@ -331,6 +332,19 @@ class ApprovalController extends Controller
                 'status' => 400,
                 'message' => $message,
             ], 400);
+        }
+    }
+
+    public function createLaporanKegiatan($proposal)
+    {
+        try{
+            LaporanKegiatan::create([
+                'proposal_id' => $proposal->id,
+                'status' => 'Draft',
+                'available_at' => $proposal->end_date,
+            ]);
+        }catch(Throwable $e){
+            throw new Exception($this->getErrorMessage($e));
         }
     }
 
