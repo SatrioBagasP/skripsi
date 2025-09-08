@@ -47,11 +47,11 @@ class NotifikasiController extends Controller
             $alasanNotif = $response['reason'] ?? 'Tidak diketahui';
         }
         if ($messageFor == 'Pengajuan') {
-            return 'Pengajuan Disetujui dan Berhasil Diajukan ke Verifikator ' . $nextVerifikator . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
+            return 'Pengajuan Disetujui dan Berhasil Diajukan ke Verifikator ' . $nextVerifikator . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek data ' . $nextVerifikator : '');
         } elseif ($messageFor == 'Ditolak') {
-            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
+            return 'Pengajuan Berhasil Ditolak' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek data ' . $nextVerifikator : '');
         } elseif ($messageFor == 'Diterima') {
-            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek akun ' . $nextVerifikator : '');
+            return 'Pengajuan Berhasil Diterima' . ($notifGagal ? '. Namun notifikasi tidak berhasil dikirim dikarenakan "' . $alasanNotif . '". Silakan hubungi ' . $nextVerifikator . ' secara langsung atau minta admin mengecek data ' . $nextVerifikator : '');
         }
     }
 
