@@ -141,7 +141,7 @@ class ProposalController extends Controller
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
                 'start_date' => $startDate,
-                'end_date' => $endDate,
+                'end_date' => $request->boolean('is_harian') ? $endDate->copy()->endOfDay()  : $endDate,
             ]);
             $mahasiswaId = $request->mahasiswa_id ?? [];
             $ketuaId = $request->ketua_ids;
@@ -279,7 +279,7 @@ class ProposalController extends Controller
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',
                 'start_date' => $startDate,
-                'end_date' => $endDate,
+                'end_date' => $request->boolean('is_harian') ? $endDate->copy()->endOfDay()  : $endDate,
             ]);
 
             $mahasiswaId = $request->mahasiswa_id ?? [];
