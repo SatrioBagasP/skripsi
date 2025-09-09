@@ -13,6 +13,7 @@ use App\Models\Proposal;
 use Mockery\Matcher\Not;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use App\Traits\UserValidation;
 use App\Traits\DosenValidation;
 use Illuminate\Validation\Rule;
 use App\Traits\CommonValidation;
@@ -29,8 +30,8 @@ use Illuminate\Support\Facades\Storage;
 use App\Traits\ProposalRequestValidator;
 use App\Traits\UnitKemahasiswaanValidation;
 use App\Http\Controllers\Helper\CrudController;
+use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
-use App\Traits\UserValidation;
 
 class ProposalController extends Controller
 {
@@ -404,6 +405,8 @@ class ProposalController extends Controller
                 })
                 ->orderBy('id', 'desc')
                 ->paginate($request->itemDisplay ?? 10);
+        } else {
+            $data = new LengthAwarePaginator([], 0, $request->itemDisplay ?? 10);
         }
 
 

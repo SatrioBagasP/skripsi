@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\LaporanKegiatan;
 
+use Carbon\Carbon;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use App\Traits\UserValidation;
 use App\Models\LaporanKegiatan;
 use App\Models\UnitKemahasiswaan;
 use App\Traits\JurusanValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\UserValidation;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanKegiatanController extends Controller
 {
@@ -67,6 +68,8 @@ class LaporanKegiatanController extends Controller
                 })
                 ->orderBy('id', 'desc')
                 ->paginate($request->itemDisplay ?? 10);
+        } else {
+            $data = new LengthAwarePaginator([], 0, $request->itemDisplay ?? 10);
         }
 
         $dataFormated = $data->map(function ($item) use ($admin) {
