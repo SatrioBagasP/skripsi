@@ -91,11 +91,12 @@ class UserController extends Controller
                 'email' => $request->email,
                 'userable_id' => $id,
                 'userable_type' => $type,
-                'password' => Hash::make($request->password),
                 'status' => $request->boolean('status'),
             ]);
             if (!empty($request->password)) {
-                $data->password = Hash::make($request->password);
+                $data->fill([
+                    'password' => Hash::make($request->password),
+                ]);
             }
             $data->roles()->sync($request->selected_role);
             $this->updateLog($data, 'Merubah User', 'User');
