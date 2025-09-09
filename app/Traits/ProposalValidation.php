@@ -65,10 +65,10 @@ trait ProposalValidation
         return $newNumber  . '/' . $kodeJurusan . '/PR/' . $romawi . '/' . $tahun;
     }
 
-    public function validateProposalIsEditable($data)
+    public function validateProposalIsEditable($data, $type = 'proposal')
     {
         if (!in_array($data->status, ['Draft', 'Rejected'])) {
-            throw new \Exception('Tidak bisa merubah data proposal karena sudah diajukan');
+            throw new \Exception('Tidak bisa merubah data ' . $type . ' karena sudah diajukan');
         }
     }
 

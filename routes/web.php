@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/all-option', 'getOption')->name('getOption');
             Route::get('/edit/{id}', 'edit')->name('edit');
             Route::post('/update', 'update')->name('update');
+            Route::delete('/delete-image', 'deleteImage')->name('delete-image');
             Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
             Route::get('/get-data', 'getData')->name('getData');
         });

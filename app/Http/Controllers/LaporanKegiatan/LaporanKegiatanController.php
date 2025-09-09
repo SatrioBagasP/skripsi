@@ -2,22 +2,28 @@
 
 namespace App\Http\Controllers\LaporanKegiatan;
 
+use Throwable;
 use Carbon\Carbon;
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use App\Traits\UserValidation;
 use App\Models\LaporanKegiatan;
+use Illuminate\Validation\Rule;
 use App\Models\UnitKemahasiswaan;
 use App\Traits\JurusanValidation;
+use App\Traits\ProposalValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\BuktiDukung;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\File;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class LaporanKegiatanController extends Controller
 {
-    use UserValidation;
+    use UserValidation, ProposalValidation;
 
     public function index()
     {
@@ -33,9 +39,155 @@ class LaporanKegiatanController extends Controller
         return view('Pages.LaporanKegiatan.index', compact('head'));
     }
 
-    public function edit(Request $request, $id) {}
+    public function edit(Request $request, $id)
+    {
 
-    public function update(Request $request) {}
+        $data = LaporanKegiatan::with([
+            'proposal:id,name,no_proposal,unit_id',
+            'buktiDukung:id,laporan_kegiatan_id,file',
+        ])
+            ->where('id', decrypt($id))
+            ->first();
+
+        $this->validateExistingDataReturnAbort($data);
+        $this->validateProposalOwnership($data->proposal);
+
+        $data = [
+            'id' => encrypt($data->id),
+            'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
+            'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
+            'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,
+            'bukti_dukung' => $data->buktiDukung->map(function ($item, $index) {
+                return [
+                    'id' => encrypt($item->id),
+                    'file' => $item->file ? Storage::temporaryUrl($item->file, now()->addMinutes(5)) : null,
+                ];
+            })->toArray(),
+        ];
+
+        $edit = true;
+        return view('Pages.LaporanKegiatan.form', compact('edit', 'data'));
+    }
+
+    public function update(Request $request)
+    {
+        DB::beginTransaction();
+        $data = LaporanKegiatan::where('id', decrypt($request->id))
+            ->lockForUpdate()
+            ->first();
+
+        $request->validate([
+            'file' => [
+                Rule::requiredIf(fn() => empty($data->file)),
+                File::types(['pdf'])->max(2 * 1024),
+            ],
+            'file_bukti_kehadiran' => [
+                Rule::requiredIf(fn() => empty($data->file_bukti_kehadiran)),
+                File::types(['jpg', 'png', 'jpeg'])->max(2 * 1024),
+            ],
+            'file_bukti_dukung'   => 'array',
+            'file_bukti_dukung.*' => File::types(['jpg', 'png', 'jpeg'])->max(2 * 1024),
+        ], [
+            'file.required' => "File laporan kegiatan wajib diisi",
+            'file.max' => "Ukuran laporan kegiatan maksimal 2 MB",
+            'file_bukti_kehadiran.required' => "File bukti kehadiran wajib diisi",
+            'file_bukti_kehadiran.max' => "Ukuran bukti kehadiran maksimal 2 MB",
+            'file_bukti_dukung.*.file'  => 'Setiap bukti dukung harus berupa file pada bukti dukung',
+            'file_bukti_dukung.*.mimes' => 'Format file hanya boleh JPG, JPEG, atau PNG pada bukti dukung',
+            'file_bukti_dukung.*.max'   => 'Ukuran file maksimal 2 MB per file pada bukti dukung',
+
+        ]);
+        try {
+
+            $this->validateProposalOwnership($data->proposal);
+            $this->validateProposalIsEditable($data, 'laporan kegiatan');
+
+            $file = null;
+            $fileBuktiKehadiran = null;
+            $fileBuktiDukung = [];
+
+            $oldFile = $data->file;
+            $oldFileBuktiKehadiran = $data->file_bukti_kehadiran;
+            if ($request->file('file')) {
+                $file = $this->storageStore($request->file('file'), 'laporan-kegiatan');
+            }
+
+            if ($request->file('file_bukti_kehadiran')) {
+                $fileBuktiKehadiran = $this->storageStore($request->file('file_bukti_kehadiran'), 'bukti-kehadiran');
+            }
+
+            if ($request->file('file_bukti_dukung')) {
+                foreach ($request->file('file_bukti_dukung') as $fileBukti) {
+                    $fileBuktiDukung[] = [
+                        'laporan_kegiatan_id' => $data->id,
+                        'file' => $this->storageStore($fileBukti, 'bukti-dukung'),
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ];
+                }
+                BuktiDukung::insert($fileBuktiDukung);
+            }
+
+
+            $data->fill([
+                'file' => $file ?? $data->file,
+                'file_bukti_kehadiran' => $fileBuktiKehadiran ?? $data->file_bukti_kehadiran,
+            ]);
+            $this->updateLog($data, 'Merubah Laporan Kegiatan', 'Laporan Kegiatan');
+            if ($request->file('file')) {
+                $this->storageDelete($oldFile);
+            }
+            if ($request->file('file_bukti_kehadiran')) {
+                $this->storageDelete($oldFileBuktiKehadiran);
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $this->getUpdateSuccessMessage(),
+            ], 200);
+        } catch (Throwable $e) {
+            DB::rollBack();
+            $this->storageDelete($file);
+            $this->storageDelete($file);
+
+            return response()->json([
+                'status' => 400,
+                'message' => $this->getErrorMessage($e),
+            ], 400);
+        }
+    }
+
+    public function deleteImage(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = BuktiDukung::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
+            $this->validateExistingDataReturnException($data);
+            $this->validateProposalOwnership($data->LaporanKegiatan->proposal);
+            $this->validateProposalIsEditable($data->LaporanKegiatan, 'laporan kegiatan');
+
+            $this->storageDelete($data->file);
+
+            $data->delete();
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Gambar Berhasil Dihapus',
+            ], 200);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 400,
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
 
     public function getData(Request $request)
     {
