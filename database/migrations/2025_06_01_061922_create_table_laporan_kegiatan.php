@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('proposal_id')->constrained('proposal')->onDelete('cascade');
             $table->string('file')->nullable();
+            $table->string('file_bukti_kehadiran')->nullable();
             $table->dateTime('available_at');
             $table->string('status');
             $table->text('alasan_tolak')->nullable();

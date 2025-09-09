@@ -10,6 +10,7 @@ class LaporanKegiatan extends Model
     protected $fillable = [
         'proposal_id',
         'file',
+        'file_bukti_kehadiran',
         'available_at',
         'status',
         'alasan_tolak',
