@@ -30,11 +30,12 @@ use App\Traits\ProposalRequestValidator;
 use App\Traits\UnitKemahasiswaanValidation;
 use App\Http\Controllers\Helper\CrudController;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
+use App\Traits\UserValidation;
 
 class ProposalController extends Controller
 {
     // use ProposalRequestValidator;
-    use MahasiswaValidation, DosenValidation, UnitKemahasiswaanValidation, ProposalValidation;
+    use MahasiswaValidation, DosenValidation, UnitKemahasiswaanValidation, ProposalValidation, UserValidation;
 
     public function index()
     {
@@ -384,22 +385,27 @@ class ProposalController extends Controller
 
     public function getData(Request $request)
     {
-        $data = [];
+        $data = collect();
         $admin = Gate::allows('admin');
-        $data = Proposal::with(['pengusul.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'unit_id', 'dosen_id', 'mahasiswa_id')
-            ->when(Auth::user()->userable_type == UnitKemahasiswaan::class, function ($query) {
-                $query->where('unit_id', Auth::user()->userable_id);
-            })
-            ->when($request->search !== null, function ($query) use ($request) {
-                $query->where(function ($item) use ($request) {
-                    $item->where('name', 'like', '%' . $request->search . '%')
-                        ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
-                        ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
-                        ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
-                });
-            })
-            ->orderBy('id', 'desc')
-            ->paginate($request->itemDisplay ?? 10);
+        $unitKemahasiswaan = $this->validateUserIsUnitKemahasiswaan(Auth::user());
+
+        if ($admin || $unitKemahasiswaan) {
+            $data = Proposal::with(['pengusul.jurusan', 'dosen', 'ketua'])->select('name', 'no_proposal', 'status', 'id', 'unit_id', 'dosen_id', 'mahasiswa_id')
+                ->when($unitKemahasiswaan == true, function ($query) {
+                    $query->where('unit_id', Auth::user()->userable_id);
+                })
+                ->when($request->search !== null, function ($query) use ($request) {
+                    $query->where(function ($item) use ($request) {
+                        $item->where('name', 'like', '%' . $request->search . '%')
+                            ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
+                    });
+                })
+                ->orderBy('id', 'desc')
+                ->paginate($request->itemDisplay ?? 10);
+        }
+
 
         $dataFormated = $data->map(function ($item) use ($admin) {
             return [

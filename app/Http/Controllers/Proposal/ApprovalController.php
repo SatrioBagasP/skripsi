@@ -351,7 +351,7 @@ class ApprovalController extends Controller
 
     public function getData(Request $request)
     {
-        $data = [];
+        $data = collect();
         $admin = Gate::allows('admin');
         $user = Auth::user()->load('userable.jurusan');
 
@@ -361,38 +361,41 @@ class ApprovalController extends Controller
         $wakilRektor = $this->validateUserIsWakilRektor1($user);
         $kaprodi = $this->validateUserIsKaprodi($user);
 
-        $data = Proposal::with([
-            'pengusul:id,jurusan_id,name',
-            'pengusul.jurusan:name',
-            'ketua:id,name,jurusan_id,npm',
-            'ketua.jurusan:id,name',
-            'dosen:id,name',
-        ])
-            ->when($admin == false, function ($q) use ($dosen, $user, $ketuaMinatDanBakat, $layananMahasiswa, $wakilRektor, $kaprodi) {
-                $q->when($dosen == true, function ($q) use ($user) {
-                    $q->where('dosen_id', $user->userable_id)
-                        ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted']);
-                })
-                    ->when($kaprodi == true, function ($q) use ($user) {
-                        $q->orWhere(function ($q) use ($user) {
-                            $q->where('status', 'Pending Kaprodi')
-                                ->whereRelation('pengusul', 'jurusan_id', $user->userable->jurusan_id); // krn jika dia itu tidak memiliki jurusan atau eksul, dia tidak perlu acc kaprodi
+        if ($admin || $dosen) {
+            $data = Proposal::with([
+                'pengusul:id,jurusan_id,name',
+                'pengusul.jurusan:name',
+                'ketua:id,name,jurusan_id,npm',
+                'ketua.jurusan:id,name',
+                'dosen:id,name',
+            ])
+                ->when($admin == false, function ($q) use ($dosen, $user, $ketuaMinatDanBakat, $layananMahasiswa, $wakilRektor, $kaprodi) {
+                    $q->when($dosen == true, function ($q) use ($user) {
+                        $q->where('dosen_id', $user->userable_id)
+                            ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted']);
+                    })
+                        ->when($kaprodi == true, function ($q) use ($user) {
+                            $q->orWhere(function ($q) use ($user) {
+                                $q->where('status', 'Pending Kaprodi')
+                                    ->whereRelation('pengusul', 'jurusan_id', $user->userable->jurusan_id); // krn jika dia itu tidak memiliki jurusan atau eksul, dia tidak perlu acc kaprodi
+                            });
+                        })
+                        ->when($ketuaMinatDanBakat == true, function ($q) {
+                            $q->orWhere('status', 'Pending Minat dan Bakat');
+                        })
+                        ->when($layananMahasiswa == true, function ($q) {
+                            $q->orWhere('status', 'Pending Layanan Mahasiswa');
+                        })
+                        ->when($wakilRektor == true, function ($q) {
+                            $q->orWhere('status', 'Pending Wakil Rektor 1');
                         });
-                    })
-                    ->when($ketuaMinatDanBakat == true, function ($q) {
-                        $q->orWhere('status', 'Pending Minat dan Bakat');
-                    })
-                    ->when($layananMahasiswa == true, function ($q) {
-                        $q->orWhere('status', 'Pending Layanan Mahasiswa');
-                    })
-                    ->when($wakilRektor == true, function ($q) {
-                        $q->orWhere('status', 'Pending Wakil Rektor 1');
-                    });
-            })
-            ->select('id', 'unit_id', 'mahasiswa_id', 'dosen_id', 'no_proposal', 'status', 'name')
-            ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
-            ->orderBy('id', 'desc')
-            ->paginate($request->itemDisplay ?? 10);
+                })
+                ->select('id', 'unit_id', 'mahasiswa_id', 'dosen_id', 'no_proposal', 'status', 'name')
+                ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
+                ->orderBy('id', 'desc')
+                ->paginate($request->itemDisplay ?? 10);
+        }
+
 
         $dataFormated = $data->map(function ($item) use ($admin) {
             return [
