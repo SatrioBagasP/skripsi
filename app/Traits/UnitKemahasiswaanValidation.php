@@ -17,6 +17,12 @@ trait UnitKemahasiswaanValidation
                 if (!in_array($item->status, ['Draft', 'Rejected', 'Accepted'])) {
                     throw new \Exception('Tidak bisa merubah unit kemahasiswaan, dikarenakan ada proposal pada unit ini masih tahap pengecekan oleh verifikator');
                 }
+
+                if ($item->laporanKegiatan !== null) {
+                    if ($item->laporanKegiatan->status != 'Accepted') {
+                        throw new \Exception('Tidak bisa merubah unit kemahasiswaan, dikarenakan ada laporan kegiatan pada unit ini masih memiliki tanggungan laporan kegiatan yang belum selesai');
+                    }
+                }
             });
         }
     }
