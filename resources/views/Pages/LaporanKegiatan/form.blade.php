@@ -204,8 +204,7 @@
                 $(document).on('change', '.file_bukti_dukung', function(e) {
                     e.preventDefault();
                     let index = $(this).data('index');
-                    dataSet.file_bukti_dukung[index] = this.files[0]; // replace sesuai index
-                });
+                    dataSet.file_bukti_dukung[index] = this.files[0];
 
 
                 $('#addBukti').click(function(e) {

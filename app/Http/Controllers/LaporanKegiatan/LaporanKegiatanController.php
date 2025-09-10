@@ -4,7 +4,9 @@ namespace App\Http\Controllers\LaporanKegiatan;
 
 use Throwable;
 use Carbon\Carbon;
+use App\Models\Dosen;
 use App\Models\Mahasiswa;
+use App\Models\BuktiDukung;
 use Illuminate\Http\Request;
 use App\Traits\UserValidation;
 use App\Models\LaporanKegiatan;
@@ -14,12 +16,12 @@ use App\Traits\JurusanValidation;
 use App\Traits\ProposalValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\BuktiDukung;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Http\Controllers\Notifikasi\NotifikasiController;
 
 class LaporanKegiatanController extends Controller
 {
@@ -50,14 +52,14 @@ class LaporanKegiatanController extends Controller
             ->first();
 
         $this->validateExistingDataReturnAbort($data);
-        $this->validateProposalOwnership($data->proposal);
+        $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
 
         $data = [
             'id' => encrypt($data->id),
             'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
             'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
             'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,
-            'bukti_dukung' => $data->buktiDukung->map(function ($item, $index) {
+            'bukti_dukung' => $data->buktiDukung->map(function ($item) {
                 return [
                     'id' => encrypt($item->id),
                     'file' => $item->file ? Storage::temporaryUrl($item->file, now()->addMinutes(5)) : null,
@@ -154,6 +156,53 @@ class LaporanKegiatanController extends Controller
             return response()->json([
                 'status' => 400,
                 'message' => $this->getErrorMessage($e),
+            ], 400);
+        }
+    }
+
+    public function pengajuan(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $admin = Gate::allows('admin');
+            $data = LaporanKegiatan::where('id', decrypt($request->id))
+                ->lockForUpdate()
+                ->first();
+
+            $this->validateExistingDataReturnException($data);
+            $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
+            $this->validateProposalIsEditable($data, 'laporan kegiatan');
+
+            $dosen = Dosen::where('id', $data->proposal->dosen_id)
+                ->lockForUpdate()
+                ->first();
+
+            $notifikasi = new NotifikasiController();
+            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Laporan Kegiatan', nama: $dosen->name, judulKegiatan: $data->proposal->name, unitKemahasiswaan: $data->proposal->pengusul->name, route: route('approval-proposal.edit', encrypt($data->id))) : '-';
+
+            $response = $notifikasi->sendMessage($dosen->no_hp ?? 0, $message, 'Dosen Penanggung Jawab', 'Pengajuan');
+
+            $data->fill([
+                'status' => 'Pending Dosen',
+            ]);
+
+            $desc =  $admin ?  'Admin telah mengajukan laporan kegiatan anda' : 'Berhasil mengajukan laporan kegiatan';
+
+
+            $this->updateLog($data, $desc, 'Laporan Kegiatan');
+
+            DB::commit();
+            return response()->json([
+                'status' => 200,
+                'message' => $response,
+            ], 200);
+        } catch (Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => 400,
+                'message' =>  $this->getErrorMessage($e),
             ], 400);
         }
     }
