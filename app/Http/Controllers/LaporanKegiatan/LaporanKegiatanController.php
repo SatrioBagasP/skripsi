@@ -29,7 +29,7 @@ class LaporanKegiatanController extends Controller
 
     public function index()
     {
-        $head = ['No Proposal', 'Nama'];
+        $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Dosen'];
         $admin = Gate::allows('admin');
         if ($admin) {
             $head[] = 'Organisasi';
@@ -248,10 +248,11 @@ class LaporanKegiatanController extends Controller
 
         if ($admin || $unitKemahasiswaan) {
             $data = LaporanKegiatan::with([
-                'proposal:id,name,no_proposal,unit_id,mahasiswa_id',
+                'proposal:id,name,no_proposal,unit_id,mahasiswa_id,dosen_id',
+                'proposal.dosen:id,name',
                 'proposal.pengusul:id,name,jurusan_id',
                 'proposal.pengusul.jurusan:id,name',
-                'proposal.ketua:id,jurusan_id',
+                'proposal.ketua:id,jurusan_id,name,npm',
                 'proposal.ketua.jurusan:id,name',
             ])
                 ->select('proposal_id', 'status', 'id', 'available_at')
@@ -277,6 +278,10 @@ class LaporanKegiatanController extends Controller
             return [
                 'id' => encrypt($item->id),
                 'status' => $item->status,
+                'name' => $item->proposal->name,
+                'dosen' => $item->proposal->dosen->name,
+                'ketua' => $item->proposal->ketua->name,
+                'npm_ketua' => $item->proposal->ketua->npm,
                 'name' => $item->proposal->name,
                 'no_proposal' => $item->proposal->no_proposal,
                 'organisasi' => $admin == true ? $item->proposal->pengusul->name : '',

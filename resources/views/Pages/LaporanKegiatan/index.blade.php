@@ -42,6 +42,8 @@
                             <td class='align-middle text-center text-sm'>${i}</td>
                             <td class='text-sm'> ${item.no_proposal} </td>
                             <td class='text-sm'> ${item.name} </td>
+                            <td class='align-middle text-center text-sm'> ${item.ketua} <br> <small >(${item.npm_ketua})<small> </td>
+                            <td class='align-middle text-center text-sm'> ${item.dosen} </td>
                             ${item.admin == true ? `<td>${item.organisasi}</td>` : ''}
                             ${item.admin == true ? `<td>${item.jurusan}</td>` : ''}
                             <td class='align-middle text-center text-sm'>
