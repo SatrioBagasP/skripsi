@@ -599,7 +599,7 @@
                     e.preventDefault();
                     e.preventDefault();
                     const button = $(this);
-                    button.attr('disabled', true);
+                    // button.attr('disabled', true);
 
                     let formData = new FormData();
 
