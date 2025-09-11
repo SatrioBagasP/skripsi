@@ -44,8 +44,8 @@
                 File
             </div>
             <div class="col-md-8 mb-2">
-                (<a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline">view
-                    file</a>)
+                <a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline"><i
+                        class="bi bi-file-earmark"></i></i>File</a>
             </div>
             <div class="col-md-4 mb-2">
                 List Mahasiswa
