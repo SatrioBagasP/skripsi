@@ -391,6 +391,14 @@ class ApprovalProposalController extends Controller
                             $q->orWhere('status', 'Pending Wakil Rektor 1');
                         });
                 })
+                ->when($request->search !== null, function ($query) use ($request) {
+                    $query->where(function ($item) use ($request) {
+                        $item->where('name', 'like', '%' . $request->search . '%')
+                            ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
+                    });
+                })
                 ->select('id', 'unit_id', 'mahasiswa_id', 'dosen_id', 'no_proposal', 'status', 'name')
                 ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
                 ->orderBy('id', 'desc')
