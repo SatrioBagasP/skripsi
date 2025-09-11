@@ -22,10 +22,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Traits\ApprovalProposalRequestValidator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
 
-class ApprovalController extends Controller
+class ApprovalProposalController extends Controller
 {
     use UserValidation, ApprovalProposalValidation;
-    use ApprovalProposalRequestValidator;
+
     public function index()
     {
         $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Organisasi'];
@@ -37,7 +37,7 @@ class ApprovalController extends Controller
 
         $head[] = 'Status';
         $head[] = 'Aksi';
-        return view('Pages.Proposal.approval', compact('head'));
+        return view('Pages.Proposal.approval-index', compact('head'));
     }
 
     public function edit(Request $request, $id)
@@ -70,7 +70,7 @@ class ApprovalController extends Controller
         $data['mahasiswa'] = $data['mahasiswa']->sortByDesc(function ($mhs) use ($data) {
             return $mhs->id == $data['ketua_id']; // ketua akan jadi true (1), lainnya false (0)
         });
-        return view('Pages.Proposal.validasi', compact('data'));
+        return view('Pages.Proposal.approval', compact('data'));
     }
 
     public function accProposal($proposal, $status, $desc, $reciever, $nextVerifikator, $messageFor)

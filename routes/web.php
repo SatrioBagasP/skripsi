@@ -8,9 +8,10 @@ use App\Http\Controllers\Dosen\DosenController;
 use App\Http\Controllers\Jurusan\JurusanController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Jabatan\JabatanController;
+use App\Http\Controllers\LaporanKegiatan\ApprovalLaporanKegiatanController;
 use App\Http\Controllers\LaporanKegiatan\LaporanKegiatanController;
 use App\Http\Controllers\Mahasiswa\MahasiswaController;
-use App\Http\Controllers\Proposal\ApprovalController;
+use App\Http\Controllers\Proposal\ApprovalProposalController;
 use App\Http\Controllers\Proposal\ProposalController;
 use App\Http\Controllers\Proposal\TrackingProposalController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
@@ -109,18 +110,34 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+    Route::middleware(['canAny:admin,verifikator'])->group(function () {
+
+        Route::prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalProposalController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/edit/{id}', 'edit')->name('edit');
+            Route::post('/approval-dosen', 'approvalDosen')->name('approvalDosen');
+            Route::post('/approval-kaprodi', 'approvalKaprodi')->name('approvalKaprodi');
+            Route::post('/approval-minat-bakat', 'approvalMinatBakat')->name('approvalMinatBakat');
+            Route::post('/approval-layanan-mahasiswa', 'approvalLayananMahasiswa')->name('approvalLayananMahasiswa');
+            Route::post('/approval-wakil-rektor', 'approvalWakilRektor')->name('approvalWakilRektor');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
+
+        Route::prefix('/approval-laporan-kegiatan')->name('approval-laporan-kegiatan.')->controller(ApprovalLaporanKegiatanController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/edit/{id}', 'edit')->name('edit');
+            Route::post('/approval-dosen', 'approvalDosen')->name('approvalDosen');
+            Route::post('/approval-kaprodi', 'approvalKaprodi')->name('approvalKaprodi');
+            Route::post('/approval-minat-bakat', 'approvalMinatBakat')->name('approvalMinatBakat');
+            Route::post('/approval-layanan-mahasiswa', 'approvalLayananMahasiswa')->name('approvalLayananMahasiswa');
+            Route::post('/approval-wakil-rektor', 'approvalWakilRektor')->name('approvalWakilRektor');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
 
 
-    Route::middleware(['canAny:admin,verifikator'])->prefix('/approval-proposal')->name('approval-proposal.')->controller(ApprovalController::class)->group(function () {
-        Route::get('/', 'index')->name('index');
-        Route::get('/edit/{id}', 'edit')->name('edit');
-        Route::post('/approval-dosen', 'approvalDosen')->name('approvalDosen');
-        Route::post('/approval-kaprodi', 'approvalKaprodi')->name('approvalKaprodi');
-        Route::post('/approval-minat-bakat', 'approvalMinatBakat')->name('approvalMinatBakat');
-        Route::post('/approval-layanan-mahasiswa', 'approvalLayananMahasiswa')->name('approvalLayananMahasiswa');
-        Route::post('/approval-wakil-rektor', 'approvalWakilRektor')->name('approvalWakilRektor');
-        Route::get('/get-data', 'getData')->name('getData');
     });
+
+
     Route::prefix('/tracking')->name('tracking.')->controller(TrackingProposalController::class)->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/tracking/search',  'search')->name('search');

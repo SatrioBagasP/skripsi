@@ -1,81 +1,197 @@
 @extends('Layout.layout')
 
-@section('pages', 'Approval Proposal')
+@section('pages', 'Validasi Proposal')
 
-@section('title', config('app.name') . ' | Approval Proposal')
+@section('title', config('app.name') . ' | Validasi Proposal')
 
 @section('content')
 
-    <div class="card">
-        <div class="px-4 py-2">
-            <div class='d-flex justify-content-between align-items-center'>
-                <div>
-                    <h6>Data Pending Propsal</h6>
-                </div>
+    <div class="card px-4 py-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-3">Detail Data Proposal {{ $data['no_proposal'] }} </h5>
+            <span class="badge bg-info">{{ $data['status'] }}</span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                Nama Proposal
             </div>
-            @include('Component.datatable', [
-                'head' => $head,
-            ])
+            <div class="col-md-8 mb-2">
+                <input type="text" class="form-control" placeholder="Nama Proposal" name="name" id="name"
+                    value="{{ $data['name'] }}" readonly>
+            </div>
+            <div class="col-md-4 mb-2">
+                Organisasi
+            </div>
+            <div class="col-md-8 mb-2">
+                <input type="text" class="form-control" placeholder="Nama Proposal" name="organisasi" id="organisasi"
+                    value="{{ $data['organisasi'] }}" readonly>
+            </div>
+            <div class="col-md-4 mb-2">
+                Dosen Penangung Jawab
+            </div>
+            <div class="col-md-8 mb-2">
+                <input type="text" class="form-control" placeholder="Nama Proposal" name="dosen" id="dosen"
+                    value="{{ $data['dosen'] }}" readonly>
+            </div>
+            <div class="col-md-4 mb-2">
+                Deskripsi
+            </div>
+            <div class="col-md-8 mb-2">
+                <textarea class="form-control" name="desc" id="desc" cols="30" rows="10" readonly>{{ $data['desc'] }}</textarea>
+            </div>
+            <div class="col-md-4 mb-2">
+                File
+            </div>
+            <div class="col-md-8 mb-2">
+                <a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline"><i
+                        class="bi bi-file-earmark"></i></i>File</a>
+            </div>
+            <div class="col-md-4 mb-2">
+                List Mahasiswa
+            </div>
+            <div class="col-md-8 mb-2">
+                <ul class="row list">
+                    @foreach ($data['mahasiswa'] as $mhs)
+                        <li class="col-3 mb-2" style='margin-right: 10px' class='text-sm'> <span class='text-sm'>
+                                {{ $mhs->npm }} </span> | <span class='text-sm'>{{ $mhs->name }}</span>
+                            @if ($mhs->id == $data['ketua_id'])
+                                <br>
+                                <span class='text-sm'>
+                                    (Ketua Pelaksana)
+                                </span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="col-md-4 mb-2">
+                Tanggal
+            </div>
+            <div class="col-md-4 mb-2">
+                <input class="form-control flatpickr" type="text" id="start_date" name="start_date"
+                    value="{{ $data['start_date'] }}" readonly>
+            </div>
+            <div class="col-md-4 mb-2">
+                <input class="form-control flatpickr" type="text" id="start_date" name="start_date"
+                    value="{{ $data['end_date'] }}" readonly>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                @if ($data['approvalBtn'])
+                    <div class="d-flex justify-content-end gap-2">
+                        @include('Component.button', [
+                            'class' => 'btn-danger mt-2',
+                            'id' => 'btn-tolak',
+                            'label' => 'Tolak Proposal',
+                        ])
+                        @include('Component.button', [
+                            'class' => 'btn-primary mt-2',
+                            'id' => 'btn-setujui',
+                            'label' => 'Setujui Proposal',
+                        ])
+                    </div>
+                @else
+                    <div class="d-flex justify-content-end gap-2 mt-2 mb-2">
+                        @if ($data['status'] == 'Accepted')
+                            -- No Action Needed --
+                        @elseif($data['status'] == 'Rejected')
+                            -- Waiting For Revision --
+                        @else
+                            -- Waiting For Approval --
+                        @endif
+
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 
 @endsection
 
 @push('js')
-    <script type="module">
-        import {
-            dataTable
-        } from '/js/datatable.js';
+    <script>
         (function() {
-
-            function renderTableBody(data) {
-                let i = 1;
-                data.forEach((item, index) => {
-                    $('#tableBody').append(`
-                        <tr class="data-item" data-index="${index}">
-                            <td class='align-middle text-center text-sm'>${i}</td>
-                            <td class='text-sm'> ${item.no_proposal} </td>
-                            <td class='text-sm'> ${item.name} </td>
-                            <td class='align-middle text-center text-sm'> ${item.ketua} <br> <small >(${item.npm_ketua})<small> </td>
-                            <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
-                            ${item.admin == true ? `<td class='text-sm'>${item.dosen}</td>` : ''}
-                            ${item.admin == true ? `<td class='text-sm'>${item.jurusan}</td>` : ''}
-                            <td class='align-middle text-center text-sm'> ${item.status} </td>
-                            <td class='align-middle text-center text-sm'>
-                                ${item.detail == true ? `<button class='btn btn-info detail w-full mb-1'> <i class="fa fa-eye me-1"></i>Detail</button><br>` : ''}
-                            </td>
-                        </tr>
-                    `);
-                    i++;
-                });
-            }
-            const table = dataTable({
-                renderTableBody
-            });
-            table.renderData("{{ route('approval-proposal.getData') }}");
-
+            const id = @json($data['id']);
+            const approvalUrl = @json($data['approvalUrl']);
             $(document).ready(function() {
-                const validasiUrl = @json(route('approval-proposal.edit', ['id' => ':id']));
 
-                const message = localStorage.getItem('flash_message');
-                const type = localStorage.getItem('flash_type');
+                $('#btn-setujui').click(function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Setujui Proposal?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Setujui!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: approvalUrl,
+                                contentType: "application/json",
+                                data: JSON.stringify({
+                                    id: id,
+                                    approve: true,
+                                }),
+                                success: function(response) {
+                                    localStorage.setItem('flash_message', response
+                                        .message);
+                                    localStorage.setItem('flash_type',
+                                        'success');
+                                    window.location.href =
+                                        '{{ route('approval-proposal.index') }}';
+                                },
+                                error: function(xhr, status, error) {
+                                    flasher.error(xhr.responseJSON.message)
+                                }
+                            });
+                        }
+                    });
+                });
 
-                if (message && type && typeof flasher !== 'undefined') {
-                    flasher[type](message);
-                    localStorage.removeItem('flash_message');
-                    localStorage.removeItem('flash_type');
-                }
+                $('#btn-tolak').click(function(e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Tolak Proposal?',
+                        input: "text",
+                        inputAttributes: {
+                            autocapitalize: "off"
+                        },
+                        text: "Jika anda menolak proposal, silahkan masukkan alasan penolakan.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, tolak!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: approvalUrl,
+                                contentType: "application/json",
+                                data: JSON.stringify({
+                                    id: id,
+                                    approve: false,
+                                    reason: result.value,
+                                }),
+                                success: function(response) {
+                                    localStorage.setItem('flash_message', response
+                                        .message);
+                                    localStorage.setItem('flash_type',
+                                        'success');
 
-                $(document).on('click', '.detail', function() {
-                    $(this).attr('disabled', true);
-                    const item = $(this).closest('.data-item');
-                    const index = parseInt(item.data('index'));
-                    let data = table.getDataByIndex(index);
-
-                    if (data.detail == true) {
-                        let editUrl = validasiUrl.replace(':id', data.id);
-                        window.location.href = editUrl;
-                    }
+                                    window.location.href =
+                                        '{{ route('approval-proposal.index') }}';
+                                },
+                                error: function(xhr, status, error) {
+                                    flasher.error(xhr.responseJSON.message)
+                                }
+                            });
+                        }
+                    });
                 });
             });
         })()
