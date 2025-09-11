@@ -34,6 +34,130 @@
 
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    <style>
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+        }
+
+        .file-label {
+            cursor: pointer;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-label:hover {
+            background-color: #e9ecef;
+            border-color: #0d6efd;
+        }
+
+        .file-label i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .file-label.has-file {
+            border: 2px solid #0d6efd;
+            background-color: #f0f7ff;
+        }
+
+        .file-label.has-file:hover {
+            background-color: #e6f2ff;
+        }
+
+        .file-label.has-file i {
+            color: #0d6efd;
+        }
+
+        .file-preview {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            display: none;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: #495057;
+            text-align: center;
+            margin-top: 8px;
+            word-break: break-word;
+            display: none;
+        }
+
+        .file-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 12px;
+        }
+
+        .file-label:hover .file-overlay {
+            opacity: 1;
+        }
+
+        .upload-status {
+            display: none;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .document-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #0d6efd;
+            transition: width 0.4s ease;
+        }
+    </style>
     @stack('css')
 </head>
 
@@ -112,6 +236,90 @@
             $('#sidebarform-btn').click(function(e) {
                 $('#sidebarForm').find('input, textarea, select').val('').trigger('change');
             });
+
+            $(document).on('change', '.file-input', function(e) {
+                e.preventDefault();
+                $progress = $(this).closest('.file-upload').find('.progress');
+                $label = $(this).closest('.file-upload').find('.file-label');
+                $fileIcon = $label.find('.file-icon');
+                $fileName = $label.find('.file-name');
+                $filePreview = $label.find('.file-preview');
+                $status = $(this).closest('.file-upload').find('.upload-status');
+
+                handleFileUpload(this, $label, $filePreview, $fileIcon, $fileName, $status,
+                    $progress);
+
+            });
+
+            // Generic file upload handler
+            function handleFileUpload(input, $label, $preview, $icon, $fileNameElement, $status,
+                $progress) {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+
+                    // Validate file size (max 5MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                        $(input).val("");
+                        return;
+                    }
+
+                    // Show progress bar
+                    $progress.show();
+                    const progressBar = $progress.find(".progress-bar");
+
+                    // Simulate upload progress
+                    let width = 0;
+                    const interval = setInterval(() => {
+                        if (width >= 100) {
+                            clearInterval(interval);
+
+                            // Update label appearance
+                            $label.addClass("has-file");
+
+                            // Show file name
+                            $fileNameElement.text(file.name).show();
+
+                            if (file.type.startsWith("image/")) {
+                                // Preview image
+                                const reader = new FileReader();
+                                reader.onload = function(e) {
+                                    if ($preview) {
+                                        $preview.attr("src", e.target.result).show();
+                                    }
+                                };
+                                reader.readAsDataURL(file);
+                                $icon.hide();
+                            } else {
+                                if ($preview) $preview.hide();
+                                $icon.attr("class",
+                                        "bi bi-file-earmark-pdf-fill pdf-icon file-icon")
+                                    .show();
+                            }
+
+                            // Show status
+                            $status.show().html(
+                                `<i class="bi bi-check-circle-fill me-1 text-success"></i><span>${file.name} - ${formatFileSize(file.size)}</span>`
+                            );
+
+                            $progress.hide();
+
+                        } else {
+                            width += 5;
+                            progressBar.css("width", width + "%");
+                        }
+                    }, 50);
+                }
+            }
+
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' bytes';
+                else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                else return (bytes / 1048576).toFixed(1) + ' MB';
+            }
+
+
         });
     </script>
     <script>

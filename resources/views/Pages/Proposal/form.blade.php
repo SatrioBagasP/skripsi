@@ -54,22 +54,56 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <label>File Proposal</label>
-                @if (isset($data))
-                    <small>
-                        (<a href="{{ $data['file_url'] }}" target="_blank"
-                            class="text-primary text-decoration-underline">view file</a>)
-                    </small>
-                @endif
+                <label>Organisasi</label>
                 <div class="mb-2">
-                    <input type="file" class="form-control" name="file" id="file" accept="application/pdf">
-                    <span class="rules">
-                        <small>
-                            Hanya menerima file PDF <br>
-                            Maksimal ukuran: <strong>2 MB</strong>
-                        </small>
-                    </span>
-                    <div class="invalid-feedback" id="fileError"></div>
+                    @include('Component.select', [
+                        'name' => 'unit_id',
+                        'id' => 'unit_id',
+                        'placeholder' => '-- Pilih Organisasi --',
+                        'data' => $organisasiOption,
+                    ])
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <div class="position-relative file-upload">
+                        <div class="d-flex align-items-center mb-0">
+                            <h6 class=" fw-semibold">
+                                <label>File Proposal</label>
+                                @if (isset($data))
+                                    <small>
+                                        <a href="{{ $data['file_url'] }}" target="_blank"
+                                            class="text-primary text-decoration-underline"><i
+                                                class="bi bi-file-earmark"></i></i>File</a>
+                                    </small>
+                                @endif
+                            </h6>
+                        </div>
+
+                        <input type="file" id="file" class="file-input" accept=".pdf">
+                        <label for="file" class="file-label">
+                            <i class="bi bi-file-earmark-pdf file-icon"></i>
+                            <span class="fw-medium">Upload File</span>
+                            <small class="text-muted mt-2">Format: PDF (Maks 2MB)</small>
+
+                            <img class="file-preview" alt="Pratinjau dokumen">
+                            <div class="file-name"></div>
+
+                            <div class="file-overlay">
+                                <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                                <span>Klik untuk upload file</span>
+                            </div>
+                        </label>
+
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div class="upload-status">
+                            <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                            <span>File berhasil diupload</span>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -81,15 +115,6 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <label>Organisasi</label>
-                <div class="mb-2">
-                    @include('Component.select', [
-                        'name' => 'unit_id',
-                        'id' => 'unit_id',
-                        'placeholder' => '-- Pilih Organisasi --',
-                        'data' => $organisasiOption,
-                    ])
-                </div>
                 <label>Ketua Pelaksana</label>
                 <div class="mb-2">
                     @include('Component.select', [
@@ -99,6 +124,8 @@
                         'data' => [],
                     ])
                 </div>
+            </div>
+            <div class="col-md-6">
                 <label>Dosen Penanggung Jawab</label>
                 <div class="mb-3">
                     @include('Component.select', [
@@ -108,6 +135,8 @@
                         'data' => [],
                     ])
                 </div>
+            </div>
+            <div class="col-md-6">
                 <label>Mahasiswa</label>
                 <div class="">
                     @include('Component.select', [
@@ -125,8 +154,6 @@
                     <input class="form-check-input" type="checkbox" id="is_harian" name="is_harian">
                     <label class="form-check-label">Harian?</label>
                 </div>
-            </div>
-            <div class="col-md-6">
                 <div id="not-harian">
                     <div class="row d-flex">
                         <div class="col-md-6">
