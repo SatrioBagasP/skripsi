@@ -34,6 +34,129 @@
             font-size: 14px;
             line-height: 1.5;
         }
+
+        .file-input {
+            opacity: 0;
+            position: absolute;
+            width: 1px;
+            height: 1px;
+        }
+
+        .file-label {
+            cursor: pointer;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 180px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-label:hover {
+            background-color: #e9ecef;
+            border-color: #0d6efd;
+        }
+
+        .file-label i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+
+        .file-label.has-file {
+            border: 2px solid #0d6efd;
+            background-color: #f0f7ff;
+        }
+
+        .file-label.has-file:hover {
+            background-color: #e6f2ff;
+        }
+
+        .file-label.has-file i {
+            color: #0d6efd;
+        }
+
+        .file-preview {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            display: none;
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: #495057;
+            text-align: center;
+            margin-top: 8px;
+            word-break: break-word;
+            display: none;
+        }
+
+        .file-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 12px;
+        }
+
+        .file-label:hover .file-overlay {
+            opacity: 1;
+        }
+
+        .upload-status {
+            display: none;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+
+        .document-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5rem;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: #0d6efd;
+            transition: width 0.4s ease;
+        }
     </style>
 @endpush
 
@@ -46,7 +169,7 @@
                 <p>{{ $data['alasan_tolak'] }}</p>
             </div>
         @endif
-        <div class="row">
+        <div class="row" id='formWrapper'>
             <div class="col-md-12">
                 <label>Nama Proposal</label>
                 <div class="mb-3">
@@ -55,7 +178,44 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <label>File Laporan Kegiatan</label>
+                <div class="position-relative file-upload">
+                    <div class="d-flex align-items-center mb-0">
+                        <h6 class=" fw-semibold">
+                            <label>File Laporan Kegiatan</label>
+                            @if (isset($data) && $data['file'] != null)
+                                <small>
+                                    <a href="{{ $data['file'] }}" target="_blank"
+                                        class="text-primary text-decoration-underline"><i
+                                            class="bi bi-file-earmark"></i></i>File</a>
+                                </small>
+                            @endif
+                        </h6>
+                    </div>
+
+                    <input type="file" id="file" class="file-input" accept=".pdf">
+                    <label for="file" class="file-label">
+                        <i class="bi bi-file-earmark-pdf file-icon"></i>
+                        <span class="fw-medium">Upload File</span>
+                        <small class="text-muted mt-2">Format: PDF (Maks 2MB)</small>
+
+                        <img class="file-preview" alt="Pratinjau dokumen">
+                        <div class="file-name"></div>
+
+                        <div class="file-overlay">
+                            <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                            <span>Klik untuk upload file</span>
+                        </div>
+                    </label>
+
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="upload-status">
+                        <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                        <span>File berhasil diupload</span>
+                    </div>
+                </div>
+                {{-- <label>File Laporan Kegiatan</label>
                 @if (isset($data) && $data['file'] != null)
                     <small>
                         (<a href="{{ $data['file'] }}" target="_blank" class="text-primary text-decoration-underline">view
@@ -71,30 +231,122 @@
                         </small>
                     </span>
                     <div class="invalid-feedback" id="fileError"></div>
-                </div>
+                </div> --}}
             </div>
             <div class="col-md-6">
-                <label>File Bukti Kehadiran</label>
-                @if (isset($data) && $data['file_bukti_kehadiran'] != null)
-                    <small>
-                        (<a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
-                            class="text-primary text-decoration-underline">view file</a>)
-                    </small>
-                @endif
-                <div class="mb-2">
-                    <input type="file" class="form-control" name="file_bukti_kehadiran" id="file_bukti_kehadiran"
-                        accept="image/jpeg, image/png, image/jpg">
-                    <span class="rules">
-                        <small>
-                            Hanya menerima file JPG, PNG, JPEG <br>
-                            Maksimal ukuran: <strong>2 MB</strong>
-                        </small>
-                    </span>
-                    <div class="invalid-feedback" id="file_bukti_kehadiranError"></div>
+                <div class="position-relative file-upload">
+                    <div class="d-flex align-items-center mb-0">
+                        <h6 class=" fw-semibold">
+                            <label>File Bukti Kehadiran</label>
+                            @if (isset($data) && $data['file_bukti_kehadiran'] != null)
+                                <small>
+                                    <a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
+                                        class="text-primary text-decoration-underline"><i
+                                            class="bi bi-file-earmark"></i></i>File</a>
+                                </small>
+                            @endif
+                        </h6>
+                    </div>
+
+                    <input type="file" id="file_bukti_kehadiran" class="file-input" accept=".pdf">
+                    <label for="file_bukti_kehadiran" class="file-label">
+                        <i class="bi bi-file-earmark-pdf file-icon"></i>
+                        <span class="fw-medium">Upload File</span>
+                        <small class="text-muted mt-2">Format: PDF (Maks 2MB)</small>
+
+                        <img class="file-preview" alt="Pratinjau dokumen">
+                        <div class="file-name"></div>
+
+                        <div class="file-overlay">
+                            <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                            <span>Klik untuk upload file</span>
+                        </div>
+                    </label>
+
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="upload-status">
+                        <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                        <span>File berhasil diupload</span>
+                    </div>
                 </div>
+                {{-- <div class="position-relative file-upload">
+                    <div class="d-flex align-items-center mb-0">
+                        <h6 class=" fw-semibold">
+                            <label>File Laporan Kegiatan</label>
+                            @if (isset($data) && $data['file_bukti_kehadiran'] != null)
+                                <small>
+                                    <a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
+                                        class="text-primary text-decoration-underline"><i
+                                            class="bi bi-file-earmark"></i></i>File</a>
+                                </small>
+                            @endif
+                        </h6>
+                    </div>
+
+                    <input type="file" id="fileBuktiKehadiran" class="file-input" accept=".png, .jpg, .jpeg">
+                    <label for="fileBuktiKehadiran" class="file-label">
+                        <i class="bi bi-file-earmark-arrow-up file-icon"></i>
+                        <span class="fw-medium">Upload File</span>
+                        <small class="text-muted mt-2">Format: PNG, JPG, JPEG (Maks 2MB)</small>
+
+                        <img class="file-preview" alt="Pratinjau dokumen">
+                        <div class="file-name"></div>
+
+                        <div class="file-overlay">
+                            <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                            <span>Klik untuk upload file</span>
+                        </div>
+                    </label>
+
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="upload-status">
+                        <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                        <span>File berhasil diupload</span>
+                    </div>
+                </div> --}}
             </div>
             <div class="col-md-6">
-                <label>File Bukti Dukung</label>
+                <div class="position-relative file-upload">
+                    <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
+                        <h6 class="fw-semibold">
+                            <label>File Laporan Kegiatan</label>
+                        </h6>
+                        <button type="button" class="btn btn-outline-primary btn-sm addBukti mb-0" id="addBukti">
+                            + Tambah Bukti Dukung
+                        </button>
+                    </div>
+
+                    <input type="file" id="fileBuktiDukung" class="file-input file_bukti_dukung" data-index='0' accept=".png, .jpg, .jpeg">
+                    <label for="fileBuktiDukung" class="file-label">
+                        <i class="bi bi-file-earmark-arrow-up file-icon"></i>
+                        <span class="fw-medium">Upload File</span>
+                        <small class="text-muted mt-2">Format: PNG, JPG, JPEG (Maks 2MB)</small>
+
+                        <img class="file-preview" alt="Pratinjau dokumen">
+                        <div class="file-name"></div>
+
+                        <div class="file-overlay">
+                            <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                            <span>Klik untuk upload file</span>
+                        </div>
+                    </label>
+
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="upload-status">
+                        <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                        <span>File berhasil diupload</span>
+                    </div>
+                </div>
+                {{-- <label>File Bukti Dukung</label>
+                <button type="button" class="btn btn-outline-primary addBukti mb-0" id="addBukti">
+                    + Tambah Bukti Dukung
+                </button>
 
                 <div class="bukti-item input-group mb-2">
                     <input type="file" class="form-control file_bukti_dukung mb-0" data-index="0"
@@ -102,33 +354,24 @@
                     <button type="button" class="btn btn-outline-primary addBukti mb-0" id="addBukti">
                         + Tambah Bukti Dukung
                     </button>
-                </div>
-                <div id="buktiDukungWrapper"> </div>
-                <span class="rules">
-                    <small>
-                        Hanya menerima file JPG, PNG, JPEG <br>
-                        Maksimal ukuran: <strong>2 MB</strong>
-                    </small>
-                </span>
-
+                </div> --}}
             </div>
-            @if (isset($data) && $data['bukti_dukung'] != [])
-                <div class="row">
-                    <h5 class="card-title">List File Bukti Dukung</h5>
-                    @foreach ($data['bukti_dukung'] as $index => $file)
-                        <div class="mb-5 col-md-4 col-sm-6 d-flex flex-column align-items-center data-item"
-                            data-index="{{ $index }}">
-                            <a data-fancybox="gallery" data-src="{{ $file['file'] }}" data-caption=''>
-                                <img src="{{ $file['file'] }}" width="200" height="150" alt="" />
-                            </a>
-                            <br>
-                            <button type='button' class="btn btn-danger delete-image">Delete</button>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-
         </div>
+        @if (isset($data) && $data['bukti_dukung'] != [])
+            <div class="row">
+                <h5 class="card-title">List File Bukti Dukung</h5>
+                @foreach ($data['bukti_dukung'] as $index => $file)
+                    <div class="mb-5 col-md-4 col-sm-6 d-flex flex-column align-items-center data-item"
+                        data-index="{{ $index }}">
+                        <a data-fancybox="gallery" data-src="{{ $file['file'] }}" data-caption=''>
+                            <img src="{{ $file['file'] }}" width="200" height="150" alt="" />
+                        </a>
+                        <br>
+                        <button type='button' class="btn btn-danger delete-image">Delete</button>
+                    </div>
+                @endforeach
+            </div>
+        @endif
         <div class="row mt-2">
             <div class="col-md-12">
                 <div class="d-flex justify-content-end">
@@ -168,14 +411,43 @@
 
             function createBuktiDukung() {
                 let newItem = `
-                    <div class="mb-2 bukti-item input-group">
-                        <input type="file" class="form-control file_bukti_dukung"
-                            data-index="${buktiIndex}"
-                            accept="image/jpeg, image/png, image/jpg">
-                        <button type="button" class="btn btn-outline-danger removeBukti mb-0">-</button>
+                    <div class='col-md-6'>
+                        <div class="position-relative file-upload">
+                            <div class="d-flex align-items-center justify-content-between mb-2 mt-2">
+                                <h6 class="fw-semibold">
+
+                                </h6>
+                                <button type="button" class="btn btn-outline-danger removeBukti btn-sm mb-0" id="addBukti">
+                                    - Hapus bukti dukung
+                                </button>
+                            </div>
+
+                            <input type="file" id="fileBuktiKehadiran${buktiIndex}" data-index="${buktiIndex}" class="file-input file_bukti_dukung" accept=".png, .jpg, .jpeg">
+                            <label for="fileBuktiKehadiran${buktiIndex}" class="file-label">
+                                <i class="bi bi-file-earmark-arrow-up file-icon"></i>
+                                <span class="fw-medium">Upload File</span>
+                                <small class="text-muted mt-2">Format: PNG, JPG, JPEG (Maks 2MB)</small>
+
+                                <img class="file-preview" alt="Pratinjau dokumen">
+                                <div class="file-name"></div>
+
+                                <div class="file-overlay">
+                                    <i class="bi bi-cloud-arrow-up mb-2" style="font-size: 2rem;"></i>
+                                    <span>Klik untuk upload file</span>
+                                </div>
+                            </label>
+
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="upload-status">
+                                <i class="bi bi-check-circle-fill me-1 text-success"></i>
+                                <span>File berhasil diupload</span>
+                            </div>
+                        </div>
                     </div>
                 `;
-                $('#buktiDukungWrapper').append(newItem);
+                $('#formWrapper').append(newItem);
                 buktiIndex++;
             }
 
@@ -189,6 +461,110 @@
                     localStorage.removeItem('flash_message');
                     localStorage.removeItem('flash_type');
                 }
+
+                $(document).on('change', '.file-input', function(e) {
+                    e.preventDefault();
+                    $progress = $(this).closest('.file-upload').find('.progress');
+                    $label = $(this).closest('.file-upload').find('.file-label');
+                    $fileIcon = $label.find('.file-icon');
+                    $fileName = $label.find('.file-name');
+                    $filePreview = $label.find('.file-preview');
+                    $status = $(this).closest('.file-upload').find('.upload-status');
+
+                    handleFileUpload(this, $label, $filePreview, $fileIcon, $fileName, $status,
+                        $progress);
+
+                });
+
+                // Generic file upload handler
+                function handleFileUpload(input, $label, $preview, $icon, $fileNameElement, $status,
+                    $progress) {
+                    if (input.files && input.files[0]) {
+                        const file = input.files[0];
+
+                        // Validate file size (max 5MB)
+                        if (file.size > 2 * 1024 * 1024) {
+                            flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                            $(input).val("");
+                            return;
+                        }
+
+                        // Show progress bar
+                        $progress.show();
+                        const progressBar = $progress.find(".progress-bar");
+
+                        // Simulate upload progress
+                        let width = 0;
+                        const interval = setInterval(() => {
+                            if (width >= 100) {
+                                clearInterval(interval);
+
+                                // Update label appearance
+                                $label.addClass("has-file");
+
+                                // Show file name
+                                $fileNameElement.text(file.name).show();
+
+                                if (file.type.startsWith("image/")) {
+                                    // Preview image
+                                    const reader = new FileReader();
+                                    reader.onload = function(e) {
+                                        if ($preview) {
+                                            $preview.attr("src", e.target.result).show();
+                                        }
+                                    };
+                                    reader.readAsDataURL(file);
+                                    $icon.hide();
+                                } else {
+                                    if ($preview) $preview.hide();
+                                    $icon.attr("class",
+                                            "bi bi-file-earmark-pdf-fill pdf-icon file-icon")
+                                        .show();
+                                }
+
+                                // Show status
+                                $status.show().html(
+                                    `<i class="bi bi-check-circle-fill me-1 text-success"></i><span>${file.name} - ${formatFileSize(file.size)}</span>`
+                                );
+
+                                $progress.hide();
+
+                            } else {
+                                width += 5;
+                                progressBar.css("width", width + "%");
+                            }
+                        }, 50);
+                    }
+                }
+
+                // Format file size
+                function formatFileSize(bytes) {
+                    if (bytes < 1024) return bytes + ' bytes';
+                    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+                    else return (bytes / 1048576).toFixed(1) + ' MB';
+                }
+
+                $("#saveButton").on("click", function() {
+                    let button = $(this);
+                    button.html(
+                        '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Menyimpan...'
+                    ).prop("disabled", true);
+
+                    setTimeout(function() {
+                        alert("Dokumen berhasil disimpan!");
+                        button.html('<i class="bi bi-check-circle me-2"></i>Simpan Dokumen')
+                            .prop(
+                                "disabled", false);
+
+                        // let successAlert = $(`
+                    //     <div class="alert alert-success alert-dismissible fade show">
+                    //         <strong>Berhasil!</strong> Dokumen Anda telah berhasil disimpan dan akan segera diproses.
+                    //         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    //     </div>
+                    // `);
+                        // $(".container").prepend(successAlert);
+                    }, 2000);
+                });
 
 
                 $('#file').change(function(e) {
@@ -205,7 +581,7 @@
                     e.preventDefault();
                     let index = $(this).data('index');
                     dataSet.file_bukti_dukung[index] = this.files[0];
-
+                });
 
                 $('#addBukti').click(function(e) {
                     e.preventDefault();
@@ -213,17 +589,17 @@
                 });
 
                 $(document).on('click', '.removeBukti', function() {
-                    let parent = $(this).closest('.bukti-item');
+                    let parent = $(this).closest('.d-flex').closest('.file-upload');
                     let index = parent.find('.file_bukti_dukung').data('index');
                     dataSet.file_bukti_dukung.splice(index, 1);
-                    parent.remove();
+                    parent.closest('.col-md-6').remove();
                 });
 
                 $('#btn-submit').click(function(e) {
                     e.preventDefault();
                     e.preventDefault();
                     const button = $(this);
-                    button.attr('disabled', true);
+                    // button.attr('disabled', true);
 
                     let formData = new FormData();
 
@@ -236,7 +612,6 @@
                         formData.append(`file_bukti_dukung[${index}]`, file);
                     });
                     formData.append('id', data.id);
-
                     $.ajax({
                         type: "POST",
                         url: "{{ route('laporan-kegiatan.update') }}",
@@ -292,198 +667,6 @@
                 });
 
             });
-            // let firstRender = true;
-            // let edit = @json($edit ?? false);
-            // let dataSet = {
-            //     selected_mahasiswa: [],
-            // };
-            // if (edit) {
-            //     dataSet = @json($data ?? null);
-            //     Object.entries(dataSet).forEach(function([key, value]) {
-            //         if (key != 'file_url') {
-            //             $(`#${key}`).val(value);
-            //         }
-            //     });
-            //     $('#is_harian').prop('checked', dataSet.is_harian == 1);
-            //     if (dataSet.is_harian == 1) {
-            //         $('#yes-harian').show();
-            //         $('#not-harian').hide();
-            //     } else {
-            //         $('#yes-harian').hide();
-            //         $('#not-harian').show();
-            //     }
-
-
-
-            // }
-            // $(document).ready(function() {
-            //     $('.flatpickr-range').flatpickr({
-            //         mode: "range",
-            //         minDate: "today",
-            //         dateFormat: "Y-m-d",
-            //     });
-            //     $('.flatpickr').flatpickr({
-            //         enableTime: true,
-            //         dateFormat: "Y-m-d H:i",
-            //         minDate: "today",
-            //         time_24hr: true,
-            //     });
-
-            //     $('input[id], select[id], textarea[id], checkbox[id], file[id]').on('input change', function() {
-            //         const key = $(this).attr('id');
-            //         const type = $(this).attr('type');
-
-            //         if (type === 'checkbox') {
-            //             dataSet[key] = $(this).prop('checked');
-            //         } else if (type === 'file') {
-            //             dataSet[key] = this.files[0];
-            //         } else {
-            //             dataSet[key] = $(this).val();
-            //         }
-            //     });
-            //     $('#unit_id').change(function(e) {
-            //         e.preventDefault();
-            //         $('#ketua_id').attr('disabled', true);
-            //         $('#dosen_id').attr('disabled', true);
-            //         $('#mahasiswa_id').attr('disabled', true);
-            //         if ($(this).val() === '') {
-            //             return;
-            //         }
-            //         appendKetuaPelaksana($(this).val());
-            //     });
-
-            //     $('#unit_id').trigger('change');
-
-
-            //     function appendKetuaPelaksana(organisasiId) {
-            //         $('#ketua_ids').empty();
-            //         $('#mahasiswa_id').empty();
-            //         $('#dosen_id').empty();
-            //         $.ajax({
-            //             type: "GET",
-            //             url: "{{ route('proposal.getOption') }}",
-            //             data: {
-            //                 id: organisasiId,
-            //             },
-            //             success: function(response) {
-            //                 var ketuaOptions = '';
-            //                 var dosenOptions = '';
-            //                 var mahasiswaOptions = '';
-            //                 if (response.data_mahasiswa.length > 0) {
-            //                     ketuaOptions +=
-            //                         '<option value="" selected disabled>--Pilih Data--</option>';
-            //                     $.each(response.data_mahasiswa, function(index, value) {
-            //                         ketuaOptions +=
-            //                             `<option value="${value.value}"}>${value.label}</option>`;
-            //                     });
-            //                 } else {
-            //                     ketuaOptions +=
-            //                         '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
-            //                 }
-
-            //                 if (response.data_dosen.length > 0) {
-            //                     dosenOptions +=
-            //                         '<option value="" selected disabled>--Pilih Data--</option>';
-            //                     $.each(response.data_dosen, function(index, value) {
-            //                         dosenOptions +=
-            //                             `<option value="${value.value}">${value.label}</option>`;
-            //                     });
-            //                 } else {
-            //                     dosenOptions +=
-            //                         '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
-            //                 }
-
-            //                 if (response.data_mahasiswa.length > 0) {
-            //                     mahasiswaOptions +=
-            //                         '<option value="" disabled>--Pilih Data--</option>';
-            //                     $.each(response.data_mahasiswa, function(index, value) {
-            //                         let isSelected = dataSet.selected_mahasiswa.some(v =>
-            //                             v == value.value)
-            //                         mahasiswaOptions +=
-            //                             `<option value="${value.value}">${value.label}</option>`;
-            //                     });
-            //                 } else {
-            //                     mahasiswaOptions +=
-            //                         '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
-            //                 }
-
-            //                 $('#ketua_ids').removeAttr('disabled');
-            //                 $('#mahasiswa_id').removeAttr('disabled');
-            //                 $('#dosen_id').removeAttr('disabled');
-            //                 $('#ketua_ids').html(ketuaOptions);
-            //                 $('#dosen_id').html(dosenOptions);
-            //                 $('#mahasiswa_id').html(mahasiswaOptions);
-            //                 $('#ketua_ids').val(dataSet.ketua_ids).trigger('change');
-            //                 $('#dosen_id').val(dataSet.dosen_id).trigger('change');
-            //                 $('#mahasiswa_id').val(dataSet.selected_mahasiswa).trigger('change');
-
-            //             },
-            //             error: function(xhr, status, error) {
-            //                 var err = xhr.responseJSON.errors;
-            //                 flasher.error(xhr.responseJSON.message);
-            //             }
-            //         });
-            //     }
-
-            //     $('#is_harian').change(function(e) {
-            //         e.preventDefault();
-
-            //         let isHarian = $(this).prop('checked')
-            //         if (isHarian) {
-            //             $('#yes-harian').show();
-            //             $('#not-harian').hide();
-            //         } else {
-            //             $('#yes-harian').hide();
-            //             $('#not-harian').show();
-            //         }
-            //     });
-
-            //     $('#btn-submit').click(function(e) {
-            //         e.preventDefault();
-            //         const button = $(this);
-            //         const formData = new FormData();
-            //         for (const key in dataSet) {
-            //             if (dataSet[key] !== null && key !== 'mahasiswa_id') {
-            //                 formData.append(key, dataSet[key]);
-            //             }
-            //         }
-
-            //         if (Array.isArray(dataSet.mahasiswa_id)) {
-            //             dataSet.mahasiswa_id.forEach((id) => {
-            //                 formData.append('mahasiswa_id[]', id);
-            //             });
-            //         }
-            //         button.attr('disabled', true);
-            //         $.ajax({
-            //             type: "POST",
-            //             url: edit ? '{{ route('proposal.update') }}' :
-            //                 '{{ route('proposal.store') }}',
-            //             data: formData,
-            //             processData: false,
-            //             contentType: false,
-            //             success: function(response) {
-            //                 localStorage.setItem('flash_message', response
-            //                     .message);
-            //                 localStorage.setItem('flash_type',
-            //                     'success');
-            //                 window.location.href = '{{ route('proposal.index') }}';
-
-            //             },
-            //             error: function(xhr, status, error) {
-            //                 var err = xhr.responseJSON.errors;
-            //                 $('.invalid-feedback').text('').hide();
-            //                 $('.form-control').removeClass('is-invalid');
-            //                 $.each(err, function(key, value) {
-            //                     $('#' + key + 'Error').text(value).show();
-            //                     $('#' + key).addClass('is-invalid');
-            //                 });
-            //                 flasher.error(xhr.responseJSON.message);
-            //                 button.attr('disabled', false);
-            //             }
-            //         });
-            //     });
-
-            // });
         })()
     </script>
 @endpush
