@@ -53,11 +53,13 @@ class LaporanKegiatanController extends Controller
 
         $this->validateExistingDataReturnAbort($data);
         $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
+        $this->validateProposalIsEditable($data, 'laporan kegiatan', true);
 
         $data = [
             'id' => encrypt($data->id),
             'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
             'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
+            'alasan_tolak' => $data->alasan_tolak,
             'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,
             'bukti_dukung' => $data->buktiDukung->map(function ($item) {
                 return [
@@ -134,6 +136,7 @@ class LaporanKegiatanController extends Controller
             $data->fill([
                 'file' => $file ?? $data->file,
                 'file_bukti_kehadiran' => $fileBuktiKehadiran ?? $data->file_bukti_kehadiran,
+                'status' => 'Draft',
             ]);
             $this->updateLog($data, 'Merubah Laporan Kegiatan', 'Laporan Kegiatan');
             if ($request->file('file')) {
@@ -179,7 +182,7 @@ class LaporanKegiatanController extends Controller
                 ->first();
 
             $notifikasi = new NotifikasiController();
-            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Laporan Kegiatan', nama: $dosen->name, judulKegiatan: $data->proposal->name, unitKemahasiswaan: $data->proposal->pengusul->name, route: route('approval-proposal.edit', encrypt($data->id))) : '-';
+            $message = $dosen ? $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Laporan Kegiatan', nama: $dosen->name, judulKegiatan: $data->proposal->name, unitKemahasiswaan: $data->proposal->pengusul->name, route: route('approval-laporan-kegiatan.edit', encrypt($data->id))) : '-';
 
             $response = $notifikasi->sendMessage($dosen->no_hp ?? 0, $message, 'Dosen Penanggung Jawab', 'Pengajuan');
 

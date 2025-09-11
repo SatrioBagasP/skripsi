@@ -1,0 +1,90 @@
+@extends('Layout.layout')
+
+@section('pages', 'Approval Laporan Kegiatan')
+
+@section('title', config('app.name') . ' | Approval Laporan Kegiatan')
+
+@section('content')
+
+    <div class="card">
+        <div class="px-4 py-2">
+            <div class='d-flex justify-content-between align-items-center'>
+                <div>
+                    <h6>Data Pending Laporan Kegiatan</h6>
+                </div>
+            </div>
+            @include('Component.datatable', [
+                'head' => $head,
+            ])
+        </div>
+    </div>
+
+@endsection
+
+@push('js')
+    <script type="module">
+        import {
+            dataTable
+        } from '/js/datatable.js';
+        (function() {
+
+            function renderTableBody(data) {
+                let i = 1;
+                data.forEach((item, index) => {
+                    const statusClass = {
+                        'Draft': 'bg-secondary',
+                        'Rejected': 'bg-danger',
+                        'Accepted': 'bg-success'
+                    } [item.status] || 'bg-warning';
+                    $('#tableBody').append(`
+                        <tr class="data-item" data-index="${index}">
+                           <td class='align-middle text-center text-sm'>${i}</td>
+                            <td class='text-sm'> ${item.no_proposal} </td>
+                            <td class='text-sm'> ${item.name} </td>
+                            <td class='align-middle text-center text-sm'> ${item.ketua} <br> <small >(${item.npm_ketua})<small> </td>
+                            <td class='align-middle text-center text-sm'> ${item.dosen} </td>
+                            <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
+                            <td class='align-middle text-center text-sm'> ${item.jurusan} </td>
+                            <td class='align-middle text-center text-sm'>
+                                <span class="badge ${statusClass}">${item.status}</span>
+                            </td>
+                            <td class='align-middle text-center text-sm'>
+                                ${item.detail == true ? `<button class='btn btn-info detail w-full mb-1'> <i class="fa fa-eye me-1"></i>Detail</button><br>` : ''}
+                            </td>
+                        </tr>
+                    `);
+                    i++;
+                });
+            }
+            const table = dataTable({
+                renderTableBody
+            });
+            table.renderData("{{ route('approval-laporan-kegiatan.getData') }}");
+
+            $(document).ready(function() {
+                const validasiUrl = @json(route('approval-laporan-kegiatan.edit', ['id' => ':id']));
+
+                const message = localStorage.getItem('flash_message');
+                const type = localStorage.getItem('flash_type');
+
+                if (message && type && typeof flasher !== 'undefined') {
+                    flasher[type](message);
+                    localStorage.removeItem('flash_message');
+                    localStorage.removeItem('flash_type');
+                }
+
+                $(document).on('click', '.detail', function() {
+                    $(this).attr('disabled', true);
+                    const item = $(this).closest('.data-item');
+                    const index = parseInt(item.data('index'));
+                    let data = table.getDataByIndex(index);
+
+                    if (data.detail == true) {
+                        let editUrl = validasiUrl.replace(':id', data.id);
+                        window.location.href = editUrl;
+                    }
+                });
+            });
+        })()
+    </script>
+@endpush

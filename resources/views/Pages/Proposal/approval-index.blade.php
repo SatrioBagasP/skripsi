@@ -31,16 +31,25 @@
             function renderTableBody(data) {
                 let i = 1;
                 data.forEach((item, index) => {
+                    const statusClass = {
+                        'Draft': 'bg-secondary',
+                        'Rejected': 'bg-danger',
+                        'Accepted': 'bg-success'
+                    } [item.status] || 'bg-warning';
                     $('#tableBody').append(`
                         <tr class="data-item" data-index="${index}">
                             <td class='align-middle text-center text-sm'>${i}</td>
                             <td class='text-sm'> ${item.no_proposal} </td>
                             <td class='text-sm'> ${item.name} </td>
                             <td class='align-middle text-center text-sm'> ${item.ketua} <br> <small >(${item.npm_ketua})<small> </td>
+                            <td class='align-middle text-center text-sm'> ${item.dosen} </td>
                             <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
+                            <td class='align-middle text-center text-sm'> ${item.jurusan} </td>
                             ${item.admin == true ? `<td class='text-sm'>${item.dosen}</td>` : ''}
                             ${item.admin == true ? `<td class='text-sm'>${item.jurusan}</td>` : ''}
-                            <td class='align-middle text-center text-sm'> ${item.status} </td>
+                            <td class='align-middle text-center text-sm'>
+                                <span class="badge ${statusClass}">${item.status}</span>
+                            </td>
                             <td class='align-middle text-center text-sm'>
                                 ${item.detail == true ? `<button class='btn btn-info detail w-full mb-1'> <i class="fa fa-eye me-1"></i>Detail</button><br>` : ''}
                             </td>

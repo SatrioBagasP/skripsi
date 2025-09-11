@@ -171,60 +171,56 @@ class ProposalController extends Controller
 
     public function edit(Request $request, $id)
     {
-        try {
-            $data = Proposal::where('id', decrypt($id))
-                ->lockForUpdate()
-                ->first();
+        $data = Proposal::where('id', decrypt($id))
+            ->lockForUpdate()
+            ->first();
 
-            $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsEditable($data);
-            $organisasiOption = $this->getOrganisasiOption();
-            $edit = true;
+        $this->validateExistingDataReturnException($data);
+        $this->validateProposalIsEditable($data, 'proposal', true);
+        $organisasiOption = $this->getOrganisasiOption();
+        $edit = true;
 
-            if (Auth::user()->userable_type == UnitKemahasiswaan::class) {
-                $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
-                    if ($item['value'] == Auth::user()->userable_id) {
-                        $item['selected'] = true;
-                    }
-                    return $item;
-                });
-            } else {
-                $organisasiOption = $organisasiOption->map(function ($item) use ($data) {
-                    if ($item['value'] == $data->user_id) {
-                        $item['selected'] = true;
-                    }
-                    return $item;
-                });
-            }
-
-            $range = null;
-            if ($data->is_harian) {
-                $range = Carbon::parse($data->start_date)->format('Y-m-d') . ' to ' . Carbon::parse($data->end_date)->format('Y-m-d');
-            }
-
-            $data = [
-                'id' => encrypt($data->id),
-                'name' => $data->name,
-                'desc' => $data->desc,
-                'file_url' => Storage::temporaryUrl($data->file, now()->addMinutes(5)),
-                'is_harian' => $data->is_harian,
-                'start_date' => Carbon::parse($data->start_date)->format('Y-m-d H:i'),
-                'end_date' => Carbon::parse($data->end_date)->format('Y-m-d H:i'),
-                'range_date' => $range,
-                'unit_id' => $data->unit_id,
-                'dosen_id' => $data->dosen_id,
-                'ketua_ids' => $data->mahasiswa_id,
-                'alasan_tolak' => $data->alasan_tolak,
-                'selected_mahasiswa' => $data->mahasiswa->filter(function ($q) use ($data) {
-                    return $q->id != $data->mahasiswa_id;
-                })
-                    ->pluck('id')
-                    ->toArray(),
-            ];
-            return view('Pages.Proposal.form', compact('organisasiOption', 'data', 'edit'));
-        } catch (Throwable $e) {
-            return abort(500, $this->getErrorMessage($e));
+        if (Auth::user()->userable_type == UnitKemahasiswaan::class) {
+            $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)->map(function ($item) {
+                if ($item['value'] == Auth::user()->userable_id) {
+                    $item['selected'] = true;
+                }
+                return $item;
+            });
+        } else {
+            $organisasiOption = $organisasiOption->map(function ($item) use ($data) {
+                if ($item['value'] == $data->user_id) {
+                    $item['selected'] = true;
+                }
+                return $item;
+            });
         }
+
+        $range = null;
+        if ($data->is_harian) {
+            $range = Carbon::parse($data->start_date)->format('Y-m-d') . ' to ' . Carbon::parse($data->end_date)->format('Y-m-d');
+        }
+
+        $data = [
+            'id' => encrypt($data->id),
+            'name' => $data->name,
+            'desc' => $data->desc,
+            'file_url' => Storage::temporaryUrl($data->file, now()->addMinutes(5)),
+            'is_harian' => $data->is_harian,
+            'start_date' => Carbon::parse($data->start_date)->format('Y-m-d H:i'),
+            'end_date' => Carbon::parse($data->end_date)->format('Y-m-d H:i'),
+            'range_date' => $range,
+            'unit_id' => $data->unit_id,
+            'dosen_id' => $data->dosen_id,
+            'ketua_ids' => $data->mahasiswa_id,
+            'alasan_tolak' => $data->alasan_tolak,
+            'selected_mahasiswa' => $data->mahasiswa->filter(function ($q) use ($data) {
+                return $q->id != $data->mahasiswa_id;
+            })
+                ->pluck('id')
+                ->toArray(),
+        ];
+        return view('Pages.Proposal.form', compact('organisasiOption', 'data', 'edit'));
     }
 
     public function update(Request $request)
@@ -276,7 +272,6 @@ class ProposalController extends Controller
                 'desc' => $request->desc,
                 'dosen_id' => $request->dosen_id,
                 'unit_id' => $request->unit_id,
-                'alasan_tolak' => null,
                 'file' => $request->file('file') ? $filePath : $oldPath,
                 'is_harian' => $request->boolean('is_harian'),
                 'status' => 'Draft',

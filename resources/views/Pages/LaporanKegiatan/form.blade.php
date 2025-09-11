@@ -42,7 +42,7 @@
     <div class="card px-4 py-2">
         @if (isset($data['alasan_tolak']) && $data['alasan_tolak'])
             <div class="alasan-box">
-                <h4>Proposal Ditolak</h4>
+                <h4>Laporan Kegiatan Ditolak</h4>
                 <p>{{ $data['alasan_tolak'] }}</p>
             </div>
         @endif

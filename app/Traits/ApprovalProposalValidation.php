@@ -15,7 +15,7 @@ trait ApprovalProposalValidation
 {
     use UserValidation;
 
-    public function validateUserCanApprove($proposal, $abort = null)
+    public function validateUserCanApprove($proposal, $abort = null, $type = 'proposal')
     {
         $user = Auth::user();
 
@@ -55,7 +55,7 @@ trait ApprovalProposalValidation
             return true;
         }
 
-        $message = 'Anda tidak berhak melakukan approval pada proposal ini!';
+        $message = 'Anda tidak berhak melakukan approval pada ' . $type . ' ini!';
         if ($abort) {
             abort(403, $message);
         } else {
@@ -63,10 +63,10 @@ trait ApprovalProposalValidation
         }
     }
 
-    public function validateProposalIsApproveable($data, $abort = null)
+    public function validateProposalIsApproveable($data, $abort = null, $type = 'proposal')
     {
         if (in_array($data->status, ['Draft', 'Rejected'])) {
-            $message = 'Tidak bisa melakukan approval pada proposal ini dikarenakan masih belum diajukan oleh unit kemahasiswaan!';
+            $message = 'Tidak bisa melakukan approval pada ' . $type . ' ini dikarenakan masih belum diajukan oleh unit kemahasiswaan!';
             if ($abort) {
                 abort(403, $message);
             } else {
@@ -75,15 +75,15 @@ trait ApprovalProposalValidation
         }
     }
 
-    public function validateApprovalDosen($proposal)
+    public function validateApprovalDosen($data, $type = 'proposal')
     {
         $user = Auth::user();
         $admin = Gate::allows('admin');
         $dosen = $this->validateUserIsDosen($user);
-        $dosen = $dosen ? $proposal->dosen_id == $user->userable_id : null;
+        $dosen = $dosen ? ($type == 'proposal' ? $data->dosen_id == $user->userable_id : $data->proposal->dosen_id == $user->userable_id) : null;
 
         if ($dosen || $admin) {
-            if ($proposal->status == 'Pending Dosen') {
+            if ($data->status == 'Pending Dosen') {
                 return true;
             } else {
                 throw new Exception('Data Tidak valid untuk disetujui atau ditolak, silahkan refresh halaman ini!');
@@ -93,15 +93,15 @@ trait ApprovalProposalValidation
         }
     }
 
-    public function validateApprovalKaprodi($proposal)
+    public function validateApprovalKaprodi($data, $type = 'proposal')
     {
         $user = Auth::user();
         $admin = Gate::allows('admin');
         $kaprodi = $this->validateUserIsKaprodi($user);
-        $kaprodi = $kaprodi ? $proposal->pengusul->jurusan_id == $user->userable->jurusan_id : null;
+        $kaprodi = $kaprodi ? ($type == 'proposal' ? $data->pengusul->jurusan_id == $user->userable->jurusan_id : $data->proposal->pengusul->jurusan_id == $user->userable->jurusan_id) : null;
 
         if ($kaprodi || $admin) {
-            if ($proposal->status == 'Pending Kaprodi') {
+            if ($data->status == 'Pending Kaprodi') {
                 return true;
             } else {
                 throw new Exception('Data Tidak valid untuk disetujui atau ditolak, silahkan refresh halaman ini!');

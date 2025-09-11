@@ -1,34 +1,29 @@
 <?php
 
-namespace App\Http\Controllers\Proposal;
+namespace App\Http\Controllers\LaporanKegiatan;
 
 use Exception;
 use Throwable;
-use App\Models\User;
-use App\Models\Jurusan;
-use App\Models\Proposal;
 use Illuminate\Http\Request;
 use App\Traits\UserValidation;
 use App\Models\LaporanKegiatan;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\ApprovalProposalValidation;
-use App\Http\Controllers\Helper\CrudController;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Traits\ApprovalProposalRequestValidator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
 
-class ApprovalProposalController extends Controller
+class ApprovalLaporanKegiatanController extends Controller
 {
+
     use UserValidation, ApprovalProposalValidation;
 
     public function index()
     {
-        $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Dosen', 'Organisasi', 'Jurusan', 'Status', 'Aksi'];
+        $head = ['No Proposal', 'Nama', 'Ketua Pelaksana', 'Dosen', 'Organisasi',  'Jurusan', 'Status', 'Aksi'];
         // $admin = Gate::allows('admin');
         // if ($admin) {
         //     $head[] = 'Dosen';
@@ -37,32 +32,37 @@ class ApprovalProposalController extends Controller
 
         // $head[] = 'Status';
         // $head[] = 'Aksi';
-        return view('Pages.Proposal.approval-index', compact('head'));
+        return view('Pages.LaporanKegiatan.approval-index', compact('head'));
     }
 
     public function edit(Request $request, $id)
     {
-        $data = Proposal::with('mahasiswa')
+        $data = LaporanKegiatan::with([
+            'proposal:id,name,no_proposal,unit_id,dosen_id,mahasiswa_id',
+            'buktiDukung:id,laporan_kegiatan_id,file',
+        ])
             ->where('id', decrypt($id))
             ->first();
 
+
         $this->validateExistingDataReturnAbort($data);
-        $this->validateUserCanApprove($data, true);
-        $this->validateProposalIsApproveable($data, true);
+        $this->validateProposalIsApproveable($data, true, 'laporan kegiatan');
+        $this->validateUserCanApprove($data->proposal, true, 'laporan kegiatan');
+
 
         $data = [
             'id' => encrypt($data->id),
-            'ketua_id' => $data->mahasiswa_id,
-            'name' => $data->name,
-            'no_proposal' => $data->no_proposal,
-            'desc' => $data->desc,
-            'organisasi' => $data->pengusul->name,
-            'dosen' => $data->dosen->name,
-            'file_url' => Storage::temporaryUrl($data->file, now()->addMinutes(5)),
-            'start_date' => $data->start_date,
-            'end_date' => $data->end_date,
+            'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
+            'ketua_id' => $data->proposal->mahasiswa_id,
+            'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
+            'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,
             'status' => $data->status,
-            'mahasiswa' => $data->mahasiswa,
+            'bukti_dukung' => $data->buktiDukung->map(function ($item) {
+                return [
+                    'file' => $item->file ? Storage::temporaryUrl($item->file, now()->addMinutes(5)) : null,
+                ];
+            })->toArray(),
+            'mahasiswa' => $data->proposal->mahasiswa,
             'approvalBtn' => $this->getApprovalButton($data),
             'approvalUrl' => $this->getUrlApproval($data),
         ];
@@ -70,22 +70,23 @@ class ApprovalProposalController extends Controller
         $data['mahasiswa'] = $data['mahasiswa']->sortByDesc(function ($mhs) use ($data) {
             return $mhs->id == $data['ketua_id']; // ketua akan jadi true (1), lainnya false (0)
         });
-        return view('Pages.Proposal.approval', compact('data'));
+
+        return view('Pages.LaporanKegiatan.approval', compact('data'));
     }
 
-    public function accProposal($proposal, $status, $desc, $reciever, $nextVerifikator, $messageFor)
+    public function accLaporanKegiatan($laporanKegiatan, $status, $desc, $reciever, $nextVerifikator, $messageFor)
     {
         try {
-            $proposal->fill([
+            $laporanKegiatan->fill([
                 'status' => $status,
             ]);
-            $this->updateLog($proposal, $desc, 'Proposal');
+            $this->updateLog($laporanKegiatan, $desc, 'Laporan Kegiatan');
 
             $notifikasi = new NotifikasiController();
             if ($messageFor == 'Pengajuan') {
-                $message = $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Proposal', nama: $reciever->name ?? '-', judulKegiatan: $proposal->name, unitKemahasiswaan: $proposal->pengusul->name, route: route('approval-proposal.edit', encrypt($proposal->id)));
+                $message = $notifikasi->generateMessageForVerifikator(jenisPengajuan: 'Laporan Kegiatan', nama: $reciever->name ?? '-', judulKegiatan: $laporanKegiatan->proposal->name, unitKemahasiswaan: $laporanKegiatan->proposal->pengusul->name, route: route('approval-laporan-kegiatan.edit', encrypt($laporanKegiatan->id)));
             } elseif ($messageFor == 'Diterima') {
-                $message = $notifikasi->generateMessageForAccepted(jenisPengajuan: 'Proposal', judulKegiatan: $proposal->name, ketua: $reciever->name);
+                $message = $notifikasi->generateMessageForDoneFinal(jenisPengajuan: 'Laporan Kegiatan', judulKegiatan: $laporanKegiatan->proposal->name, ketua: $reciever->name);
             }
             $message = $reciever ? $message : '-';
             $noHp = $reciever->no_hp ?? 0;
@@ -97,19 +98,19 @@ class ApprovalProposalController extends Controller
         }
     }
 
-    public function rejectProposal($proposal, $status, $reason, $desc)
+    public function rejectLaporanKegiatan($laporanKegiatan, $status, $reason, $desc)
     {
         try {
-            $proposal->fill([
+            $laporanKegiatan->fill([
                 'status' => $status,
                 'alasan_tolak' => $reason,
             ]);
-            $this->updateLog($proposal, $desc, 'Proposal');
+            $this->updateLog($laporanKegiatan, $desc, 'Proposal');
 
             $notifikasi = new NotifikasiController();
-            $noHp = $proposal->ketua->no_hp;
+            $noHp = $laporanKegiatan->proposal->ketua->no_hp;
 
-            $message = $notifikasi->generateMessageForRejected(jenisPengajuan: 'Proposal', alasanTolak: $reason, judulKegiatan: $proposal->name, unitKemahasiswaan: $proposal->pengusul->name, route: route('proposal.edit', encrypt($proposal->id)));
+            $message = $notifikasi->generateMessageForRejected(jenisPengajuan: 'Laporan Kegiatan', alasanTolak: $reason, judulKegiatan: $laporanKegiatan->proposal->name, unitKemahasiswaan: $laporanKegiatan->proposal->pengusul->name, route: route('laporan-kegiatan.edit', encrypt($laporanKegiatan->proposal->id)));
             $response = $notifikasi->sendMessage($noHp, $message, 'Ketua Pelaksana', 'Ditolak');
 
             return $response;
@@ -123,9 +124,9 @@ class ApprovalProposalController extends Controller
         $this->validateApprovalRequest($request);
         try {
             DB::beginTransaction();
-            $data = Proposal::with([
-                'mahasiswa',
-                'pengusul' => function ($q) {
+            $data = LaporanKegiatan::with([
+                'proposal.ketua:id,name,no_hp',
+                'proposal.pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
             ])
@@ -133,21 +134,22 @@ class ApprovalProposalController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsApproveable($data);
-            $this->validateApprovalDosen($data);
 
-            $nonJurusan = $data->pengusul->is_non_jurusan == true;
+            $this->validateExistingDataReturnException($data);
+            $this->validateProposalIsApproveable($data, null, 'laporan kegiatan');
+            $this->validateApprovalDosen($data, 'laporan kegiatan');
+
+            $nonJurusan = $data->proposal->pengusul->is_non_jurusan == true;
             $status = $nonJurusan ? 'Pending Layanan Mahasiswa' : 'Pending Kaprodi';
 
             if ($request->boolean('approve')) {
                 // jika dia buka jurusan, maka langsung ambil layanan mahasiswanya siapa
-                $jurusanId = $data->pengusul->jurusan_id;
+                $jurusanId = $data->proposal->pengusul->jurusan_id;
                 $reciever = $nonJurusan ? $this->getLayananMahasiswa() : $this->getKaprodi($jurusanId);
                 $nextVerifikator = $nonJurusan ? 'Layanan Mahasiswa' : 'Kaprodi';
-                $response = $this->accProposal($data, $status, 'Dosen Telah Menyetujui Proposal Anda!', $reciever, $nextVerifikator, 'Pengajuan');
+                $response = $this->accLaporanKegiatan($data, $status, 'Dosen Telah Menyetujui Laporan Kegiatan Anda!', $reciever, $nextVerifikator, 'Pengajuan');
             } else {
-                $response = $this->rejectProposal($data, 'Rejected', $request->reason, 'Dosen Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $response = $this->rejectLaporanKegiatan($data, 'Rejected', $request->reason, 'Dosen Telah Menolak Laporan Kegiatan Anda Anda dengan alasan ' . $request->reason);
             }
 
             DB::commit();
@@ -171,9 +173,9 @@ class ApprovalProposalController extends Controller
         $this->validateApprovalRequest($request);
         try {
             DB::beginTransaction();
-            $data = Proposal::with([
-                'mahasiswa',
-                'pengusul' => function ($q) {
+            $data = LaporanKegiatan::with([
+                'proposal.ketua:id,name,no_hp',
+                'proposal.pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
             ])
@@ -182,15 +184,15 @@ class ApprovalProposalController extends Controller
                 ->first();
 
             $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsApproveable($data);
-            $this->validateApprovalKaprodi($data);
+            $this->validateProposalIsApproveable($data, null, 'laporan kegiatan');
+            $this->validateApprovalKaprodi($data, 'laporan kegiatan');
 
             if ($request->boolean('approve')) {
                 // $reciever = $this->getKepalaBagianMinatBakat();
                 $reciever = $this->getMinatBakat();
-                $response =  $this->accProposal($data, 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Proposal Anda!', $reciever, 'Akademik Minat dan Bakat', 'Pengajuan');
+                $response =  $this->accLaporanKegiatan($data, 'Pending Minat dan Bakat', 'Kaprodi Telah Menyetujui Laporan Kegiatan Anda!', $reciever, 'Akademik Minat dan Bakat', 'Pengajuan');
             } else {
-                $response =  $this->rejectProposal($data, 'Rejected', $request->reason, 'Kaprodi Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $response =  $this->rejectLaporanKegiatan($data, 'Rejected', $request->reason, 'Kaprodi Telah Menolak Pengajuan Laporan Kegiatan Anda dengan alasan ' . $request->reason);
             }
 
             DB::commit();
@@ -214,9 +216,9 @@ class ApprovalProposalController extends Controller
         $this->validateApprovalRequest($request);
         try {
             DB::beginTransaction();
-            $data = Proposal::with([
-                'mahasiswa',
-                'pengusul' => function ($q) {
+            $data = LaporanKegiatan::with([
+                'proposal.ketua:id,name,no_hp',
+                'proposal.pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
             ])
@@ -225,14 +227,14 @@ class ApprovalProposalController extends Controller
                 ->first();
 
             $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsApproveable($data);
+            $this->validateProposalIsApproveable($data, null, 'laporan kegiatan');
             $this->validateApprovalKetuaMinatBakat($data);
 
             if ($request->boolean('approve')) {
                 $reciever = $this->getLayananMahasiswa();
-                $response = $this->accProposal($data, 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Proposal Anda!', $reciever, 'Layanan Mahasiswa', 'Pengajuan');
+                $response = $this->accLaporanKegiatan($data, 'Pending Layanan Mahasiswa', 'Kepala Bagian Minat dan Bakat Telah Menyetujui Laporan Kegiatan Anda!', $reciever, 'Layanan Mahasiswa', 'Pengajuan');
             } else {
-                $response =  $this->rejectProposal($data, 'Rejected', $request->reason, 'Kepala Bagian Minat dan Bakat Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $response =  $this->rejectLaporanKegiatan($data, 'Rejected', $request->reason, 'Kepala Bagian Minat dan Bakat Telah Menolak Pengajuan Laporan Kegiatan Anda dengan alasan ' . $request->reason);
             }
 
             DB::commit();
@@ -255,10 +257,9 @@ class ApprovalProposalController extends Controller
     {
         $this->validateApprovalRequest($request);
         try {
-            DB::beginTransaction();
-            $data = Proposal::with([
-                'mahasiswa',
-                'pengusul' => function ($q) {
+            $data = LaporanKegiatan::with([
+                'proposal.ketua:id,name,no_hp',
+                'proposal.pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
             ])
@@ -267,14 +268,14 @@ class ApprovalProposalController extends Controller
                 ->first();
 
             $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsApproveable($data);
+            $this->validateProposalIsApproveable($data, null, 'laporan kegiatan');
             $this->validateApprovalLayananMahasiswa($data);
 
             if ($request->boolean('approve')) {
                 $reciever = $this->getWakilRektor1();
-                $response = $this->accProposal($data, 'Pending Wakil Rektor 1', 'Layanan Mahasiswa Menyetujui Proposal Anda!', $reciever, 'Wakil Rektor 1', 'Pengajuan');
+                $response = $this->accLaporanKegiatan($data, 'Pending Wakil Rektor 1', 'Layanan Mahasiswa Menyetujui Laporan Kegiatan Anda!', $reciever, 'Wakil Rektor 1', 'Pengajuan');
             } else {
-                $response =  $this->rejectProposal($data, 'Rejected', $request->reason, 'Layanan Mahasiswa Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $response =  $this->rejectLaporanKegiatan($data, 'Rejected', $request->reason, 'Layanan Mahasiswa Telah Menolak Pengajuan Laporan Kegiatan Anda dengan alasan ' . $request->reason);
             }
 
             DB::commit();
@@ -298,9 +299,9 @@ class ApprovalProposalController extends Controller
         $this->validateApprovalRequest($request);
         try {
             DB::beginTransaction();
-            $data = Proposal::with([
-                'ketua:id,name,no_hp',
-                'pengusul' => function ($q) {
+            $data = LaporanKegiatan::with([
+                'proposal.ketua:id,name,no_hp',
+                'proposal.pengusul' => function ($q) {
                     $q->lockForUpdate();
                 },
             ])
@@ -309,15 +310,14 @@ class ApprovalProposalController extends Controller
                 ->first();
 
             $this->validateExistingDataReturnException($data);
-            $this->validateProposalIsApproveable($data);
+            $this->validateProposalIsApproveable($data, null, 'laporan kegiatan');
             $this->validateApprovalWakilRektor($data);
 
             if ($request->boolean('approve')) {
-                $reciever = $data->ketua;
-                $response =  $this->accProposal($data, 'Accepted', 'Wakil Rektor 1 Menyetujui Proposal Anda!', $reciever, 'Ketua Pelaksana', 'Diterima');
-                $this->createLaporanKegiatan($data);
+                $reciever = $data->proposal->ketua;
+                $response =  $this->accLaporanKegiatan($data, 'Accepted', 'Wakil Rektor 1 Menyetujui Laporan Kegiatan Anda!', $reciever, 'Ketua Pelaksana', 'Diterima');
             } else {
-                $response =  $this->rejectProposal($data, 'Rejected', $request->reason, 'Wakil Rektor 1 Telah Menolak Pengajuan Proposal Anda dengan alasan ' . $request->reason);
+                $response =  $this->rejectLaporanKegiatan($data, 'Rejected', $request->reason, 'Wakil Rektor 1 Telah Menolak Pengajuan Laporan Kegiatan Anda dengan alasan ' . $request->reason);
             }
 
             DB::commit();
@@ -336,17 +336,50 @@ class ApprovalProposalController extends Controller
         }
     }
 
-    public function createLaporanKegiatan($proposal)
+    public function getUrlApproval($laporanKegiatan)
     {
-        try {
-            LaporanKegiatan::updateOrCreate([
-                'proposal_id' => $proposal->id,
-            ], [
-                'status' => 'Draft',
-                'available_at' => $proposal->end_date,
-            ]);
-        } catch (Throwable $e) {
-            throw new Exception($this->getErrorMessage($e));
+        if ($laporanKegiatan->status == 'Pending Dosen') {
+            return route('approval-laporan-kegiatan.approvalDosen');
+        } elseif ($laporanKegiatan->status == 'Pending Kaprodi') {
+            return route('approval-laporan-kegiatan.approvalKaprodi');
+        } elseif ($laporanKegiatan->status == 'Pending Minat dan Bakat') {
+            return route('approval-laporan-kegiatan.approvalMinatBakat');
+        } elseif ($laporanKegiatan->status == 'Pending Layanan Mahasiswa') {
+            return route('approval-laporan-kegiatan.approvalLayananMahasiswa');
+        } elseif ($laporanKegiatan->status == 'Pending Wakil Rektor 1') {
+            return route('approval-laporan-kegiatan.approvalWakilRektor');
+        } else {
+            return null;
+        }
+    }
+
+    public function getApprovalButton($data)
+    {
+        $admin = Gate::allows('admin');
+        $user = Auth::user()->load('userable.jurusan');
+
+        $dosen = $this->validateUserIsDosen($user);
+        $ketuaMinatDanBakat = $this->validateUserIsKetuaMinatBakat($user);
+        $layananMahasiswa = $this->validateUserIsLayananMahasiswa($user);
+        $wakilRektor = $this->validateUserIsWakilRektor1($user);
+        $kaprodi = $this->validateUserIsKaprodi($user);
+        $dosenPj = $dosen ? $data->proposal->dosen_id == Auth::user()->userable_id : false;
+
+
+        if (($data->status == 'Rejected' || $data->status == 'Draft' || $data->status == 'Accepted') && ($dosenPj || $admin)) {
+            return false;
+        } elseif ($data->status == 'Pending Dosen' && ($dosenPj || $admin)) {
+            return true;
+        } elseif ($data->status == 'Pending Kaprodi' && ($kaprodi || $admin)) {
+            return true;
+        } elseif ($data->status == 'Pending Minat dan Bakat' && ($ketuaMinatDanBakat || $admin)) {
+            return true;
+        } elseif ($data->status == 'Pending Layanan Mahasiswa' && ($layananMahasiswa || $admin)) {
+            return true;
+        } elseif ($data->status == 'Pending Wakil Rektor 1' && ($wakilRektor || $admin)) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -363,22 +396,24 @@ class ApprovalProposalController extends Controller
         $kaprodi = $this->validateUserIsKaprodi($user);
 
         if ($admin || $dosen) {
-            $data = Proposal::with([
-                'pengusul:id,jurusan_id,name',
-                'pengusul.jurusan:name',
-                'ketua:id,name,jurusan_id,npm',
-                'ketua.jurusan:id,name',
-                'dosen:id,name',
+
+            $data = LaporanKegiatan::with([
+                'proposal:id,name,no_proposal,unit_id,mahasiswa_id,dosen_id',
+                'proposal.pengusul:id,jurusan_id,name',
+                'proposal.pengusul.jurusan:name',
+                'proposal.ketua:id,name,jurusan_id,npm',
+                'proposal.ketua.jurusan:id,name',
+                'proposal.dosen:id,name',
             ])
                 ->when($admin == false, function ($q) use ($dosen, $user, $ketuaMinatDanBakat, $layananMahasiswa, $wakilRektor, $kaprodi) {
                     $q->when($dosen == true, function ($q) use ($user) {
-                        $q->where('dosen_id', $user->userable_id)
+                        $q->whereRelation('proposal', 'dosen_id', $user->userable_id)
                             ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted']);
                     })
                         ->when($kaprodi == true, function ($q) use ($user) {
                             $q->orWhere(function ($q) use ($user) {
                                 $q->where('status', 'Pending Kaprodi')
-                                    ->whereRelation('pengusul', 'jurusan_id', $user->userable->jurusan_id); // krn jika dia itu tidak memiliki jurusan atau eksul, dia tidak perlu acc kaprodi
+                                    ->whereRelation('proposal.pengusul', 'jurusan_id', $user->userable->jurusan_id); // krn jika dia itu tidak memiliki jurusan atau eksul, dia tidak perlu acc kaprodi
                             });
                         })
                         ->when($ketuaMinatDanBakat == true, function ($q) {
@@ -393,13 +428,13 @@ class ApprovalProposalController extends Controller
                 })
                 ->when($request->search !== null, function ($query) use ($request) {
                     $query->where(function ($item) use ($request) {
-                        $item->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
-                            ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
-                            ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
+                        $item->whereRelation('proposal', 'name', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('proposal', 'no_proposal', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('proposal.pengusul', 'name', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('proposal.pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
                     });
                 })
-                ->select('id', 'unit_id', 'mahasiswa_id', 'dosen_id', 'no_proposal', 'status', 'name')
+                ->select('id', 'proposal_id', 'status')
                 ->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
                 ->orderBy('id', 'desc')
                 ->paginate($request->itemDisplay ?? 10);
@@ -411,15 +446,16 @@ class ApprovalProposalController extends Controller
         $dataFormated = $data->map(function ($item) use ($admin) {
             return [
                 'id' => encrypt($item->id),
-                'name' => $item->name,
-                'ketua' => $item->ketua->name,
-                'npm_ketua' => $item->ketua->npm,
-                'no_proposal' => $item->no_proposal,
-                'organisasi' => $item->pengusul->name,
-                'jurusan' => $item->pengusul->jurusan  ?  $item->pengusul->jurusan->name : $item->ketua->jurusan->name,
                 'status' => $item->status,
+                'name' => $item->proposal->name,
+                'dosen' => $item->proposal->dosen->name,
+                'ketua' => $item->proposal->ketua->name,
+                'npm_ketua' => $item->proposal->ketua->npm,
+                'name' => $item->proposal->name,
+                'no_proposal' => $item->proposal->no_proposal,
+                'organisasi' => $item->proposal->pengusul->name,
+                'jurusan' => $item->proposal->pengusul->jurusan  ?  $item->proposal->pengusul->jurusan->name : $item->proposal->ketua->jurusan->name,
                 'admin' => $admin,
-                'dosen' => $item->dosen->name,
                 'detail' => !in_array($item->status, ['draft', 'Draft']),
             ];
         });
@@ -430,52 +466,5 @@ class ApprovalProposalController extends Controller
             'currentPage' => $data->currentPage(),
             'totalPage' => $data->lastPage(),
         ], 200);
-    }
-
-    public function getUrlApproval($proposal)
-    {
-        if ($proposal->status == 'Pending Dosen') {
-            return route('approval-proposal.approvalDosen');
-        } elseif ($proposal->status == 'Pending Kaprodi') {
-            return route('approval-proposal.approvalKaprodi');
-        } elseif ($proposal->status == 'Pending Minat dan Bakat') {
-            return route('approval-proposal.approvalMinatBakat');
-        } elseif ($proposal->status == 'Pending Layanan Mahasiswa') {
-            return route('approval-proposal.approvalLayananMahasiswa');
-        } elseif ($proposal->status == 'Pending Wakil Rektor 1') {
-            return route('approval-proposal.approvalWakilRektor');
-        } else {
-            return null;
-        }
-    }
-
-    public function getApprovalButton($proposal)
-    {
-        $admin = Gate::allows('admin');
-        $user = Auth::user()->load('userable.jurusan');
-
-        $dosen = $this->validateUserIsDosen($user);
-        $ketuaMinatDanBakat = $this->validateUserIsKetuaMinatBakat($user);
-        $layananMahasiswa = $this->validateUserIsLayananMahasiswa($user);
-        $wakilRektor = $this->validateUserIsWakilRektor1($user);
-        $kaprodi = $this->validateUserIsKaprodi($user);
-        $dosenPj = $dosen ? $proposal->dosen_id == Auth::user()->userable_id : false;
-
-
-        if (($proposal->status == 'Rejected' || $proposal->status == 'Draft' || $proposal->status == 'Accepted') && ($dosenPj || $admin)) {
-            return false;
-        } elseif ($proposal->status == 'Pending Dosen' && ($dosenPj || $admin)) {
-            return true;
-        } elseif ($proposal->status == 'Pending Kaprodi' && ($kaprodi || $admin)) {
-            return true;
-        } elseif ($proposal->status == 'Pending Minat dan Bakat' && ($ketuaMinatDanBakat || $admin)) {
-            return true;
-        } elseif ($proposal->status == 'Pending Layanan Mahasiswa' && ($layananMahasiswa || $admin)) {
-            return true;
-        } elseif ($proposal->status == 'Pending Wakil Rektor 1' && ($wakilRektor || $admin)) {
-            return true;
-        } else {
-            return false;
-        }
     }
 }

@@ -4,11 +4,20 @@
 
 @section('title', config('app.name') . ' | Validasi Proposal')
 
+@push('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/fancybox/fancybox.css" />
+    <style>
+        .fancy-box {
+            cursor: pointer;
+        }
+    </style>
+@endpush
+
 @section('content')
 
     <div class="card px-4 py-2">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-3">Detail Data Proposal {{ $data['no_proposal'] }} </h5>
+            <h5 class="mb-3">Detail Laporan Kegiatan {{ $data['name'] }} </h5>
             <span class="badge bg-info">{{ $data['status'] }}</span>
         </div>
 
@@ -20,7 +29,7 @@
                 <input type="text" class="form-control" placeholder="Nama Proposal" name="name" id="name"
                     value="{{ $data['name'] }}" readonly>
             </div>
-            <div class="col-md-4 mb-2">
+            {{-- <div class="col-md-4 mb-2">
                 Organisasi
             </div>
             <div class="col-md-8 mb-2">
@@ -39,13 +48,30 @@
             </div>
             <div class="col-md-8 mb-2">
                 <textarea class="form-control" name="desc" id="desc" cols="30" rows="10" readonly>{{ $data['desc'] }}</textarea>
-            </div>
+            </div> --}}
             <div class="col-md-4 mb-2">
                 File
             </div>
             <div class="col-md-8 mb-2">
-                <a href="{{ $data['file_url'] }}" target="_blank" class="text-primary text-decoration-underline"><i
-                        class="bi bi-file-earmark"></i></i>File</a>
+                @if ($data['file'] != null)
+                    <a href="{{ $data['file'] }}" target="_blank" class="text-primary text-decoration-underline"><i
+                            class="bi bi-file-earmark"></i></i>File</a>
+                @else
+                    == TIDAK FILE LAPORAN KEGIATAN YANG DI UPLOAD ==
+                @endif
+
+            </div>
+            <div class="col-md-4 mb-2">
+                File Bukti Kehadiran
+            </div>
+            <div class="col-md-8 mb-2">
+                @if ($data['file_bukti_kehadiran'] != null)
+                    <a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
+                        class="text-primary text-decoration-underline"><i class="bi bi-file-earmark"></i></i>File</a>
+                @else
+                    == TIDAK FILE LAPORAN KEGIATAN YANG DI UPLOAD ==
+                @endif
+
             </div>
             <div class="col-md-4 mb-2">
                 List Mahasiswa
@@ -66,16 +92,29 @@
                 </ul>
             </div>
             <div class="col-md-4 mb-2">
-                Tanggal
+                File Bukti Dukung
             </div>
-            <div class="col-md-4 mb-2">
-                <input class="form-control flatpickr" type="text" id="start_date" name="start_date"
-                    value="{{ $data['start_date'] }}" readonly>
+            <div class="col-md-8 mb-2">
+
+                @forelse ($data['bukti_dukung'] as $item)
+                    <a data-fancybox="gallery" data-src="{{ $item['file'] }}" class='fancy-box'>
+                        <img src="{{ $item['file'] }}" width="200" height="150" alt="" />
+                    </a>
+                @empty
+                    == TIDAK ADA BUKTI DUKUNG YANG DI UPLOAD ==
+                @endforelse
+
+
+                {{-- <a data-fancybox="gallery" data-src="https://lipsum.app/id/3/1600x1200">
+                    <img src="https://lipsum.app/id/3/200x150" width="200" height="150" alt="" />
+                </a>
+
+                <a data-fancybox="gallery" data-src="https://lipsum.app/id/4/1600x1200">
+                    <img src="https://lipsum.app/id/4/200x150" width="200" height="150" alt="" />
+                </a> --}}
             </div>
-            <div class="col-md-4 mb-2">
-                <input class="form-control flatpickr" type="text" id="start_date" name="start_date"
-                    value="{{ $data['end_date'] }}" readonly>
-            </div>
+            {{-- <a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
+                    class="text-primary text-decoration-underline"><i class="bi bi-file-earmark"></i></i>File</a> --}}
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
@@ -108,14 +147,21 @@
         </div>
     </div>
 
+    </div>
+
 @endsection
 
 @push('js')
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/fancybox/fancybox.umd.js"></script>
     <script>
         (function() {
+            Fancybox.bind("[data-fancybox]", {
+                // Your custom options
+            });
             const id = @json($data['id']);
             const approvalUrl = @json($data['approvalUrl']);
             $(document).ready(function() {
+
                 $('#btn-setujui').click(function(e) {
                     e.preventDefault();
                     const button = $(this);
@@ -143,10 +189,10 @@
                                     localStorage.setItem('flash_type',
                                         'success');
                                     window.location.href =
-                                        '{{ route('approval-proposal.index') }}';
+                                        '{{ route('approval-laporan-kegiatan.index') }}';
                                 },
                                 error: function(xhr, status, error) {
-                                    flasher.error(xhr.responseJSON.message);
+                                    flasher.error(xhr.responseJSON.message)
                                     button.removeAttr('disabled');
                                 }
                             });
