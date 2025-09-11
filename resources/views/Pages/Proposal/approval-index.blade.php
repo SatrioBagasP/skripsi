@@ -45,8 +45,6 @@
                             <td class='align-middle text-center text-sm'> ${item.dosen} </td>
                             <td class='align-middle text-center text-sm'> ${item.organisasi} </td>
                             <td class='align-middle text-center text-sm'> ${item.jurusan} </td>
-                            ${item.admin == true ? `<td class='text-sm'>${item.dosen}</td>` : ''}
-                            ${item.admin == true ? `<td class='text-sm'>${item.jurusan}</td>` : ''}
                             <td class='align-middle text-center text-sm'>
                                 <span class="badge ${statusClass}">${item.status}</span>
                             </td>

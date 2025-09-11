@@ -116,9 +116,34 @@
             const id = @json($data['id']);
             const approvalUrl = @json($data['approvalUrl']);
             $(document).ready(function() {
+
+                function setLoadingState(isLoading) {
+                    const buttons = $('#btn-setujui, #btn-tolak');
+
+                    if (isLoading) {
+                        buttons.attr('disabled', true).each(function() {
+                            const btn = $(this);
+                            if (!btn.data('original-text')) {
+                                btn.data('original-text', btn.html());
+                            }
+                            btn.html(
+                                `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                 Loading...`
+                            );
+                        });
+                    } else {
+                        buttons.removeAttr('disabled').each(function() {
+                            const btn = $(this);
+                            if (btn.data('original-text')) {
+                                btn.html(btn.data('original-text'));
+                                btn.removeData('original-text');
+                            }
+                        });
+                    }
+                }
+
                 $('#btn-setujui').click(function(e) {
                     e.preventDefault();
-                    const button = $(this);
                     Swal.fire({
                         title: 'Setujui Proposal?',
                         icon: 'warning',
@@ -128,26 +153,25 @@
                         confirmButtonText: 'Ya, Setujui!'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            button.attr('disabled', true);
+                            setLoadingState(true);
                             $.ajax({
                                 type: "POST",
                                 url: approvalUrl,
                                 contentType: "application/json",
                                 data: JSON.stringify({
                                     id: id,
-                                    approve: true,
+                                    approve: true
                                 }),
                                 success: function(response) {
                                     localStorage.setItem('flash_message', response
                                         .message);
-                                    localStorage.setItem('flash_type',
-                                        'success');
+                                    localStorage.setItem('flash_type', 'success');
                                     window.location.href =
                                         '{{ route('approval-proposal.index') }}';
                                 },
-                                error: function(xhr, status, error) {
+                                error: function(xhr) {
                                     flasher.error(xhr.responseJSON.message);
-                                    button.removeAttr('disabled');
+                                    setLoadingState(false);
                                 }
                             });
                         }
@@ -156,7 +180,6 @@
 
                 $('#btn-tolak').click(function(e) {
                     e.preventDefault();
-                    const button = $(this);
                     Swal.fire({
                         title: 'Tolak Proposal?',
                         input: "text",
@@ -171,7 +194,7 @@
                         confirmButtonText: 'Ya, tolak!'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            button.attr('disabled', true);
+                            setLoadingState(true);
                             $.ajax({
                                 type: "POST",
                                 url: approvalUrl,
@@ -179,20 +202,18 @@
                                 data: JSON.stringify({
                                     id: id,
                                     approve: false,
-                                    reason: result.value,
+                                    reason: result.value
                                 }),
                                 success: function(response) {
                                     localStorage.setItem('flash_message', response
                                         .message);
-                                    localStorage.setItem('flash_type',
-                                        'success');
-
+                                    localStorage.setItem('flash_type', 'success');
                                     window.location.href =
                                         '{{ route('approval-proposal.index') }}';
                                 },
-                                error: function(xhr, status, error) {
-                                    flasher.error(xhr.responseJSON.message)
-                                    button.removeAttr('disabled');
+                                error: function(xhr) {
+                                    flasher.error(xhr.responseJSON.message);
+                                    setLoadingState(false);
                                 }
                             });
                         }
