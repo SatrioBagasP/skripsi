@@ -106,12 +106,10 @@
 
                 $(document).on('click', '.delete', function() {
                     const button = $(this);
-                    button.attr('disabled', true);
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
                     if (data.delete == true) {
-
                         Swal.fire({
                             icon: 'question',
                             title: 'Apakah Anda Yakin?',
@@ -123,6 +121,7 @@
                             cancelButtonText: 'Batal',
                         }).then((result) => {
                             if (result.isConfirmed) {
+                                setButtonLoading(button, true, 'Menghapus...');
                                 $.ajax({
                                     type: "POST",
                                     url: "{{ route('proposal.delete') }}",
@@ -135,13 +134,10 @@
                                     },
                                     error: function(xhr, status, error) {
                                         flasher.error(xhr.responseJSON.message);
-                                        button.attr('disabled', false);
+                                        setButtonLoading(button, false);
                                     }
                                 });
-                            } else {
-                                button.attr('disabled', false);
                             }
-
                         })
                     }
                 });
@@ -153,6 +149,7 @@
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
                     if (data.pengajuan == true) {
+                        setButtonLoading(button, true, 'Mengajukan...');
                         $.ajax({
                             type: "POST",
                             url: "{{ route('proposal.pengajuan') }}",
@@ -165,7 +162,7 @@
                             },
                             error: function(xhr, status, error) {
                                 flasher.error(xhr.responseJSON.message);
-                                button.attr('disabled', false);
+                                setButtonLoading(button, false);
                             }
                         });
                     }

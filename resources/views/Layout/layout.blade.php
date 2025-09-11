@@ -224,6 +224,22 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@flasher/flasher@1.2.4/dist/flasher.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        function setButtonLoading(button, isLoading, loadingText = 'Loading...') {
+            if (isLoading) {
+                if (!button.data('original-text')) {
+                    button.data('original-text', button.html());
+                }
+                button.attr('disabled', true).html(`
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        `);
+            } else {
+                if (button.data('original-text')) {
+                    button.html(button.data('original-text'));
+                    button.removeData('original-text');
+                }
+                button.attr('disabled', false);
+            }
+        }
         $(document).ready(function() {
             $.ajaxSetup({
                 headers: {

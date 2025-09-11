@@ -123,7 +123,7 @@
                 }
 
                 function submitForm(button, type) {
-                    button.attr('disabled', true);
+                    setButtonLoading(button, true);
                     let route = ''
                     if (type == 'store') {
                         route = '{{ route('master.dosen.store') }}'
@@ -136,7 +136,7 @@
                         data: dataSet,
                         success: function(response) {
                             flasher.success(response.message);
-                            button.attr('disabled', false);
+                            setButtonLoading(button, false);
                             $('#sidebar-form').removeClass('show');
                             table.reload();
                         },
@@ -149,7 +149,7 @@
                                 $('#' + key).addClass('is-invalid');
                             });
                             flasher.error(xhr.responseJSON.message);
-                            button.attr('disabled', false);
+                            setButtonLoading(button, false);
                         }
                     });
                 }

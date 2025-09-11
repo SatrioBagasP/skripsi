@@ -117,7 +117,7 @@
                 }
 
                 function submitForm(button, type) {
-                    button.attr('disabled', true);
+                    setButtonLoading(button, true);
                     let route = ''
                     if (type == 'store') {
                         route = '{{ route('master.akademik.store') }}'
@@ -130,8 +130,8 @@
                         data: dataSet,
                         success: function(response) {
                             flasher.success(response.message);
-                            button.attr('disabled', false);
                             $('#sidebar-form').removeClass('show');
+                            setButtonLoading(button, false);
                             table.reload();
                         },
                         error: function(xhr, status, error) {
@@ -143,7 +143,7 @@
                                 $('#' + key).addClass('is-invalid');
                             });
                             flasher.error(xhr.responseJSON.message);
-                            button.attr('disabled', false);
+                            setButtonLoading(button, false);
                         }
                     });
                 }

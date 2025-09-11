@@ -92,11 +92,11 @@
 
                 $(document).on('click', '.pengajuan', function() {
                     const button = $(this);
-                    button.attr('disabled', true);
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
                     if (data.pengajuan == true) {
+                        setButtonLoading(button, true, 'Mengajukan...');
                         $.ajax({
                             type: "POST",
                             url: "{{ route('laporan-kegiatan.pengajuan') }}",
@@ -109,7 +109,7 @@
                             },
                             error: function(xhr, status, error) {
                                 flasher.error(xhr.responseJSON.message);
-                                button.attr('disabled', false);
+                                  setButtonLoading(button, false);
                             }
                         });
                     }

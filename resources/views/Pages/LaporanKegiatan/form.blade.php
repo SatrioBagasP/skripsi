@@ -197,7 +197,8 @@
                         </button>
                     </div>
 
-                    <input type="file" id="fileBuktiDukung" class="file-input file_bukti_dukung" data-index='0' accept=".png, .jpg, .jpeg">
+                    <input type="file" id="fileBuktiDukung" class="file-input file_bukti_dukung" data-index='0'
+                        accept=".png, .jpg, .jpeg">
                     <label for="fileBuktiDukung" class="file-label">
                         <i class="bi bi-file-earmark-arrow-up file-icon"></i>
                         <span class="fw-medium">Upload File</span>
@@ -394,7 +395,6 @@
                     e.preventDefault();
                     e.preventDefault();
                     const button = $(this);
-                    // button.attr('disabled', true);
 
                     let formData = new FormData();
 
@@ -407,6 +407,7 @@
                         formData.append(`file_bukti_dukung[${index}]`, file);
                     });
                     formData.append('id', data.id);
+                    setButtonLoading(button, true, 'Menyimpan...');
                     $.ajax({
                         type: "POST",
                         url: "{{ route('laporan-kegiatan.update') }}",
@@ -430,7 +431,7 @@
                                 $('#' + baseKey + 'Error').text(value[0]).show();
                                 $('#' + baseKey).addClass('is-invalid');
                             });
-                            button.attr('disabled', false);
+                            setButtonLoading(button, false);
                         }
                     });
 
@@ -441,7 +442,7 @@
                     const button = $(this);
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
-                    button.attr('disabled', true);
+                    setButtonLoading(button, true, 'Menghapus...');
                     $.ajax({
                         type: "POST",
                         url: '{{ route('laporan-kegiatan.delete-image') }}',
@@ -456,7 +457,7 @@
                         },
                         error: function(xhr, status, error) {
                             flasher.error(xhr.responseJSON.message);
-                            button.attr('disabled', false);
+                                setButtonLoading(button, false);
                         }
                     });
                 });

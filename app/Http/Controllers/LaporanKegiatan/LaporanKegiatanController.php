@@ -101,12 +101,12 @@ class LaporanKegiatanController extends Controller
             'file_bukti_dukung.*.max'   => 'Ukuran file maksimal 2 MB per file pada bukti dukung',
 
         ]);
+        $file = null;
         try {
 
             $this->validateProposalOwnership($data->proposal);
             $this->validateProposalIsEditable($data, 'laporan kegiatan');
 
-            $file = null;
             $fileBuktiKehadiran = null;
             $fileBuktiDukung = [];
 

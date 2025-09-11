@@ -357,7 +357,7 @@
                             formData.append('mahasiswa_id[]', id);
                         });
                     }
-                    button.attr('disabled', true);
+                    setButtonLoading(button, true, 'Menyimpan...');
                     $.ajax({
                         type: "POST",
                         url: edit ? '{{ route('proposal.update') }}' :
@@ -382,7 +382,7 @@
                                 $('#' + key).addClass('is-invalid');
                             });
                             flasher.error(xhr.responseJSON.message);
-                            button.attr('disabled', false);
+                            setButtonLoading(button, false);
                         }
                     });
                 });

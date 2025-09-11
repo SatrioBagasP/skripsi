@@ -69,7 +69,7 @@
                     <a href="{{ $data['file_bukti_kehadiran'] }}" target="_blank"
                         class="text-primary text-decoration-underline"><i class="bi bi-file-earmark"></i></i>File</a>
                 @else
-                    == TIDAK FILE LAPORAN KEGIATAN YANG DI UPLOAD ==
+                    == TIDAK FILE BUKTI KEHADIRAN YANG DI UPLOAD ==
                 @endif
 
             </div>
