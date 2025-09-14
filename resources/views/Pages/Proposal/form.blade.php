@@ -250,7 +250,7 @@
                 } else {
                     $('#ruangan').attr('disabled', true);
                 }
-                console.log(dataSet.ruangan);
+
             }
             $(document).ready(function() {
                 $('.flatpickr-range').flatpickr({

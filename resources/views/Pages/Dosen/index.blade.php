@@ -92,7 +92,6 @@
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
                     dataSet.id = data.id;
-                    console.log(data);
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data.name).trigger('change');
                     $('#no_hp').val(data.no_hp).trigger('change');
