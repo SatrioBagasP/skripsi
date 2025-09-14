@@ -76,11 +76,27 @@
                 <input class="form-control flatpickr" type="text" id="start_date" name="start_date"
                     value="{{ $data['end_date'] }}" readonly>
             </div>
+            <div class="col-md-4 mb-2">
+                Ruangan
+            </div>
+            <div class="col-md-8 mb-2">
+                <ul class="row list">
+                    @foreach ($data['ruangan'] as $ruangan)
+                        <li class="col-3 mb-2" style='margin-right: 10px' class='text-sm'><span
+                                class='text-sm'>{{ $ruangan->name }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
                 @if ($data['approvalBtn'])
                     <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('approval-proposal.index') }}"
+                            class="btn fixed-plugin-button mt-2 btn-secondary">
+                            Kembali
+                        </a>
                         @include('Component.button', [
                             'class' => 'btn-danger mt-2',
                             'id' => 'btn-tolak',

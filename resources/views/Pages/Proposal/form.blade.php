@@ -174,10 +174,38 @@
                     <div class="invalid-feedback" id="range_dateError"></div>
                 </div>
             </div>
+            <div class="col-md-6">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="need_ruangan" name="need_ruangan">
+                    <label class="form-check-label">Butuh Ruangan?</label>
+                </div>
+                <small class="text-muted d-block mt-1">
+                    Pilih jadwal terlebih dahulu untuk menampilkan ruangan.
+                </small>
+                <div class="mb-3" id="input-ruangan">
+                    @include('Component.select', [
+                        'name' => 'ruangan',
+                        'id' => 'ruangan',
+                        'disabled' => true,
+                        'data' => [],
+                        'multiple' => true,
+                    ])
+                    <div id="ruangan-loading" class="text-muted small mt-1" style="display:none;">
+                        <span class="spinner-border spinner-border-sm"></span> Loading data...
+                    </div>
+                    <small class="text-muted d-block">
+                        NB: Ruangan dengan Proposal yang masih berstatus <b>Draft</b> atau <b>Ditolak</b> tetap bisa
+                        dipinjam organisasi lain.
+                    </small>
+                </div>
+            </div>
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
-                <div class="d-flex justify-content-end">
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="{{ route('proposal.index') }}" class="btn fixed-plugin-button mt-2 btn-secondary">
+                        Kembali
+                    </a>
                     @include('Component.button', [
                         'class' => 'fixed-plugin-button mt-2',
                         'id' => 'btn-submit',
@@ -192,14 +220,13 @@
 
 @push('js')
     <script>
-        $('.select2').select2({
-            placeholder: '-- Pilih Data --'
-        });
+        $('.select2').select2();
         (function() {
             let firstRender = true;
             let edit = @json($edit ?? false);
             let dataSet = {
                 selected_mahasiswa: [],
+                ruangan: [],
             };
             if (edit) {
                 dataSet = @json($data ?? null);
@@ -209,6 +236,7 @@
                     }
                 });
                 $('#is_harian').prop('checked', dataSet.is_harian == 1);
+                $('#need_ruangan').prop('checked', dataSet.need_ruangan == 1);
                 if (dataSet.is_harian == 1) {
                     $('#yes-harian').show();
                     $('#not-harian').hide();
@@ -217,20 +245,30 @@
                     $('#not-harian').show();
                 }
 
-
-
+                if (dataSet.need_ruangan == 1) {
+                    $('#ruangan').removeAttr('disabled');
+                } else {
+                    $('#ruangan').attr('disabled', true);
+                }
+                console.log(dataSet.ruangan);
             }
             $(document).ready(function() {
                 $('.flatpickr-range').flatpickr({
                     mode: "range",
                     minDate: "today",
                     dateFormat: "Y-m-d",
+                    onClose: function(selectedDates, dateStr, instance) {
+                        $('#need_ruangan').trigger('change');
+                    }
                 });
                 $('.flatpickr').flatpickr({
                     enableTime: true,
                     dateFormat: "Y-m-d H:i",
                     minDate: "today",
                     time_24hr: true,
+                    onClose: function(selectedDates, dateStr, instance) {
+                        $('#need_ruangan').trigger('change');
+                    }
                 });
 
                 $('input[id], select[id], textarea[id], checkbox[id], file[id]').on('input change', function() {
@@ -258,7 +296,6 @@
 
                 $('#unit_id').trigger('change');
 
-
                 function appendKetuaPelaksana(organisasiId) {
                     $('#ketua_ids').empty();
                     $('#mahasiswa_id').empty();
@@ -282,7 +319,7 @@
                                 });
                             } else {
                                 ketuaOptions +=
-                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                                    '<option disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
                             }
 
                             if (response.data_dosen.length > 0) {
@@ -294,12 +331,12 @@
                                 });
                             } else {
                                 dosenOptions +=
-                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                                    '<option disabled selected>Tidak Ada Data Dosen Hubungi Admin Aplikasi!</option>';
                             }
 
                             if (response.data_mahasiswa.length > 0) {
                                 mahasiswaOptions +=
-                                    '<option value="" disabled>--Pilih Data--</option>';
+                                    '<option disabled>--Pilih Data--</option>';
                                 $.each(response.data_mahasiswa, function(index, value) {
                                     let isSelected = dataSet.selected_mahasiswa.some(v =>
                                         v == value.value)
@@ -308,7 +345,7 @@
                                 });
                             } else {
                                 mahasiswaOptions +=
-                                    '<option value="" disabled selected>Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
+                                    '<option disabled >Tidak Ada Data Mahasiswa Hubungi Admin Aplikasi!</option>';
                             }
 
                             $('#ketua_ids').removeAttr('disabled');
@@ -329,25 +366,90 @@
                     });
                 }
 
+                function getRuanganOption() {
+                    $('#ruangan').empty();
+                    $('#ruangan-loading').show();
+                    let isHarian = $('#is_harian').prop('checked')
+                    $.ajax({
+                        type: "GET",
+                        url: "{{ route('proposal.getRuanganOption') }}",
+                        data: {
+                            start_date: $('#start_date').val(),
+                            end_date: $('#end_date').val(),
+                            range_date: $('#range_date').val(),
+                            is_harian: isHarian,
+                            id: dataSet.id,
+                        },
+                        success: function(response) {
+                            var ruanganOptions = '';
+                            if (response.data.length > 0) {
+                                ruanganOptions +=
+                                    '<option disabled>--Pilih Data--</option>';
+                                $.each(response.data, function(index, value) {
+                                    ruanganOptions +=
+                                        `<option value="${value.value}"}>${value.label}</option>`;
+                                });
+                            } else {
+                                ruanganOptions +=
+                                    '<option disabled >Tidak Ada Data Ruangan Silahkan Pilih Jadwal Lain!</option>';
+                            }
+                            $('#ruangan').html(ruanganOptions);
+                            $('#ruangan-loading').hide();
+                            $('#ruangan').val(dataSet.ruangan).trigger('change');
+                            firstRender = false;
+
+                        },
+                        error: function(xhr, status, error) {
+                            $('#ruangan-loading').hide();
+                            flasher.error(xhr.responseJSON.message);
+                        }
+                    });
+                }
+
                 $('#is_harian').change(function(e) {
                     e.preventDefault();
 
                     let isHarian = $(this).prop('checked')
                     if (isHarian) {
                         $('#yes-harian').show();
+                        $('#start_date').val('').trigger('change');
+                        $('#end_date').val('').trigger('change');
                         $('#not-harian').hide();
                     } else {
                         $('#yes-harian').hide();
                         $('#not-harian').show();
+                        $('#range_date').val('').trigger('change');
+                    }
+                    $('#need_ruangan').trigger('change');
+                });
+
+                $('#need_ruangan').change(function() {
+                    let needRuangan = $(this).prop('checked');
+                    let startDate = $('#start_date').val();
+                    let endDate = $('#end_date').val();
+                    let rangeDate = $('#range_date').val();
+                    if (!firstRender) {
+                        $('#ruangan').val('').trigger('change');
+                    }
+
+
+                    if (needRuangan && ((startDate != '' && endDate != '') || rangeDate != '')) {
+                        $('#ruangan').removeAttr('disabled');
+                        getRuanganOption();
+                    } else {
+                        $('#ruangan').attr('disabled', true);
                     }
                 });
+
+                $('#need_ruangan').trigger('change');
 
                 $('#btn-submit').click(function(e) {
                     e.preventDefault();
                     const button = $(this);
                     const formData = new FormData();
                     for (const key in dataSet) {
-                        if (dataSet[key] !== null && key !== 'mahasiswa_id') {
+                        // mengecualikan mahasiswa_id dan ruangan, krn dia array, agar nanti respon yagn diterima di backend itu array
+                        if (dataSet[key] !== '' && (key !== 'mahasiswa_id' || key !== 'ruangan')) {
                             formData.append(key, dataSet[key]);
                         }
                     }
@@ -355,6 +457,11 @@
                     if (Array.isArray(dataSet.mahasiswa_id)) {
                         dataSet.mahasiswa_id.forEach((id) => {
                             formData.append('mahasiswa_id[]', id);
+                        });
+                    }
+                    if (Array.isArray(dataSet.ruangan)) {
+                        dataSet.ruangan.forEach((id) => {
+                            formData.append('ruangan[]', id);
                         });
                     }
                     setButtonLoading(button, true, 'Menyimpan...');

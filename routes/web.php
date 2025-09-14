@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/all-option', 'getOption')->name('getOption');
+            Route::get('/get-ruangan-option', 'getRuanganOption')->name('getRuanganOption');
             Route::get('/create', 'create')->name('create');
             Route::get('/edit/{id}', 'edit')->name('edit');
             Route::post('/store', 'store')->name('store');

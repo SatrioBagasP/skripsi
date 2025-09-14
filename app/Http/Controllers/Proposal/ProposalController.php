@@ -32,11 +32,13 @@ use App\Traits\UnitKemahasiswaanValidation;
 use App\Http\Controllers\Helper\CrudController;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
+use App\Models\Ruangan;
+use App\Traits\RuanganValidation;
 
 class ProposalController extends Controller
 {
     // use ProposalRequestValidator;
-    use MahasiswaValidation, DosenValidation, UnitKemahasiswaanValidation, ProposalValidation, UserValidation;
+    use MahasiswaValidation, DosenValidation, UnitKemahasiswaanValidation, ProposalValidation, UserValidation, RuanganValidation;
 
     public function index()
     {
@@ -74,11 +76,50 @@ class ProposalController extends Controller
         }
     }
 
+    public function getRuanganOption(Request $request)
+    {
+        try {
+            [$startDate, $endDate] = $this->validateDate($request);
+
+            $availableRuangan = Ruangan::where(function ($query) use ($startDate, $endDate) {
+                $query->whereDoesntHave('proposal', function ($q) use ($startDate, $endDate) {
+                    $q->where(function ($query) use ($startDate, $endDate) {
+                        $query->whereNotIn('status', ['Draft', 'Rejected'])
+                            ->where('start_date', '<=', $endDate->copy()->endOfDay())
+                            ->where('end_date', '>=', $startDate);
+                    });
+                })->where('status', true);
+            })
+                ->when($request->id != null, function ($query) use ($request) {
+                    $query->orWhereHas('proposal', function ($q) use ($request) {
+                        $q->where('proposal.id', decrypt($request->id));
+                    });
+                })
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'value' => $item->id,
+                        'label' => $item->name,
+                    ];
+                });
+            return response()->json([
+                'status' => 200,
+                'data' => $availableRuangan,
+            ], 200);
+        } catch (Throwable $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $this->getErrorMessage($e),
+            ], 400);
+        }
+    }
+
     public function create()
     {
         $organisasiOption = $this->getOrganisasiOption();
+        $unitKemahasiswaan = $this->validateUserIsUnitKemahasiswaan(Auth::user());
 
-        if (Auth::user()->userable_type == UnitKemahasiswaan::class) {
+        if ($unitKemahasiswaan) {
             $organisasiOption = $organisasiOption->where('value', Auth::user()->userable_id)
                 ->map(function ($item) {
                     if ($item['value'] == Auth::user()->userable_id) {
@@ -101,6 +142,7 @@ class ProposalController extends Controller
             'start_date' => ['date', Rule::requiredIf(fn() => !$request->boolean('is_harian'))],
             'end_date' => ['date', Rule::requiredIf(fn() => !$request->boolean('is_harian'))],
             'mahasiswa_id' => 'required',
+            'ruangan' => 'required_if:need_ruangan,true',
             'range_date' => 'required_if:is_harian,true',
             'file' => ['required', File::types(['pdf'])->max(2 * 1024)],
         ], [
@@ -112,6 +154,7 @@ class ProposalController extends Controller
             'start_date.required_if' => 'Jadwal mulai wajib diisi',
             'end_date.required_if' => 'Jadwal berakhir wajib diisi',
             'range_date.required_if' => 'Jadwal wajib diisi',
+            'ruangan.required_if' => 'Ruangan wajib diisi',
             'mahasiswa_id.required' => 'Mahasiswa wajib dipilih',
             'file.required' => 'File proposal wajib diupload',
             'file.max' => 'Ukuran file maksimal 2MB.',
@@ -151,7 +194,11 @@ class ProposalController extends Controller
                 array_unshift($mahasiswaId, $ketuaId);
             }
 
+            $ruanganId = $request->boolean('need_ruangan') ? $request->ruangan : [];
+            $this->validateRuanganIsAvailable($ruanganId, $startDate, $endDate->copy()->endOfDay());
+
             $data->mahasiswa()->attach($mahasiswaId);
+            $data->ruangan()->attach($ruanganId);
             $this->storeLog($data, 'Menambah Proposal', 'Proposal');
 
             DB::commit();
@@ -214,6 +261,9 @@ class ProposalController extends Controller
             'dosen_id' => $data->dosen_id,
             'ketua_ids' => $data->mahasiswa_id,
             'alasan_tolak' => $data->alasan_tolak,
+            'ruangan' => $data->ruangan->pluck('id')
+                ->toArray(),
+            'need_ruangan' => $data->ruangan->isNotEmpty(),
             'selected_mahasiswa' => $data->mahasiswa->filter(function ($q) use ($data) {
                 return $q->id != $data->mahasiswa_id;
             })
@@ -251,7 +301,12 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $data = Proposal::where('id', decrypt($request->id))
+            $data = Proposal::with([
+                'ruangan' => function ($q) {
+                    $q->lockForUpdate();
+                }
+            ])
+                ->where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
 
@@ -284,7 +339,12 @@ class ProposalController extends Controller
             if (!in_array($ketuaId, $mahasiswaId)) {
                 array_unshift($mahasiswaId, $ketuaId);
             }
+
+            $ruanganId = $request->boolean('need_ruangan') ? $request->ruangan : [];
+            $this->validateRuanganIsAvailable($ruanganId, $startDate, $endDate->copy()->endOfDay());
+
             $data->mahasiswa()->sync($mahasiswaId);
+            $data->ruangan()->sync($ruanganId);
             $this->updateLog($data, 'Merubah Proposal', 'Proposal');
 
             if ($request->file('file')) {
@@ -340,11 +400,17 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
             $admin = Gate::allows('admin');
-            $data = Proposal::where('id', decrypt($request->id))
+            $data = Proposal::with([
+                'ruangan' => function ($q) {
+                    $q->lockForUpdate();
+                }
+            ])
+                ->where('id', decrypt($request->id))
                 ->lockForUpdate()
                 ->first();
             $this->validateExistingDataReturnException($data);
             $this->validateProposalIsEditable($data);
+            $this->validateRuanganIsAvailable($data->ruangan->pluck('id')->toArray(), $data->start_date, $data->end_date);
             $dosen = $this->validateDosenIsActive($data->dosen_id);
             $this->validateProposalOwnership($data);
             $noHp = $dosen ? $dosen->no_hp : 0;

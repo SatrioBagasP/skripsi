@@ -120,6 +120,9 @@
             <div class="col-md-12">
                 @if ($data['approvalBtn'])
                     <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('approval-laporan-kegiatan.index') }}" class="btn fixed-plugin-button mt-2 btn-secondary">
+                            Kembali
+                        </a>
                         @include('Component.button', [
                             'class' => 'btn-danger mt-2',
                             'id' => 'btn-tolak',

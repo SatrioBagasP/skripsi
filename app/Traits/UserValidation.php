@@ -4,8 +4,10 @@ namespace App\Traits;
 
 use Exception;
 use App\Models\User;
+use App\Models\Dosen;
 use App\Models\Jurusan;
 use App\Models\Akademik;
+use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 
 trait UserValidation
@@ -36,7 +38,7 @@ trait UserValidation
 
     public function validateUserIsUnitKemahasiswaan($user)
     {
-        if ($user->userable_type === 'App\\Models\\UnitKemahasiswaan') {
+        if ($user->userable_type == UnitKemahasiswaan::class ) {
             return true;
         } else {
             return false;
@@ -45,7 +47,7 @@ trait UserValidation
 
     public function validateUserIsDosen($user)
     {
-        if ($user->userable_type === 'App\\Models\\Dosen') {
+        if ($user->userable_type == Dosen::class ) {
             return true;
         } else {
             return false;

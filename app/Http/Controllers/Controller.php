@@ -9,6 +9,7 @@ use App\Models\Jabatan;
 use App\Models\Roles;
 use App\Models\Jurusan;
 use App\Models\Mahasiswa;
+use App\Models\Ruangan;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -154,6 +155,22 @@ abstract class Controller
 
         return $data;
     }
+
+    // function getRuanganOption()
+    // {
+    //     $data = [];
+
+    //     $data = Ruangan::where('status', true)
+    //         ->get()
+    //         ->map(function ($item) {
+    //             return [
+    //                 'value' => $item->id,
+    //                 'label' => $item->name,
+    //             ];
+    //         });
+
+    //     return $data;
+    // }
 
     function getKaprodi($jurusanId)
     {

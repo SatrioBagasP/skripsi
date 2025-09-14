@@ -252,7 +252,10 @@
         @endif
         <div class="row mt-2">
             <div class="col-md-12">
-                <div class="d-flex justify-content-end">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ route('laporan-kegiatan.index') }}" class="btn fixed-plugin-button mt-2 btn-secondary">
+                        Kembali
+                    </a>
                     @include('Component.button', [
                         'class' => 'fixed-plugin-button mt-2',
                         'id' => 'btn-submit',
@@ -457,7 +460,7 @@
                         },
                         error: function(xhr, status, error) {
                             flasher.error(xhr.responseJSON.message);
-                                setButtonLoading(button, false);
+                            setButtonLoading(button, false);
                         }
                     });
                 });

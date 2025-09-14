@@ -19,7 +19,7 @@ trait ProposalValidation
         if ($request->boolean('is_harian')) {
             $range = strpos($request->range_date, 'to');
             if ($range == false) {
-                throw new \Exception('Start - End Date tidak boleh satu hari saja!, jika harian, silahkan click checkbox harian');
+                throw new \Exception('Start - End Date tidak boleh satu hari saja!, jika 1 hari silahkan uncheck checkbox harian');
             }
             list($startDate, $endDate) = explode(' to ', $request->range_date);
             $startDate = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();

@@ -63,6 +63,7 @@ class ApprovalProposalController extends Controller
             'end_date' => $data->end_date,
             'status' => $data->status,
             'mahasiswa' => $data->mahasiswa,
+            'ruangan' => $data->ruangan,
             'approvalBtn' => $this->getApprovalButton($data),
             'approvalUrl' => $this->getUrlApproval($data),
         ];
