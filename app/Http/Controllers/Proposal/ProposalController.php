@@ -90,11 +90,11 @@ class ProposalController extends Controller
                     });
                 })->where('status', true);
             })
-                ->when($request->id != null, function ($query) use ($request) {
-                    $query->orWhereHas('proposal', function ($q) use ($request) {
-                        $q->where('proposal.id', decrypt($request->id));
-                    });
-                })
+                // ->when($request->id != null, function ($query) use ($request) {
+                //     $query->orWhereHas('proposal', function ($q) use ($request) {
+                //         $q->where('proposal.id', decrypt($request->id));
+                //     });
+                // })
                 ->get()
                 ->map(function ($item) {
                     return [
