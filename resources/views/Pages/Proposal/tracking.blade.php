@@ -1,4 +1,3 @@
-{{-- resources/views/tracking/partials/timeline.blade.php --}}
 @if ($logs->isEmpty())
     <div class="">Data tidak ditemukan. Periksa inputan anda kembali</div>
 @else
