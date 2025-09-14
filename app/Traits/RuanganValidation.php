@@ -18,7 +18,7 @@ trait RuanganValidation
             ->whereIn('id', $ruanganId)
             ->lockForUpdate()
             ->with(['proposal' => function ($q) use ($startDate, $endDate) {
-                $q->whereNotIn('status', ['Draft', 'Rejected'])
+                $q->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
                     ->where('start_date', '<=', $endDate)
                     ->where('end_date', '>=', $startDate);
             }])

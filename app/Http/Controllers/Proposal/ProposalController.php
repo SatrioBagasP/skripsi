@@ -84,7 +84,7 @@ class ProposalController extends Controller
             $availableRuangan = Ruangan::where(function ($query) use ($startDate, $endDate) {
                 $query->whereDoesntHave('proposal', function ($q) use ($startDate, $endDate) {
                     $q->where(function ($query) use ($startDate, $endDate) {
-                        $query->whereNotIn('status', ['Draft', 'Rejected'])
+                        $query->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
                             ->where('start_date', '<=', $endDate->copy()->endOfDay())
                             ->where('end_date', '>=', $startDate);
                     });
