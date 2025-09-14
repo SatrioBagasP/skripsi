@@ -38,7 +38,7 @@ class ApprovalLaporanKegiatanController extends Controller
     public function edit(Request $request, $id)
     {
         $data = LaporanKegiatan::with([
-            'proposal:id,name,no_proposal,unit_id,dosen_id,mahasiswa_id',
+            'proposal:id,name,no_proposal,unit_id,dosen_id,mahasiswa_id,file',
             'buktiDukung:id,laporan_kegiatan_id,file',
         ])
             ->where('id', decrypt($id))
@@ -54,6 +54,7 @@ class ApprovalLaporanKegiatanController extends Controller
             'id' => encrypt($data->id),
             'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
             'ketua_id' => $data->proposal->mahasiswa_id,
+            'file_proposal' => Storage::temporaryUrl($data->proposal->file, now()->addMinutes(5)),
             'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
             'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,
             'status' => $data->status,

@@ -54,6 +54,14 @@
                     <div class="invalid-feedback" id="nameError"></div>
                 </div>
             </div>
+            <div class="col-md-4 mb-2">
+                File Proposal
+                <a href="{{ $data['file_proposal'] }}" target="_blank" class="text-primary text-decoration-underline"><i
+                        class="bi bi-file-earmark"></i></i>File</a>
+            </div>
+            <div class="col-md-8 mb-2">
+
+            </div>
             <div class="col-md-6">
                 <div class="position-relative file-upload">
                     <div class="d-flex align-items-center mb-0">

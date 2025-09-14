@@ -45,7 +45,7 @@ class LaporanKegiatanController extends Controller
     {
 
         $data = LaporanKegiatan::with([
-            'proposal:id,name,no_proposal,unit_id',
+            'proposal:id,name,no_proposal,unit_id,file',
             'buktiDukung:id,laporan_kegiatan_id,file',
         ])
             ->where('id', decrypt($id))
@@ -58,6 +58,7 @@ class LaporanKegiatanController extends Controller
         $data = [
             'id' => encrypt($data->id),
             'name' => $data->proposal->no_proposal . ' - ' . $data->proposal->name,
+            'file_proposal' => Storage::temporaryUrl($data->proposal->file, now()->addMinutes(5)),
             'file' => $data->file ? Storage::temporaryUrl($data->file, now()->addMinutes(5)) : null,
             'alasan_tolak' => $data->alasan_tolak,
             'file_bukti_kehadiran' => $data->file_bukti_kehadiran ? Storage::temporaryUrl($data->file_bukti_kehadiran, now()->addMinutes(5)) : null,

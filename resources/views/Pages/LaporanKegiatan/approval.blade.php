@@ -50,7 +50,15 @@
                 <textarea class="form-control" name="desc" id="desc" cols="30" rows="10" readonly>{{ $data['desc'] }}</textarea>
             </div> --}}
             <div class="col-md-4 mb-2">
-                File
+                File Proposal
+
+            </div>
+            <div class="col-md-8 mb-2">
+                <a href="{{ $data['file_proposal'] }}" target="_blank" class="text-primary text-decoration-underline"><i
+                        class="bi bi-file-earmark"></i></i>File</a>
+            </div>
+            <div class="col-md-4 mb-2">
+                File Laporan Kegiatan
             </div>
             <div class="col-md-8 mb-2">
                 @if ($data['file'] != null)
@@ -120,7 +128,8 @@
             <div class="col-md-12">
                 @if ($data['approvalBtn'])
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{{ route('approval-laporan-kegiatan.index') }}" class="btn fixed-plugin-button mt-2 btn-secondary">
+                        <a href="{{ route('approval-laporan-kegiatan.index') }}"
+                            class="btn fixed-plugin-button mt-2 btn-secondary">
                             Kembali
                         </a>
                         @include('Component.button', [
@@ -261,7 +270,7 @@
                                         'success');
 
                                     window.location.href =
-                                        '{{ route('approval-proposal.index') }}';
+                                        '{{ route('approval-laporan-kegiatan.index') }}';
                                 },
                                 error: function(xhr, status, error) {
                                     flasher.error(xhr.responseJSON.message)
