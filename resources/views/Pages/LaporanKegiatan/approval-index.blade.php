@@ -74,7 +74,7 @@
                 }
 
                 $(document).on('click', '.detail', function() {
-                    $(this).attr('disabled', true);
+                    // $(this).attr('disabled', true);
                     const item = $(this).closest('.data-item');
                     const index = parseInt(item.data('index'));
                     let data = table.getDataByIndex(index);
