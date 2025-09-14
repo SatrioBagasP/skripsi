@@ -14,6 +14,7 @@ use App\Http\Controllers\Mahasiswa\MahasiswaController;
 use App\Http\Controllers\Proposal\ApprovalProposalController;
 use App\Http\Controllers\Proposal\ProposalController;
 use App\Http\Controllers\Proposal\TrackingProposalController;
+use App\Http\Controllers\Ruangan\RuanganController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 use App\Models\LaporanKegiatan;
 
@@ -60,6 +61,13 @@ Route::middleware(['auth'])->group(function () {
         });
 
         Route::prefix('/akademik')->name('akademik.')->controller(AkademikController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/store', 'store')->name('store');
+            Route::post('/update', 'update')->name('update');
+            Route::get('/get-data', 'getData')->name('getData');
+        });
+
+        Route::prefix('/ruangan')->name('ruangan.')->controller(RuanganController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/store', 'store')->name('store');
             Route::post('/update', 'update')->name('update');
