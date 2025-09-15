@@ -10,6 +10,7 @@ use App\Models\Jurusan;
 use Faker\Factory as Faker;
 use App\Models\Akademik;
 use App\Models\Mahasiswa;
+use App\Models\Ruangan;
 use App\Models\UnitKemahasiswaan;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,52 @@ class DatabaseSeeder extends Seeder
         Jabatan::updateOrCreate([
             'id' => 3,
             'name' => 'Wakil Rektor 1',
+        ]);
+
+        Ruangan::updateOrCreate([
+            'id' => 1,
+            'name' => 'G 101',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 2,
+            'name' => 'G 102',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 3,
+            'name' => 'G 103',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 4,
+            'name' => 'G 201',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 5,
+            'name' => 'G 202',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 6,
+            'name' => 'G 203',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 7,
+            'name' => 'G 301',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 8,
+            'name' => 'G 302',
+            'status' => true,
+        ]);
+        Ruangan::updateOrCreate([
+            'id' => 49,
+            'name' => 'G 303',
+            'status' => true,
         ]);
 
 
