@@ -2,34 +2,25 @@
 
 namespace App\Http\Controllers\Proposal;
 
-use PDO;
-use Dom\Attr;
+
 use Exception;
 use Throwable;
 use Carbon\Carbon;
-use App\Models\User;
-use App\Models\Dosen;
 use App\Models\Proposal;
-use Mockery\Matcher\Not;
-use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use App\Traits\UserValidation;
 use App\Traits\DosenValidation;
 use Illuminate\Validation\Rule;
-use App\Traits\CommonValidation;
 use App\Models\UnitKemahasiswaan;
 use App\Traits\ProposalValidation;
 use Illuminate\Support\Facades\DB;
 use App\Traits\MahasiswaValidation;
 use App\Http\Controllers\Controller;
-use App\Models\ProposalHasMahasiswa;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
-use App\Traits\ProposalRequestValidator;
 use App\Traits\UnitKemahasiswaanValidation;
-use App\Http\Controllers\Helper\CrudController;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
 use App\Models\Ruangan;

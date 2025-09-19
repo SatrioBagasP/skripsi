@@ -4,22 +4,17 @@ namespace App\Http\Controllers\Proposal;
 
 use Exception;
 use Throwable;
-use App\Models\User;
-use App\Models\Jurusan;
 use App\Models\Proposal;
 use Illuminate\Http\Request;
 use App\Traits\UserValidation;
 use App\Models\LaporanKegiatan;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use App\Traits\ApprovalProposalValidation;
-use App\Http\Controllers\Helper\CrudController;
 use Illuminate\Pagination\LengthAwarePaginator;
-use App\Traits\ApprovalProposalRequestValidator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
 
 class ApprovalProposalController extends Controller

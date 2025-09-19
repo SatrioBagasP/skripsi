@@ -6,7 +6,6 @@ use App\Models\Dosen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Helper\CrudController;
 use App\Traits\JurusanValidation;
 
 class DosenController extends Controller

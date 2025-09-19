@@ -6,7 +6,6 @@ use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Helper\CrudController;
 use App\Traits\JurusanValidation;
 
 class MahasiswaController extends Controller

@@ -9,7 +9,6 @@ use App\Models\UnitKemahasiswaan;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Helper\CrudController;
 use App\Traits\UserValidation;
 
 class UserController extends Controller
