@@ -12,8 +12,8 @@ class Ruangan extends Model
         'status',
     ];
 
-    public function proposal(){
+    public function proposal()
+    {
         return $this->belongsToMany(Proposal::class, 'proposal_has_ruangan', 'ruangan_id', 'proposal_id');
     }
 }
-

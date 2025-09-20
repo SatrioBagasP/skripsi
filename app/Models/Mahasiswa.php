@@ -15,7 +15,8 @@ class Mahasiswa extends Model
         'status'
     ];
 
-    public function jurusan(){
-        return $this->belongsTo(Jurusan::class,'jurusan_id','id');
+    public function jurusan()
+    {
+        return $this->belongsTo(Jurusan::class, 'jurusan_id', 'id');
     }
 }
