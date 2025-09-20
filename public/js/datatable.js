@@ -94,8 +94,21 @@ export function dataTable(options = {}) {
                 state.data = response.data;
                 state.currentPage = response.currentPage;
                 state.totalPage = response.totalPage;
-                renderPagination();
-                renderTableBody(state.data);
+
+                console.log(state.data);
+                if (state.data.length == 0) {
+                    let colCount = $("#tableHead th").length;
+                    $('#tableBody').append(`
+                        <tr>
+                            <td class='align-middle text-center text-sm' colspan="${colCount}">
+                                === TIDAK ADA DATA ===
+                            </td>
+                        </tr>
+                    `);
+                } else {
+                    renderPagination();
+                    renderTableBody(state.data);
+                }
             },
             error: function (xhr) {
                 reject(xhr.responseJSON?.message || 'Error loading data');
