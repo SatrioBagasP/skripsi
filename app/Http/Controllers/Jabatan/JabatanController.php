@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Jabatan;
 
+use App\Models\Jabatan;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Traits\CommonValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Jabatan;
 
 class JabatanController extends Controller
 {
@@ -20,7 +21,7 @@ class JabatanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|unique:jabatan,name',
         ]);
 
         try {
@@ -47,14 +48,19 @@ class JabatanController extends Controller
 
     public function update(Request $request)
     {
+        $id = decrypt($request->id);
+
         $request->validate([
-            'name' => 'required',
+            'name' => [
+                'required',
+                Rule::unique('jabatan', 'name')->ignore($id),
+            ],
         ]);
 
         try {
             DB::beginTransaction();
 
-            $data = Jabatan::where('id', decrypt($request->id))
+            $data = Jabatan::where('id', $id)
                 ->lockForUpdate()
                 ->first();
             $this->validateExistingDataReturnException($data);
