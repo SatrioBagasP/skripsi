@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Dosen;
 
 use App\Models\Dosen;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Traits\JurusanValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\JurusanValidation;
 
 class DosenController extends Controller
 {
@@ -25,7 +26,7 @@ class DosenController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'nip' => 'required',
+            'nip' => 'required|unique:dosen,nip',
             'jurusan_id' => 'required',
             'jabatan_id' => 'required',
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
@@ -64,12 +65,16 @@ class DosenController extends Controller
 
     public function update(Request $request)
     {
+        $id = decrypt($request->id);
         $request->validate([
             'name' => 'required',
-            'nip' => 'required',
+            'nip' => [
+                'required',
+                Rule::unique('dosen', 'nip')->ignore($id),
+            ],
             'jurusan_id' => 'required',
             'jabatan_id' => 'required',
-            'no_hp' => 'required',
+            'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'alamat' => 'required',
         ]);
 

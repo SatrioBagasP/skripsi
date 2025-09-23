@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Models\Mahasiswa;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Traits\JurusanValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\JurusanValidation;
 
 class MahasiswaController extends Controller
 {
@@ -22,7 +23,7 @@ class MahasiswaController extends Controller
     {
         $request->validate([
             'name' => 'required',
-            'npm' => 'required',
+            'npm' => 'required|unique:mahasiswa,npm',
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'jurusan_id' => 'required',
         ]);
@@ -56,10 +57,14 @@ class MahasiswaController extends Controller
 
     public function update(Request $request)
     {
+        $id = decrypt($request->id);
         $request->validate([
             'name' => 'required',
-            'npm' => 'required',
-            'no_hp' => 'required',
+            'npm' => [
+                'required',
+                Rule::unique('mahasiswa', 'npm')->ignore($id),
+            ],
+            'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'jurusan_id' => 'required',
         ]);
 
