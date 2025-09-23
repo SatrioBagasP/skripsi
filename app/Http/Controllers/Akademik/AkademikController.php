@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Akademik;
 
 use App\Models\Akademik;
 use Illuminate\Http\Request;
+use App\Traits\DosenValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\DosenValidation;
+use Illuminate\Validation\Rule;
 
 class AkademikController extends Controller
 {
@@ -21,7 +22,7 @@ class AkademikController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
+            'name' => 'required|unique:akademik,name',
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
         ]);
 
@@ -55,8 +56,12 @@ class AkademikController extends Controller
 
     public function update(Request $request)
     {
+        $id = decrypt($request->id);
         $request->validate([
-            'name' => 'required',
+            'name' => [
+                'required',
+                Rule::unique('akademik', 'name')->ignore($id),
+            ],
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'ketua_id' => 'required',
         ]);

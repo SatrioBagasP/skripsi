@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Jurusan;
 
 use App\Models\Jurusan;
 use Illuminate\Http\Request;
+use App\Traits\DosenValidation;
+use Illuminate\Validation\Rule;
+use App\Traits\JurusanValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\DosenValidation;
-use App\Traits\JurusanValidation;
 
 class JurusanController extends Controller
 {
@@ -23,8 +24,8 @@ class JurusanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required',
-            'kode' => 'required',
+            'name' => 'required|unique:jurusan,name',
+            'kode' => 'required|unique:jurusan,kode',
         ]);
 
         try {
@@ -59,9 +60,16 @@ class JurusanController extends Controller
 
     public function update(Request $request)
     {
+        $id = decrypt($request->id);
         $request->validate([
-            'name' => 'required',
-            'kode' => 'required',
+            'name' => [
+                'required',
+                Rule::unique('jurusan', 'name')->ignore($id),
+            ],
+            'name' => [
+                'required',
+                Rule::unique('jurusan', 'kode')->ignore($id),
+            ],
             'ketua_id' => 'required',
         ]);
 
