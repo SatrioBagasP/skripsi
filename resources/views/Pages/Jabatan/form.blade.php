@@ -2,7 +2,7 @@
 
 @section('titleSidebarForm', 'Tambah Data')
 
-@section('sub-titleSidebarForm', 'Akademik')
+@section('sub-titleSidebarForm', 'Jabatan')
 
 @section('contentSidebarForm')
     <label>Jabatan</label>

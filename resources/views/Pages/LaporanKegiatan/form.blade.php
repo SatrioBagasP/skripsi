@@ -3,9 +3,9 @@
 @endphp
 @extends('Layout.layout')
 
-@section('pages', 'Tambah Data Proposal')
+@section('pages', 'Edit Data Laporan')
 
-@section('title', config('app.name') . ' | Mahasiswa')
+@section('title', config('app.name') . ' | Laporan Kegiatan')
 
 @push('css')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@6.0/dist/fancybox/fancybox.css" />

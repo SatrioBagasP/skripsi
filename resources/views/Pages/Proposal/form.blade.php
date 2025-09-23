@@ -5,7 +5,7 @@
 
 @section('pages', 'Tambah Data Proposal')
 
-@section('title', config('app.name') . ' | Mahasiswa')
+@section('title', config('app.name') . ' | Proposal')
 
 @push('css')
     <style>
