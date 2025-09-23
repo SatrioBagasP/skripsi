@@ -88,7 +88,8 @@ class LaporanKegiatanController extends Controller
             ],
             'file_bukti_kehadiran' => [
                 Rule::requiredIf(fn() => empty($data->file_bukti_kehadiran)),
-                File::types(['jpg', 'png', 'jpeg'])->max(2 * 1024),
+                // File::types(['jpg', 'png', 'jpeg'])->max(2 * 1024),
+                File::types(['pdf'])->max(2 * 1024),
             ],
             'file_bukti_dukung'   => 'array',
             'file_bukti_dukung.*' => File::types(['jpg', 'png', 'jpeg'])->max(2 * 1024),
