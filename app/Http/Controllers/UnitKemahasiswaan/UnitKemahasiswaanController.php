@@ -82,7 +82,7 @@ class UnitKemahasiswaanController extends Controller
 
             $this->validateExistingDataReturnException($data);
             // jika dia merubah jurusan atau merubah non jursan maka cek pendingnya
-            if ($data->is_non_jurusan != $request->boolean('is_non_jurusan') || $data->jurusan_id != $request->jurusan_id || $data->status != $request->status) {
+            if ($data->is_non_jurusan != $request->boolean('is_non_jurusan') || $data->jurusan_id != $request->jurusan_id || $data->status != $request->boolean('status')) {
                 $this->validateUnitKemahasiswaanHasPendingProposal($data);
             }
 
