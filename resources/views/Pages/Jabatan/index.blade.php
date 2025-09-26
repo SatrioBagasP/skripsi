@@ -95,12 +95,12 @@
                     dataSet.id = data.id;
                     $('#sidebar-form').addClass('show');
                     $('#name').val(data.name).trigger('change');
-                    $('#no_hp').val(data.no_hp).trigger('change');
                     $('#status').prop('checked', data.status == 1).trigger('change');
                 });
 
                 function resetDataSet() {
                     dataSet = {};
+                    $('#name').val('');
                     $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');

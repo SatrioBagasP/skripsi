@@ -109,6 +109,9 @@
 
                 function resetDataSet() {
                     dataSet = {};
+                    $('#name').val('');
+                    $('#npm').val('');
+                    $('#no_hp').val('');
                     $('.select2').val('').trigger('change');
                     $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();

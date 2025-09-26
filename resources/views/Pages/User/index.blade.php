@@ -119,6 +119,8 @@
 
                 function resetDataSet() {
                     dataSet = {};
+                    $('#name').val('');
+                    $('#email').val('');
                     $('.select2').val('').trigger('change');
                     $('#password').val('').trigger('change');
                     $('#status').prop('checked', dataSet.status);

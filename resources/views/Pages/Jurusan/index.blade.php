@@ -111,6 +111,9 @@
 
                 function resetDataSet() {
                     dataSet = {};
+                    $('#name').val('');
+                    $('#kode').val('');
+                    $('#ketua_id').val('').trigger('change');
                     $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');

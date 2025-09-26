@@ -115,6 +115,10 @@
 
                 function resetDataSet() {
                     dataSet = {};
+                    $('#name').val('');
+                    $('#no_hp').val('');
+                    $('#nip').val('');
+                    $('#alamat').val('');
                     $('.select2').val('').trigger('change');
                     $('#status').prop('checked', false);
                     $('.invalid-feedback').text('').hide();
