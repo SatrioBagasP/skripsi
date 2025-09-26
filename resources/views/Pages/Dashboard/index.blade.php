@@ -34,6 +34,25 @@
 @section('pages', 'Dashboard')
 @section('title', config('app.name') . ' | Dashboard')
 
+@push('css')
+    <style>
+        /* Untuk FullCalendar versi dayGrid / month view */
+        .fc-day-grid-event .fc-event-title,
+        .fc-daygrid-event .fc-event-title {
+            white-space: normal !important;
+            /* bukan nowrap */
+            word-wrap: break-word;
+            /* pecah kata jika terlalu panjang */
+        }
+
+        /* Kadang bagian kontainernya perlu juga: */
+        .fc-event-main-frame,
+        .fc-event-title-container {
+            white-space: normal !important;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="card">
         <div class="card-body">

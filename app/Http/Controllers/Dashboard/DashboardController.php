@@ -18,14 +18,23 @@ class DashboardController extends Controller
                 'proposal.id',
                 DB::raw("
                     CONCAT(
+                        proposal.name,
+                        ' (', uk.name, ')',
                         CASE
                             WHEN proposal.is_harian = 0 THEN
-                                CONCAT(' ', TIME_FORMAT(start_date, '%H:%i'), ' - ', TIME_FORMAT(end_date, '%H:%i'),' ')
+                                CONCAT(
+                                    ' (',
+                                    DATE_FORMAT(start_date, '%d %b %H:%i'),
+                                    ' – ',
+                                    DATE_FORMAT(end_date, '%d %b %H:%i'),
+                                    ')'
+                                )
                             ELSE ''
-                        END,
-                        proposal.name,
-                        ' (', uk.name, ')'
+                        END
                     ) as title
+                "),
+                DB::raw("
+                    CONCAT('fc-event-wrap') as class_name
                 "),
                 DB::raw("
                     CASE WHEN proposal.is_harian = 1
