@@ -1,0 +1,106 @@
+
+
+
+
+Models/
+├── Akademik
+├── BuktiDukung
+├── Dosen
+├── Jabatan
+├── Jurusan
+├── LaporanKegiatan
+├── Mahasiswa
+├── Proposal
+├── Roles
+├── Ruangan
+├── UnitKemahasiswaan
+└── User
+
+
+views/
+├── Component
+│   ├── button
+│   ├── datatable
+│   └── select
+├── Layout
+│   ├── layout
+│   ├── navbar
+│   ├── sidebar
+│   └── sidebarForm
+├── Pages
+│   ├── Akademik
+│   │   ├── form
+│   │   └── index
+│   ├── Auth
+│   │   ├── login
+│   │   └── dashboard
+│   ├── Dosen
+│   │   ├── form
+│   │   └── index
+│   ├── Jabatan
+│   │   ├── form
+│   │   └── index
+│   ├── Jurusan
+│   │   ├── form
+│   │   └── index
+│   ├── LaporanKegiatan
+│   │   ├── approval-index
+│   │   ├── approval
+│   │   ├── form
+│   │   └── index
+│   ├── Mahasiswa
+│   │   ├── form
+│   │   └── index
+│   ├── Proposal
+│   │   ├── approval-index
+│   │   ├── approval
+│   │   ├── form
+│   │   ├── index
+│   │   ├── tracking-index
+│   │   └── tracking
+│   ├── Ruangan
+│   │   ├── form
+│   │   └── index
+│   ├── UnitKemahasiswaan
+│   │   ├── form
+│   │   └── index
+│   └── User
+│       ├── form
+│       └── index
+
+
+
+Controllers
+├── Akademik
+│   └── AkademikController
+├── Auth
+│   └── AuthController
+├── Dashboard
+│   └── DashboardController
+├── Dosen
+│   └── DosenController
+├── Jabatan
+│   └── JabatanController
+├── Jurusan
+│   └── JurusanController
+├── LaporanKegiatan
+│   ├── ApprovalLaporanKegiatanController
+│   └── LaporanKegiatanController
+├── Mahasiswa
+│   └── MahasiswaController
+├── Notifikasi
+│   └── NotifikasiController
+├── Proposal
+│   ├── ApprovalProposalController
+│   ├── ProposalController
+│   └── TrackingProposalController
+├── Ruangan
+│   └── RuanganController
+├── UnitKemahasiswaan
+│   └── UnitKemahasiswaanController
+├── User
+│   └── UserController
+└── Controller
+
+
+

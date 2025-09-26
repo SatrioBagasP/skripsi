@@ -25,7 +25,7 @@ class NotifikasiController extends Controller
                 'countryCode' => '62', //optional
             ),
             CURLOPT_HTTPHEADER => array(
-                'Authorization: Rgpt2U1tVrXx7NsRTNDa  a'
+                'Authorization: Rgpt2U1tVrXx7NsRTNDa'
             ),
         ));
 
