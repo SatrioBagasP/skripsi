@@ -154,6 +154,8 @@
                     $('#imagePreview').attr('src', '').addClass('d-none');
                     $('#status').prop('checked', false).trigger('change');
                     $('#is_non_jurusan').prop('checked', false).trigger('change');
+                    $('#image').val('').trigger('change');
+                    $('#name').val('').trigger('change');
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');
                 }
