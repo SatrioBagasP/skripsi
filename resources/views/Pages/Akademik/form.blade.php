@@ -12,7 +12,7 @@
     </div>
     <label>No HP</label>
     <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Nomor Hp layanan" name="no_hp" id="no_hp">
+        <input type="text" class="form-control" placeholder="Nomor Hp Akademik" name="no_hp" id="no_hp">
         <div class="invalid-feedback" id="no_hpError"></div>
     </div>
     <label>Ketua</label>
