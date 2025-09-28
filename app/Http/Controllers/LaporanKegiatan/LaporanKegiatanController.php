@@ -22,10 +22,11 @@ use Illuminate\Validation\Rules\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Http\Controllers\Notifikasi\NotifikasiController;
+use App\Traits\LaporanKegiatanValidation;
 
 class LaporanKegiatanController extends Controller
 {
-    use UserValidation, ProposalValidation;
+    use UserValidation, ProposalValidation, LaporanKegiatanValidation;
 
     public function index()
     {
@@ -53,6 +54,7 @@ class LaporanKegiatanController extends Controller
 
         $this->validateExistingDataReturnAbort($data);
         $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
+        $this->validateLaporanKegiatanIsEditable($data, 'Abort');
         $this->validateProposalIsEditable($data, 'laporan kegiatan', true);
 
         $data = [
@@ -107,6 +109,7 @@ class LaporanKegiatanController extends Controller
         try {
 
             $this->validateProposalOwnership($data->proposal);
+            $this->validateLaporanKegiatanIsEditable($data);
             $this->validateProposalIsEditable($data, 'laporan kegiatan');
 
             $fileBuktiKehadiran = null;
@@ -177,6 +180,7 @@ class LaporanKegiatanController extends Controller
 
             $this->validateExistingDataReturnException($data);
             $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
+            $this->validateLaporanKegiatanIsEditable($data);
             $this->validateProposalIsEditable($data, 'laporan kegiatan');
 
             $dosen = Dosen::where('id', $data->proposal->dosen_id)
@@ -223,6 +227,7 @@ class LaporanKegiatanController extends Controller
 
             $this->validateExistingDataReturnException($data);
             $this->validateProposalOwnership($data->LaporanKegiatan->proposal);
+            $this->validateLaporanKegiatanIsEditable($data);
             $this->validateProposalIsEditable($data->LaporanKegiatan, 'laporan kegiatan');
 
             $this->storageDelete($data->file);
