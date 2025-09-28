@@ -78,12 +78,17 @@ trait ProposalValidation
         }
     }
 
-    public function validateProposalOwnership($data, $type = 'proposal')
+    public function validateProposalOwnership($data, $type = 'proposal', $return = 'Exception')
     {
         if ((Auth::user()->userable_type == UnitKemahasiswaan::class && $data->unit_id == Auth::user()->userable_id) || Gate::allows('admin')) {
             return;
         } else {
-            throw new \Exception('Anda tidak memiliki akses ke ' . $type . ' ini');
+            $message = 'Anda tidak memiliki akses ke ' . $type . ' ini';
+            if ($return == 'Exception') {
+                throw new \Exception($message);
+            } else {
+                abort(403, $message);
+            }
         }
     }
 }

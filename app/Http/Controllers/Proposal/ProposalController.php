@@ -210,10 +210,10 @@ class ProposalController extends Controller
     public function edit(Request $request, $id)
     {
         $data = Proposal::where('id', decrypt($id))
-            ->lockForUpdate()
             ->first();
 
-        $this->validateExistingDataReturnException($data);
+        $this->validateExistingDataReturnAbort($data);
+        $this->validateProposalOwnership($data, 'proposal', 'Abort');
         $this->validateProposalIsEditable($data, 'proposal', true);
         $organisasiOption = $this->getOrganisasiOption();
         $edit = true;
@@ -301,7 +301,9 @@ class ProposalController extends Controller
                 ->lockForUpdate()
                 ->first();
 
+            $this->validateExistingDataReturnException($data);
             $this->validateProposalIsEditable($data);
+            $this->validateProposalOwnership($data, 'proposal', 'Abort');
             $this->validateUnitKemahasiswaanIsActive($request->unit_id);
             $this->validateMahasiswaIsActive($request->ketua_ids);
             $this->validateDosenIsActive($request->dosen_id);

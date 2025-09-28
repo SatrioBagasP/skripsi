@@ -53,7 +53,7 @@ class LaporanKegiatanController extends Controller
             ->first();
 
         $this->validateExistingDataReturnAbort($data);
-        $this->validateProposalOwnership($data->proposal, 'laporan kegiatan');
+        $this->validateProposalOwnership($data->proposal, 'laporan kegiatan','Abort');
         $this->validateLaporanKegiatanIsEditable($data, 'Abort');
         $this->validateProposalIsEditable($data, 'laporan kegiatan', true);
 
