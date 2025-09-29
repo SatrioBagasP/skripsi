@@ -240,7 +240,7 @@ abstract class Controller
     function storageStore(UploadedFile $file, $basePath)
     {
         $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $timestamp = now()->format('Ymd_His');
+        $timestamp = now()->format('Ymd_Hisu');
         $extension = $file->getClientOriginalExtension();
         $fileName = $originalName . '_' . $timestamp . '.' . $extension;
         $imagePath = Storage::putFileAs($basePath, $file, $fileName);
