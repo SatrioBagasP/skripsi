@@ -115,6 +115,7 @@ class MahasiswaController extends Controller
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
                     ->orWhere('npm', 'like', '%' . $request->search . '%')
+                    ->orWhere('no_hp', 'like', '%' . $request->search . '%')
                     ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
             })
             ->orderBy('id', 'desc')

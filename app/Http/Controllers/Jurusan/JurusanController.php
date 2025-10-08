@@ -117,6 +117,7 @@ class JurusanController extends Controller
             ->select('name', 'kode', 'status', 'id', 'ketua_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhereRelation('ketua', 'name', 'like', '%' . $request->search . '%')
                     ->orWhere('kode', 'like', '%' . $request->search . '%');
             })
             ->orderBy('id', 'desc')

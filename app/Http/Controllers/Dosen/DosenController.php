@@ -122,7 +122,10 @@ class DosenController extends Controller
         $data = Dosen::with(['jurusan'])->select('name', 'nip', 'status', 'id', 'jurusan_id', 'no_hp', 'alamat', 'jabatan_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('no_hp', 'like', '%' . $request->search . '%')
+                    ->orWhere('alamat', 'like', '%' . $request->search . '%')
                     ->orWhere('nip', 'like', '%' . $request->search . '%')
+                    ->orWhereRelation('jabatan', 'name', 'like', '%' . $request->search . '%')
                     ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
             })
             ->orderBy('id', 'desc')

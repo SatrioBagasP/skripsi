@@ -122,8 +122,7 @@ class UserController extends Controller
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where(function ($query) use ($request) {
                     $query->where('name', 'like', '%' . $request->search . '%')
-                        ->orWhere('npm', 'like', '%' . $request->search . '%')
-                        ->orWhereRelation('jurusan', 'name', 'like', '%' . $request->search . '%');
+                        ->orWhere('email', 'like', '%' . $request->search . '%');
                 });
             })
             ->orderBy('id', 'desc')

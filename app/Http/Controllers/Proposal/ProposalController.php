@@ -453,6 +453,8 @@ class ProposalController extends Controller
                     $query->where(function ($item) use ($request) {
                         $item->where('name', 'like', '%' . $request->search . '%')
                             ->orWhere('no_proposal', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('ketua', 'name', 'like', '%' . $request->search . '%')
+                            ->orWhereRelation('dosen', 'name', 'like', '%' . $request->search . '%')
                             ->orWhereRelation('pengusul', 'name', 'like', '%' . $request->search . '%')
                             ->orWhereRelation('pengusul.jurusan', 'name', 'like', '%' . $request->search . '%');
                     });
