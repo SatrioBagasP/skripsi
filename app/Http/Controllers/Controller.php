@@ -44,7 +44,8 @@ abstract class Controller
     public function getAkademikOption()
     {
         $data = [];
-        $data = Akademik::get()
+        $data = Akademik::where('status', true)
+            ->get()
             ->map(function ($item) {
                 return [
                     'value' => $item->id,

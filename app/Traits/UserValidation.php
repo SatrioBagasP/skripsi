@@ -38,7 +38,7 @@ trait UserValidation
 
     public function validateUserIsUnitKemahasiswaan($user)
     {
-        if ($user->userable_type == UnitKemahasiswaan::class ) {
+        if ($user->userable_type == UnitKemahasiswaan::class) {
             return true;
         } else {
             return false;
@@ -47,7 +47,7 @@ trait UserValidation
 
     public function validateUserIsDosen($user)
     {
-        if ($user->userable_type == Dosen::class ) {
+        if ($user->userable_type == Dosen::class) {
             return true;
         } else {
             return false;
@@ -60,6 +60,7 @@ trait UserValidation
 
         if ($dosen) {
             $ketuaMinatDanBakat = Akademik::where('id', 2) // id dari akademik
+                ->where('status', true)
                 ->where('ketua_id', $user->userable_id)
                 ->exists();
             return $ketuaMinatDanBakat;

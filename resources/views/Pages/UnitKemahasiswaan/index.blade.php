@@ -149,12 +149,12 @@
                 });
 
                 function resetDataSet() {
+                    $('#image').val('').trigger('change');
                     dataSet = {};
                     $('.select2').val('').trigger('change');
                     $('#imagePreview').attr('src', '').addClass('d-none');
-                    $('#status').prop('checked', false).trigger('change');
                     $('#is_non_jurusan').prop('checked', false).trigger('change');
-                    $('#image').val('').trigger('change');
+                    $('#status').prop('checked', false).trigger('change');
                     $('#name').val('').trigger('change');
                     $('.invalid-feedback').text('').hide();
                     $('.form-control').removeClass('is-invalid');

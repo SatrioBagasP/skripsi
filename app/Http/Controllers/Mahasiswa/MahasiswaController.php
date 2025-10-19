@@ -67,15 +67,7 @@ class MahasiswaController extends Controller
             'no_hp' => 'required|numeric|regex:/^08[0-9]{8,15}$/',
             'jurusan_id' => 'required',
         ]);
-
         try {
-            $dataField = [
-                'name' => $request->name,
-                'npm' => $request->npm,
-                'no_hp' => $request->no_hp,
-                'jurusan_id' => $request->jurusan_id,
-                'status' => $request->boolean('status'),
-            ];
             DB::beginTransaction();
             $data = Mahasiswa::where('id', decrypt($request->id))
                 ->lockForUpdate()
@@ -93,6 +85,7 @@ class MahasiswaController extends Controller
                 'jurusan_id' => $request->jurusan_id,
                 'status' => $request->boolean('status'),
             ]);
+            $this->updateLog($data, 'Merubah Mahasiswa', 'Mahasiswa');
 
             DB::commit();
             return response()->json([

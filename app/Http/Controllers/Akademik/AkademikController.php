@@ -111,7 +111,8 @@ class AkademikController extends Controller
             ->select('name', 'no_hp', 'status', 'id', 'ketua_id')
             ->when($request->search !== null, function ($query) use ($request) {
                 $query->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('no_hp', 'like', '%' . $request->search . '%');
+                    ->orWhere('no_hp', 'like', '%' . $request->search . '%')
+                    ->orWhereRelation('ketua', 'name', 'like', '%' . $request->search . '%');
             })
             ->orderBy('id', 'desc')
             ->paginate($request->itemDisplay ?? 10);

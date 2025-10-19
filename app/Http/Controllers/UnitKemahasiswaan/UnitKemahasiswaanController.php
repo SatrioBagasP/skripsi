@@ -24,6 +24,7 @@ class UnitKemahasiswaanController extends Controller
     {
         $request->validate([
             'name' => 'required',
+            'is_non_jurusan' => 'required',
             'jurusan_id' => 'required_if:is_non_jurusan,false',
             'image' => ['sometimes', File::types(['jpg', 'jpeg', 'png'])->max(2 * 1024)]
         ]);

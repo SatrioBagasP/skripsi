@@ -30,7 +30,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->middleware(['auth'])->name('logout');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth','activeUser'])->group(function () {
 
     // Master
     Route::prefix('/master')->name('master.')->middleware('can:admin')->group(function () {

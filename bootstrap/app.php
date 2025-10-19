@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->append(EnsureTokenIsValid::class);
         $middleware->alias([
+            'activeUser' => App\Http\Middleware\ActiveUser::class,
             'canAny' => App\Http\Middleware\canAny::class,
             'isAdmin' => App\Http\Middleware\isAdmin::class,
             'isUnitMahasiswa' => App\Http\Middleware\isUnitMahasiswa::class,
