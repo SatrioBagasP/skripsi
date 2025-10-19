@@ -17,7 +17,11 @@ class ActiveUser
     public function handle(Request $request, Closure $next): Response
     {
         if (Auth::user()->userable->status == false) {
-            abort(403, 'Akun anda tidak aktif');
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login');
         }
         return $next($request);
     }
