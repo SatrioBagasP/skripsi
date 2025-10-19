@@ -16,7 +16,7 @@ class ActiveUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::user()->userable->status == false) {
+        if (Auth::user()->userable && Auth::user()->userable->status == false) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
