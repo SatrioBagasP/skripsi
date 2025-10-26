@@ -25,7 +25,7 @@ class DashboardController extends Controller
                                 CONCAT(
                                     ' (',
                                     DATE_FORMAT(start_date, '%d %b %H:%i'),
-                                    ' – ',
+                                    ' - ',
                                     DATE_FORMAT(end_date, '%d %b %H:%i'),
                                     ')'
                                 )
