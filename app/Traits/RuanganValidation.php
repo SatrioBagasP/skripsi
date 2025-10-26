@@ -18,7 +18,7 @@ trait RuanganValidation
             ->whereIn('id', $ruanganId)
             ->lockForUpdate()
             ->with(['proposal' => function ($q) use ($startDate, $endDate) {
-                $q->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
+                $q->whereNotIn('status', ['Draft', 'Rejected'])
                     ->where('start_date', '<=', $endDate)
                     ->where('end_date', '>=', $startDate);
             }])
@@ -27,7 +27,7 @@ trait RuanganValidation
         [$inactiveRuangan, $activeRuangan] = $ruangan->partition(fn($r) => $r->status == false);
         if ($inactiveRuangan->isNotEmpty()) {
             $ruanganList = $inactiveRuangan->pluck('name')->join(', ');
-            throw new \Exception("Tidak dapat melanjutkan, ruangan berikut sedang nonaktif: {$ruanganList}.");
+            throw new \Exception("Tidak dapat melanjutkan, ruangan berikut sedang nonaktif: {$ruanganList}.  Silakan pilih ruangan lain.");
         }
 
         // Cek bentrok jadwal
