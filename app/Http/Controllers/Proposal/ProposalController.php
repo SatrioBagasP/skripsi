@@ -67,44 +67,6 @@ class ProposalController extends Controller
         }
     }
 
-    public function getRuanganOption(Request $request)
-    {
-        try {
-            [$startDate, $endDate] = $this->validateDate($request);
-
-            $availableRuangan = Ruangan::where(function ($query) use ($startDate, $endDate) {
-                $query->whereDoesntHave('proposal', function ($q) use ($startDate, $endDate) {
-                    $q->where(function ($query) use ($startDate, $endDate) {
-                        $query->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
-                            ->where('start_date', '<=', $endDate->copy()->endOfDay())
-                            ->where('end_date', '>=', $startDate);
-                    });
-                })->where('status', true);
-            })
-                // ->when($request->id != null, function ($query) use ($request) {
-                //     $query->orWhereHas('proposal', function ($q) use ($request) {
-                //         $q->where('proposal.id', decrypt($request->id));
-                //     });
-                // })
-                ->get()
-                ->map(function ($item) {
-                    return [
-                        'value' => $item->id,
-                        'label' => $item->name,
-                    ];
-                });
-            return response()->json([
-                'status' => 200,
-                'data' => $availableRuangan,
-            ], 200);
-        } catch (Throwable $e) {
-            return response()->json([
-                'status' => 400,
-                'message' => $this->getErrorMessage($e),
-            ], 400);
-        }
-    }
-
     public function create()
     {
         $organisasiOption = $this->getOrganisasiOption();

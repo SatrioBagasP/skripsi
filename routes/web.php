@@ -17,6 +17,7 @@ use App\Http\Controllers\Proposal\TrackingProposalController;
 use App\Http\Controllers\Ruangan\RuanganController;
 use App\Http\Controllers\UnitKemahasiswaan\UnitKemahasiswaanController;
 use App\Models\LaporanKegiatan;
+use App\Models\Ruangan;
 
 // Route::get('',[TestingTwilloController::class,'index']);
 
@@ -30,7 +31,7 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('/logout', 'logout')->middleware(['auth'])->name('logout');
 });
 
-Route::middleware(['auth','activeUser'])->group(function () {
+Route::middleware(['auth', 'activeUser'])->group(function () {
 
     // Master
     Route::prefix('/master')->name('master.')->middleware('can:admin')->group(function () {
@@ -96,7 +97,7 @@ Route::middleware(['auth','activeUser'])->group(function () {
         Route::prefix('/proposal')->name('proposal.')->controller(ProposalController::class)->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/all-option', 'getOption')->name('getOption');
-            Route::get('/get-ruangan-option', 'getRuanganOption')->name('getRuanganOption');
+            // Route::get('/get-ruangan-option', 'getRuanganOption')->name('getRuanganOption');
             Route::get('/create', 'create')->name('create');
             Route::get('/edit/{id}', 'edit')->name('edit');
             Route::post('/store', 'store')->name('store');
@@ -105,6 +106,9 @@ Route::middleware(['auth','activeUser'])->group(function () {
             Route::post('/pengajuan', 'pengajuan')->name('pengajuan');
             Route::get('/get-data', 'getData')->name('getData');
         });
+
+        Route::get('/get-ruangan-option', [RuanganController::class, 'getRuanganOption'])->name('getRuanganOption');
+
 
         Route::prefix('/laporan-kegiatan')->name('laporan-kegiatan.')->controller(LaporanKegiatanController::class)->group(function () {
             Route::get('/', 'index')->name('index');
@@ -142,8 +146,6 @@ Route::middleware(['auth','activeUser'])->group(function () {
             Route::post('/approval-wakil-rektor', 'approvalWakilRektor')->name('approvalWakilRektor');
             Route::get('/get-data', 'getData')->name('getData');
         });
-
-
     });
 
 

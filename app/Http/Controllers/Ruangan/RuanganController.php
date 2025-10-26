@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Ruangan;
 
+use Throwable;
 use App\Models\Ruangan;
 use App\Models\Akademik;
 use Illuminate\Http\Request;
+use App\Traits\CommonValidation;
+use App\Traits\ProposalValidation;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Traits\CommonValidation;
 
 class RuanganController extends Controller
 {
 
-    use CommonValidation;
+    use CommonValidation, ProposalValidation;
 
     public function index(Request $request)
     {
@@ -108,5 +110,44 @@ class RuanganController extends Controller
             'currentPage' => $data->currentPage(),
             'totalPage' => $data->lastPage(),
         ], 200);
+    }
+
+
+    public function getRuanganOption(Request $request)
+    {
+        try {
+            [$startDate, $endDate] = $this->validateDate($request);
+
+            $availableRuangan = Ruangan::where(function ($query) use ($startDate, $endDate) {
+                $query->whereDoesntHave('proposal', function ($q) use ($startDate, $endDate) {
+                    $q->where(function ($query) use ($startDate, $endDate) {
+                        $query->whereNotIn('status', ['Draft', 'Rejected', 'Accepted'])
+                            ->where('start_date', '<=', $endDate)
+                            ->where('end_date', '>=', $startDate);
+                    });
+                })->where('status', true);
+            })
+                // ->when($request->id != null, function ($query) use ($request) {
+                //     $query->orWhereHas('proposal', function ($q) use ($request) {
+                //         $q->where('proposal.id', decrypt($request->id));
+                //     });
+                // })
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'value' => $item->id,
+                        'label' => $item->name,
+                    ];
+                });
+            return response()->json([
+                'status' => 200,
+                'data' => $availableRuangan,
+            ], 200);
+        } catch (Throwable $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $this->getErrorMessage($e),
+            ], 400);
+        }
     }
 }

@@ -378,7 +378,7 @@
                     let isHarian = $('#is_harian').prop('checked')
                     $.ajax({
                         type: "GET",
-                        url: "{{ route('proposal.getRuanganOption') }}",
+                        url: "{{ route('getRuanganOption') }}",
                         data: {
                             start_date: $('#start_date').val(),
                             end_date: $('#end_date').val(),
