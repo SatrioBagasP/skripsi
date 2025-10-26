@@ -376,18 +376,34 @@
 
                 $('#file').change(function(e) {
                     e.preventDefault();
-                    dataSet.file = this.files[0];
+                    const file = this.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                    } else {
+                        dataSet.file = file;
+                    }
                 });
 
                 $('#file_bukti_kehadiran').change(function(e) {
                     e.preventDefault();
-                    dataSet.file_bukti_kehadiran = this.files[0];
+                    const file = this.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                    } else {
+                        dataSet.file_bukti_kehadiran = file;
+                    }
+
                 });
 
                 $(document).on('change', '.file_bukti_dukung', function(e) {
                     e.preventDefault();
                     let index = $(this).data('index');
-                    dataSet.file_bukti_dukung[index] = this.files[0];
+                    const file = this.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                    } else {
+                        dataSet.file_bukti_dukung[index] = file;
+                    }
                 });
 
                 $('#addBukti').click(function(e) {

@@ -271,14 +271,20 @@
                     }
                 });
 
-                $('input[id], select[id], textarea[id], checkbox[id], file[id]').on('input change', function() {
+                $('input[id], select[id], textarea[id], checkbox[id]').on('input change', function(e) {
                     const key = $(this).attr('id');
                     const type = $(this).attr('type');
-
                     if (type === 'checkbox') {
                         dataSet[key] = $(this).prop('checked');
                     } else if (type === 'file') {
-                        dataSet[key] = this.files[0];
+                        if (e.type === 'input') return;
+                        const file = this.files[0];
+                        if (file.size > 2 * 1024 * 1024) {
+                            flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                        } else {
+                            dataSet[key] = file;
+                        }
+
                     } else {
                         dataSet[key] = $(this).val();
                     }
@@ -357,7 +363,7 @@
                             $('#ketua_ids').val(dataSet.ketua_ids).trigger('change');
                             $('#dosen_id').val(dataSet.dosen_id).trigger('change');
                             $('#mahasiswa_id').val(dataSet.selected_mahasiswa).trigger('change');
-
+                            console.log(dataSet);
                         },
                         error: function(xhr, status, error) {
                             var err = xhr.responseJSON.errors;
@@ -448,10 +454,16 @@
                     const button = $(this);
                     const formData = new FormData();
                     for (const key in dataSet) {
-                        // mengecualikan mahasiswa_id dan ruangan, krn dia array, agar nanti respon yagn diterima di backend itu array
-                        if (dataSet[key] !== '' && (key !== 'mahasiswa_id' || key !== 'ruangan')) {
-                            formData.append(key, dataSet[key]);
-                        }
+                        const value = dataSet[key];
+                        // Skip array karena diproses terpisah
+                        if (Array.isArray(value)) continue;
+
+                        // Skip null, undefined, dan string kosong
+                        if (value === null || value === undefined || value === '') continue;
+                        formData.append(key, value);
+                        // if (dataSet[key] !== '' && (key !== 'mahasiswa_id' || key !== 'ruangan')) {
+                        //     formData.append(key, dataSet[key]);
+                        // }
                     }
 
                     if (Array.isArray(dataSet.mahasiswa_id)) {

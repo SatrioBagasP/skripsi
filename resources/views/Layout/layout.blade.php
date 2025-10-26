@@ -273,8 +273,8 @@
 
                     // Validate file size (max 5MB)
                     if (file.size > 2 * 1024 * 1024) {
-                        flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
-                        $(input).val("");
+                        // flasher.error('Ukuran file terlalu besar. Maksimum 2MB diperbolehkan.');
+                        // $(input).val("");
                         return;
                     }
 
