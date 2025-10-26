@@ -30,7 +30,9 @@ abstract class Controller
     public function getJabatanOption()
     {
         $data = [];
-        $data = Jabatan::get()
+        $data = Jabatan::query()
+            ->toBase()
+            ->get()
             ->map(function ($item) {
                 return [
                     'value' => $item->id,
@@ -45,6 +47,7 @@ abstract class Controller
     {
         $data = [];
         $data = Akademik::where('status', true)
+            ->toBase()
             ->get()
             ->map(function ($item) {
                 return [
@@ -60,6 +63,7 @@ abstract class Controller
     {
         $data = [];
         $data = Jurusan::where('status', true)
+            ->toBase()
             ->get()
             ->map(function ($item) {
                 return [
@@ -78,6 +82,7 @@ abstract class Controller
         $dataUnit = UnitKemahasiswaan::where('status', true)
             // ->whereDoesntHave('user')
             ->get()
+            ->toBase()
             ->map(function ($item) {
                 return [
                     'value' => $item->id . '|Unit',
@@ -90,6 +95,7 @@ abstract class Controller
             // ->orWhereHas('user', function ($query){
 
             // })
+            ->toBase()
             ->get()
             ->map(function ($item) {
                 return [
@@ -108,6 +114,7 @@ abstract class Controller
         $data = UnitKemahasiswaan::where('status', true)
             ->whereHas('user')
             ->get()
+            ->toBase()
             ->map(function ($item) {
                 return [
                     'value' => $item->id,
@@ -127,6 +134,7 @@ abstract class Controller
                 $query->where('jurusan_id', $jurusan);
             })
             // ->whereHas('user')
+            ->toBase()
             ->get()
             ->map(function ($item) {
                 return [
@@ -146,6 +154,7 @@ abstract class Controller
             ->when($jurusan != null, function ($query) use ($jurusan) {
                 $query->where('jurusan_id', $jurusan);
             })
+            ->toBase()
             ->get()
             ->map(function ($item) {
                 return [
