@@ -155,7 +155,7 @@ export function dataTable(options = {}) {
 
     $(document).on('change', '#option', function () {
         state.itemDisplay = $(this).val();
-        state.page = 1;
+        state.currentPage = 1;
         reload(state.url);
     });
 
