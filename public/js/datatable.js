@@ -139,7 +139,7 @@ export function dataTable(options = {}) {
 
     $(document).on('keyup', '#search', function (e) {
         e.preventDefault();
-        state.page = 1;
+        state.currentPage = 1;
         state.search = $('#search').val();
         if (e.key === 'Enter') {
             // Langsung cari kalau tekan Enter
